@@ -1,0 +1,81 @@
+Kategori 1 count: 0
+Kategori 3 count: 4
+Films total: 22
+Kategori 1 count: 0
+Kategori 3 count: 4
+Films total: 22
+Kategori 1 count: 0
+Kategori 3 count: 4
+Films total: 22
+JUDUL: 'Moana' | KAT: 'NO_KAT'
+JUDUL: 'Petaka Gunung Welirang' | KAT: 'NO_KAT'
+JUDUL: 'Mickey 17' | KAT: 'NO_KAT'
+JUDUL: 'Spider-Man: Brand New Day (2026)' | KAT: 'NO_KAT'
+JUDUL: 'Toy Story 5 (2026)' | KAT: 'NO_KAT'
+JUDUL: 'Minions & Monsters (2026)' | KAT: 'NO_KAT'
+JUDUL: 'Evil Dead Burn' | KAT: 'NO_KAT'
+JUDUL: 'Disclosure Day' | KAT: 'NO_KAT'
+JUDUL: 'The Batman - Part II' | KAT: 'Rilisan Tersegar'
+JUDUL: 'Fantastic Four: First Steps' | KAT: 'Rilisan Tersegar'
+JUDUL: 'Jurassic World: Rebirth' | KAT: 'Rilisan Tersegar'
+JUDUL: 'Mortal Kombat 2' | KAT: 'Rilisan Tersegar'
+JUDUL: 'Five Nights at Freddy's 2' | KAT: 'Lagi Viral Nih'
+JUDUL: 'Venom: The Last Dance' | KAT: 'Lagi Viral Nih'
+JUDUL: 'Avengers: Doomsday' | KAT: 'Tangga Teratas Box Office'
+JUDUL: 'Zootopia 2' | KAT: 'Tangga Teratas Box Office'
+JUDUL: 'Mission: Impossible - Final Reckoning' | KAT: 'Tangga Teratas Box Office'
+JUDUL: 'Captain America: Brave New World' | KAT: 'Tangga Teratas Box Office'
+JUDUL: 'Thunderbolts*' | KAT: 'Tangga Teratas Box Office'
+JUDUL: 'Pengabdi Setan 3' | KAT: 'Karya Anak Bangsa'
+JUDUL: 'Petualangan Sherina 2' | KAT: 'Karya Anak Bangsa'
+JUDUL: 'Ngeri-Ngeri Sedap 2' | KAT: 'Karya Anak Bangsa'
+Kategori 1 count: 0
+Kategori 3 count: 4
+Films total: 22
+JUDUL: 'Moana' | KAT: 'NO_KAT'
+JUDUL: 'Petaka Gunung Welirang' | KAT: 'NO_KAT'
+JUDUL: 'Mickey 17' | KAT: 'NO_KAT'
+JUDUL: 'Spider-Man: Brand New Day (2026)' | KAT: 'NO_KAT'
+JUDUL: 'Toy Story 5 (2026)' | KAT: 'NO_KAT'
+JUDUL: 'Minions & Monsters (2026)' | KAT: 'NO_KAT'
+JUDUL: 'Evil Dead Burn' | KAT: 'NO_KAT'
+JUDUL: 'Disclosure Day' | KAT: 'NO_KAT'
+JUDUL: 'The Batman - Part II' | KAT: 'Rilisan Tersegar'
+JUDUL: 'Fantastic Four: First Steps' | KAT: 'Rilisan Tersegar'
+JUDUL: 'Jurassic World: Rebirth' | KAT: 'Rilisan Tersegar'
+JUDUL: 'Mortal Kombat 2' | KAT: 'Rilisan Tersegar'
+JUDUL: 'Five Nights at Freddy's 2' | KAT: 'Lagi Viral Nih'
+JUDUL: 'Venom: The Last Dance' | KAT: 'Lagi Viral Nih'
+JUDUL: 'Avengers: Doomsday' | KAT: 'Tangga Teratas Box Office'
+JUDUL: 'Zootopia 2' | KAT: 'Tangga Teratas Box Office'
+JUDUL: 'Mission: Impossible - Final Reckoning' | KAT: 'Tangga Teratas Box Office'
+JUDUL: 'Captain America: Brave New World' | KAT: 'Tangga Teratas Box Office'
+JUDUL: 'Thunderbolts*' | KAT: 'Tangga Teratas Box Office'
+JUDUL: 'Pengabdi Setan 3' | KAT: 'Karya Anak Bangsa'
+JUDUL: 'Petualangan Sherina 2' | KAT: 'Karya Anak Bangsa'
+JUDUL: 'Ngeri-Ngeri Sedap 2' | KAT: 'Karya Anak Bangsa'
+Kategori 1 count: 0
+Kategori 3 count: 4
+Films total: 22
+JUDUL: 'Moana' | KAT: 'NO_KAT'
+JUDUL: 'Petaka Gunung Welirang' | KAT: 'NO_KAT'
+JUDUL: 'Mickey 17' | KAT: 'NO_KAT'
+JUDUL: 'Spider-Man: Brand New Day (2026)' | KAT: 'NO_KAT'
+JUDUL: 'Toy Story 5 (2026)' | KAT: 'NO_KAT'
+JUDUL: 'Minions & Monsters (2026)' | KAT: 'NO_KAT'
+JUDUL: 'Evil Dead Burn' | KAT: 'NO_KAT'
+JUDUL: 'Disclosure Day' | KAT: 'NO_KAT'
+JUDUL: 'The Batman - Part II' | KAT: 'Rilisan Tersegar'
+JUDUL: 'Fantastic Four: First Steps' | KAT: 'Rilisan Tersegar'
+JUDUL: 'Jurassic World: Rebirth' | KAT: 'Rilisan Tersegar'
+JUDUL: 'Mortal Kombat 2' | KAT: 'Rilisan Tersegar'
+JUDUL: 'Five Nights at Freddy's 2' | KAT: 'Lagi Viral Nih'
+JUDUL: 'Venom: The Last Dance' | KAT: 'Lagi Viral Nih'
+JUDUL: 'Avengers: Doomsday' | KAT: 'Tangga Teratas Box Office'
+JUDUL: 'Zootopia 2' | KAT: 'Tangga Teratas Box Office'
+JUDUL: 'Mission: Impossible - Final Reckoning' | KAT: 'Tangga Teratas Box Office'
+JUDUL: 'Captain America: Brave New World' | KAT: 'Tangga Teratas Box Office'
+JUDUL: 'Thunderbolts*' | KAT: 'Tangga Teratas Box Office'
+JUDUL: 'Pengabdi Setan 3' | KAT: 'Karya Anak Bangsa'
+JUDUL: 'Petualangan Sherina 2' | KAT: 'Karya Anak Bangsa'
+JUDUL: 'Ngeri-Ngeri Sedap 2' | KAT: 'Karya Anak Bangsa'
