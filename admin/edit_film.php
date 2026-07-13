@@ -29,6 +29,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $sinopsis = trim($_POST['sinopsis'] ?? '');
     $poster   = trim($_POST['poster'] ?? 'default.jpg');
     $trailer  = trim($_POST['trailer'] ?? '');
+    $rotten   = trim($_POST['rating_rotten_tomatoes'] ?? '');
+    $meta     = trim($_POST['rating_metacritic'] ?? '');
     
     $kategoris = $_POST['kategoriSection'] ?? [];
     if (!is_array($kategoris)) {
@@ -47,6 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sinopsis_safe = addslashes($sinopsis);
         $poster_safe   = addslashes($poster);
         $trailer_safe  = addslashes($trailer);
+        $rotten_safe   = addslashes($rotten);
+        $meta_safe     = addslashes($meta);
         
         $insert_kategori = "";
         foreach ($kategoris as $kat) {
@@ -67,6 +71,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                            f:sinopsis ?old_sinopsis ;
                            f:poster_film ?old_poster ;
                            f:trailer_film ?old_trailer ;
+                           f:ratingRottenTomatoes ?old_rotten ;
+                           f:ratingMetacritic ?old_meta ;
                            f:kategoriSection ?old_kategori .
             }
             WHERE {
@@ -77,6 +83,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 OPTIONAL { f:$id_safe f:sinopsis ?old_sinopsis }
                 OPTIONAL { f:$id_safe f:poster_film ?old_poster }
                 OPTIONAL { f:$id_safe f:trailer_film ?old_trailer }
+                OPTIONAL { f:$id_safe f:ratingRottenTomatoes ?old_rotten }
+                OPTIONAL { f:$id_safe f:ratingMetacritic ?old_meta }
                 OPTIONAL { f:$id_safe f:kategoriSection ?old_kategori }
             };
             
@@ -88,7 +96,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                            f:rating_film \"$rating_safe\" ;
                            f:sinopsis \"$sinopsis_safe\" ;
                            f:poster_film \"$poster_safe\" ;
-                           f:trailer_film \"$trailer_safe\" .
+                           f:trailer_film \"$trailer_safe\" ;
+                           f:ratingRottenTomatoes \"$rotten_safe\" ;
+                           f:ratingMetacritic \"$meta_safe\" .
                 $insert_kategori
             }
         ";
@@ -107,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Ambil data film saat ini
 $result = sparql_query("
     PREFIX f: <" . ONTOLOGY_PREFIX . ">
-    SELECT ?judul ?genre ?durasi ?rating ?sinopsis ?poster ?trailer 
+    SELECT ?judul ?genre ?durasi ?rating ?sinopsis ?poster ?trailer ?rotten ?meta
            (GROUP_CONCAT(?kategori; separator=\"||\") AS ?kategori_list)
     WHERE {
         f:$id_safe f:judul ?judul .
@@ -117,8 +127,10 @@ $result = sparql_query("
         OPTIONAL { f:$id_safe f:sinopsis ?sinopsis }
         OPTIONAL { f:$id_safe f:poster_film ?poster }
         OPTIONAL { f:$id_safe f:trailer_film ?trailer }
+        OPTIONAL { f:$id_safe f:ratingRottenTomatoes ?rotten }
+        OPTIONAL { f:$id_safe f:ratingMetacritic ?meta }
         OPTIONAL { f:$id_safe f:kategoriSection ?kategori }
-    } GROUP BY ?judul ?genre ?durasi ?rating ?sinopsis ?poster ?trailer LIMIT 1
+    } GROUP BY ?judul ?genre ?durasi ?rating ?sinopsis ?poster ?trailer ?rotten ?meta LIMIT 1
 ");
 $row = get_bindings($result ?? [])[0] ?? null;
 
@@ -160,10 +172,15 @@ require_once __DIR__ . '/../includes/header.php';
             <?php endif; ?>
 
             <form action="/FILMKU_PHP/admin/edit_film.php?id=<?= urlencode($id) ?>" method="POST">
-                <div class="form-group">
+                <div class="form-group" style="position: relative;">
                     <label>Judul Film</label>
-                    <input type="text" name="judul" class="form-control" required 
-                           value="<?= htmlspecialchars($row['judul']['value'] ?? '') ?>">
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" name="judul" id="inputJudul" class="form-control" required 
+                               value="<?= htmlspecialchars($row['judul']['value'] ?? '') ?>" style="flex: 1;">
+                        <button type="button" id="btnFetchOMDB" style="background: var(--primary); color: #fff; border: none; padding: 0 16px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; transition: background 0.2s;">
+                            Tarik Data OMDB
+                        </button>
+                    </div>
                 </div>
                 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
@@ -178,11 +195,24 @@ require_once __DIR__ . '/../includes/header.php';
                                value="<?= htmlspecialchars($row['durasi']['value'] ?? '') ?>">
                     </div>
                 </div>
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;">
+                    <div class="form-group">
+                        <label>Rating Rotten Tomatoes</label>
+                        <input type="text" name="rating_rotten_tomatoes" id="inputRotten" class="form-control" 
+                               value="<?= htmlspecialchars($row['rotten']['value'] ?? '') ?>" placeholder="Contoh: 85%">
+                    </div>
+                    <div class="form-group">
+                        <label>Rating Metacritic</label>
+                        <input type="text" name="rating_metacritic" id="inputMeta" class="form-control" 
+                               value="<?= htmlspecialchars($row['meta']['value'] ?? '') ?>" placeholder="Contoh: 73/100">
+                    </div>
+                </div>
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div class="form-group">
                         <label>Genre</label>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; background-color: var(--bg-surface); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); max-height: 200px; overflow-y: auto;">
+                        <div data-lenis-prevent style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; background-color: var(--bg-surface); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); max-height: 200px; overflow-y: auto;">
                             <?php
                             $current_genres_string = $row['genre']['value'] ?? '';
                             $current_genres_array = array_map('trim', explode(',', $current_genres_string));
@@ -199,7 +229,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <div class="form-group">
                         <label>Kategori Section Dashboard (Pilih 1 atau lebih)</label>
                         <?php $current_kategoris = explode('||', $row['kategori_list']['value'] ?? ''); ?>
-                        <div style="background: var(--bg-surface); padding: 10px; border-radius: 4px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-height: 150px; overflow-y: auto;">
+                        <div data-lenis-prevent style="background: var(--bg-surface); padding: 10px; border-radius: 4px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-height: 150px; overflow-y: auto;">
                             <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-secondary);">
                                 <input type="checkbox" name="kategoriSection[]" value="Sorotan Layar Utama" <?= in_array('Sorotan Layar Utama', $current_kategoris) ? 'checked' : '' ?> style="accent-color:var(--primary);"> Sorotan Layar Utama
                             </label>
@@ -230,7 +260,7 @@ require_once __DIR__ . '/../includes/header.php';
 
                 <div class="form-group">
                     <label>Sinopsis</label>
-                    <textarea name="sinopsis" class="form-control" rows="5"><?= htmlspecialchars($row['sinopsis']['value'] ?? '') ?></textarea>
+                    <textarea name="sinopsis" id="inputSinopsis" class="form-control" rows="5"><?= htmlspecialchars($row['sinopsis']['value'] ?? '') ?></textarea>
                 </div>
 
                 <button type="submit" class="btn-primary" style="margin-top: 10px;">💾 Simpan Perubahan</button>
@@ -238,5 +268,66 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     </div>
 </div>
+
+<script>
+document.getElementById('btnFetchOMDB').addEventListener('click', async function() {
+    const judulAsli = document.getElementById('inputJudul').value.trim();
+    if (!judulAsli) {
+        alert('Silakan isi judul film terlebih dahulu!');
+        return;
+    }
+    
+    // Hapus tahun yang berada dalam kurung, contoh: "Michael (2026)" -> "Michael"
+    const judulBersih = judulAsli.replace(/\s*\(\d{4}\)\s*/g, '').trim();
+
+    this.innerText = 'Mencari...';
+    this.style.opacity = '0.7';
+
+    try {
+        const response = await fetch(`https://www.omdbapi.com/?apikey=65bbf102&t=${encodeURIComponent(judulBersih)}`);
+        const data = await response.json();
+        
+        if (data.Response === 'True') {
+            // Update input OMDB
+            if (data.Ratings) {
+                const rt = data.Ratings.find(r => r.Source === 'Rotten Tomatoes');
+                if (rt) document.getElementById('inputRotten').value = rt.Value;
+                
+                const meta = data.Ratings.find(r => r.Source === 'Metacritic');
+                if (meta) document.getElementById('inputMeta').value = meta.Value;
+            }
+            
+            // Auto fill others if empty
+            const sinopsis = document.getElementById('inputSinopsis');
+            if (sinopsis.value === '' && data.Plot !== 'N/A') {
+                sinopsis.value = data.Plot;
+            }
+
+            // Durasi mapping
+            const durasi = document.querySelector('input[name="durasi"]');
+            if (durasi.value === '' && data.Runtime !== 'N/A') {
+                const durStr = data.Runtime.replace('min', 'Menit');
+                durasi.value = durStr;
+            }
+            
+            // Rating mapping
+            const rating = document.querySelector('input[name="rating"]');
+            if (rating.value === '' && data.imdbRating !== 'N/A') {
+                rating.value = data.imdbRating;
+            }
+
+            alert('Berhasil menarik data dari OMDB API!');
+        } else {
+            alert('Gagal: ' + data.Error);
+        }
+    } catch (error) {
+        alert('Terjadi kesalahan saat menghubungi API.');
+        console.error(error);
+    } finally {
+        this.innerText = 'Tarik Data OMDB';
+        this.style.opacity = '1';
+    }
+});
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

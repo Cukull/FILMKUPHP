@@ -1,0 +1,103 @@
+/* FILMKU Payment Method Radio Pulse Animation */
+
+/* Default fallback double pulse */
+@keyframes doublePulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7), 
+                    0 0 0 0 rgba(255, 68, 68, 0.5);
+    }
+    40% {
+        box-shadow: 0 0 0 10px rgba(255, 68, 68, 0), 
+                    0 0 0 0 rgba(255, 68, 68, 0.5);
+    }
+    80%, 100% {
+        box-shadow: 0 0 0 10px rgba(255, 68, 68, 0), 
+                    0 0 0 15px rgba(255, 68, 68, 0);
+    }
+}
+
+.payment-method input[type="radio"] {
+    position: relative;
+    z-index: 2;
+    border-radius: 50%;
+    /* Ensure shadow renders outside the bounds */
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    transition: all 0.2s;
+}
+
+/* Custom styled radio inside circle for checked state */
+.payment-method input[type="radio"]:checked::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.payment-method input[type="radio"]:checked {
+    animation: doublePulse 2s infinite ease-out;
+    border-color: currentColor;
+}
+
+/* BONUS: Different colors per payment method */
+/* GoPay */
+.payment-method[aria-label*="GoPay"] input[type="radio"]:checked {
+    animation-name: pulseGoPay;
+    color: #00aadd;
+}
+@keyframes pulseGoPay {
+    0% { box-shadow: 0 0 0 0 rgba(0, 170, 221, 0.7), 0 0 0 0 rgba(0, 170, 221, 0.5); }
+    40% { box-shadow: 0 0 0 8px rgba(0, 170, 221, 0), 0 0 0 0 rgba(0, 170, 221, 0.5); }
+    80%, 100% { box-shadow: 0 0 0 8px rgba(0, 170, 221, 0), 0 0 0 14px rgba(0, 170, 221, 0); }
+}
+
+/* OVO */
+.payment-method[aria-label*="OVO"] input[type="radio"]:checked {
+    animation-name: pulseOVO;
+    color: #7c3aed;
+}
+@keyframes pulseOVO {
+    0% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7), 0 0 0 0 rgba(124, 58, 237, 0.5); }
+    40% { box-shadow: 0 0 0 8px rgba(124, 58, 237, 0), 0 0 0 0 rgba(124, 58, 237, 0.5); }
+    80%, 100% { box-shadow: 0 0 0 8px rgba(124, 58, 237, 0), 0 0 0 14px rgba(124, 58, 237, 0); }
+}
+
+/* DANA */
+.payment-method[aria-label*="DANA"] input[type="radio"]:checked {
+    animation-name: pulseDANA;
+    color: #118ee9;
+}
+@keyframes pulseDANA {
+    0% { box-shadow: 0 0 0 0 rgba(17, 142, 233, 0.7), 0 0 0 0 rgba(17, 142, 233, 0.5); }
+    40% { box-shadow: 0 0 0 8px rgba(17, 142, 233, 0), 0 0 0 0 rgba(17, 142, 233, 0.5); }
+    80%, 100% { box-shadow: 0 0 0 8px rgba(17, 142, 233, 0), 0 0 0 14px rgba(17, 142, 233, 0); }
+}
+
+/* LinkAja */
+.payment-method[aria-label*="LinkAja"] input[type="radio"]:checked {
+    animation-name: pulseLinkAja;
+    color: #e32322;
+}
+@keyframes pulseLinkAja {
+    0% { box-shadow: 0 0 0 0 rgba(227, 35, 34, 0.7), 0 0 0 0 rgba(227, 35, 34, 0.5); }
+    40% { box-shadow: 0 0 0 8px rgba(227, 35, 34, 0), 0 0 0 0 rgba(227, 35, 34, 0.5); }
+    80%, 100% { box-shadow: 0 0 0 8px rgba(227, 35, 34, 0), 0 0 0 14px rgba(227, 35, 34, 0); }
+}
+
+/* BCA */
+.payment-method[aria-label*="BCA"] input[type="radio"]:checked {
+    animation-name: pulseBCA;
+    color: #1565c0;
+}
+@keyframes pulseBCA {
+    0% { box-shadow: 0 0 0 0 rgba(21, 101, 192, 0.7), 0 0 0 0 rgba(21, 101, 192, 0.5); }
+    40% { box-shadow: 0 0 0 8px rgba(21, 101, 192, 0), 0 0 0 0 rgba(21, 101, 192, 0.5); }
+    80%, 100% { box-shadow: 0 0 0 8px rgba(21, 101, 192, 0), 0 0 0 14px rgba(21, 101, 192, 0); }
+}

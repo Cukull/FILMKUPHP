@@ -37,13 +37,51 @@ $active_nav  = $active_nav  ?? '';
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- AOS Animation CSS -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     
+    <!-- SweetAlert2 (Untuk loading modal/dialog premium) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
+
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <!-- Lenis Smooth Scroll -->
+    <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.27/dist/lenis.min.js"></script>
+
+    <!-- THREE.JS (Untuk 3D Kursi) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/loaders/OBJLoader.js"></script>
+
+    <!-- CountUp.js (Untuk number animation di jadwal/harga) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/CountUp.js/2.4.0/countUp.min.js"></script>
+
+    <!-- Splitting.js (Untuk text letter animation) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/splitting/1.0.4/splitting.min.js"></script>
+
     <!-- Main CSS -->
-    <link rel="stylesheet" href="/FILMKU_PHP/static/css/style.css">
+    <link rel="stylesheet" href="/FILMKU_PHP/static/css/style.css?v=<?= time() ?>">
+    
+    <!-- Custom JS -->
+    <script src="/FILMKU_PHP/assets/js/animations/button-magnetic.js"></script>
+    <!-- Three.js (3D Graphics) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/loaders/OBJLoader.js"></script>
+    
+    <!-- Splitting.js (Text Animation) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/splitting/1.0.4/splitting.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/splitting/1.0.4/splitting.css">
+    
+    <!-- CountUp.js (Number Animation) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/countup.js/2.8.0/countUp.umd.js"></script>
+    
+    <!-- SweetAlert2 (Modal Dialog) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
 </head>
 <body>
 
@@ -127,6 +165,7 @@ $active_nav  = $active_nav  ?? '';
                     <a href="/FILMKU_PHP/community.php" class="header-nav-link <?= ($current_page === 'community') ? 'active' : '' ?>" style="color: <?= ($current_page === 'community') ? '#fff' : 'rgba(255,255,255,0.6)' ?>; font-size: 13.5px; font-weight: <?= ($current_page === 'community') ? '700' : '600' ?>; text-decoration: none; transition: var(--transition);">Cine-Community</a>
                     <a href="/FILMKU_PHP/index.php#wishlist-section" class="header-nav-link" style="color: rgba(255,255,255,0.6); font-size: 13.5px; font-weight: 600; text-decoration: none; transition: var(--transition);">Wishlist</a>
                     <a href="/FILMKU_PHP/genre.php" class="header-nav-link <?= ($current_page === 'genre') ? 'active' : '' ?>" style="color: <?= ($current_page === 'genre') ? '#fff' : 'rgba(255,255,255,0.6)' ?>; font-size: 13.5px; font-weight: <?= ($current_page === 'genre') ? '700' : '600' ?>; text-decoration: none; transition: var(--transition);">Genre</a>
+                    <a href="/FILMKU_PHP/cafe.php" class="header-nav-link <?= ($current_page === 'cafe') ? 'active' : '' ?>" style="color: <?= ($current_page === 'cafe') ? '#fff' : 'rgba(255,255,255,0.6)' ?>; font-size: 13.5px; font-weight: <?= ($current_page === 'cafe') ? '700' : '600' ?>; text-decoration: none; transition: var(--transition);">Snack-Ku</a>
                 </nav>
             </div>
 
@@ -140,6 +179,8 @@ $active_nav  = $active_nav  ?? '';
                     <!-- Live Search Results -->
                     <div id="liveSearchResults" class="search-dropdown hidden"></div>
                 </div>
+
+
 
                 <?php if ($user_name): ?>
                     <!-- Profile Dropdown (Netflix-Style) -->
@@ -170,9 +211,9 @@ $active_nav  = $active_nav  ?? '';
                                 Daftar Tontonan
                             </a>
 
-                            <a href="/FILMKU_PHP/histori.php" class="dropdown-item">
+                            <a href="/FILMKU_PHP/myorder.php" class="dropdown-item">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                                Histori Tiket
+                                My Order
                             </a>
                             <div class="dropdown-divider"></div>
 

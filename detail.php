@@ -17,7 +17,7 @@ $film_id_safe = addslashes(preg_replace('/[^a-zA-Z0-9_\-]/', '', $film_id));
 // Query detail film + semua jadwal-nya
 $result = sparql_query("
     PREFIX f: <" . ONTOLOGY_PREFIX . ">
-    SELECT ?judul ?poster ?sinopsis ?durasi ?genre ?rating ?tanggal ?jam ?studio ?trailer WHERE {
+    SELECT ?judul ?poster ?sinopsis ?durasi ?genre ?rating ?tanggal ?jam ?studio ?trailer ?rotten ?meta WHERE {
         f:$film_id_safe f:judul ?judul .
         OPTIONAL { f:$film_id_safe f:poster_film ?poster . }
         OPTIONAL { f:$film_id_safe f:sinopsis    ?sinopsis . }
@@ -25,6 +25,8 @@ $result = sparql_query("
         OPTIONAL { f:$film_id_safe f:genre       ?genre . }
         OPTIONAL { f:$film_id_safe f:rating_film ?rating . }
         OPTIONAL { f:$film_id_safe f:trailer_film ?trailer . }
+        OPTIONAL { f:$film_id_safe f:ratingRottenTomatoes ?rotten . }
+        OPTIONAL { f:$film_id_safe f:ratingMetacritic ?meta . }
         OPTIONAL {
             f:$film_id_safe f:menyediakan ?jadwal .
             ?jadwal f:tanggal ?tanggal ;
@@ -49,6 +51,8 @@ $durasi    = $film['durasi']['value']   ?? 'N/A';
 $genre     = $film['genre']['value']    ?? 'N/A';
 $rating    = $film['rating']['value']   ?? 'N/A';
 $trailer   = $film['trailer']['value']  ?? '';
+$rt_db     = $film['rotten']['value']   ?? null;
+$meta_db   = $film['meta']['value']     ?? null;
 
 // Cek apakah ada di watchlist user
 $is_wishlist = false;
@@ -117,8 +121,8 @@ $tmdb_search_url = "https://api.themoviedb.org/3/search/movie?api_key=" . $tmdb_
 $omdb_director = 'N/A';
 $omdb_writer = 'N/A';
 $omdb_actors = 'N/A';
-$omdb_rt = 'N/A';
-$omdb_mc = 'N/A';
+$omdb_rt = $rt_db ?? 'N/A';
+$omdb_mc = $meta_db ?? 'N/A';
 
 // Menarik data dari TMDB menggunakan cURL
 if (function_exists('curl_init')) {
@@ -133,10 +137,10 @@ if (function_exists('curl_init')) {
         if (!empty($search_data['results'][0]['id'])) {
             $movie_id = $search_data['results'][0]['id'];
             
-            // Konversi Rating TMDB (skala 10) menjadi % untuk Rotten Tomatoes & Metacritic sebagai placeholder visual
+            // Konversi Rating TMDB (skala 10) menjadi % untuk Rotten Tomatoes & Metacritic sebagai placeholder visual jika di DB kosong
             $tmdb_score = $search_data['results'][0]['vote_average'];
-            $omdb_rt = round($tmdb_score * 10) . '%';
-            $omdb_mc = round($tmdb_score * 10);
+            if (!$rt_db) $omdb_rt = round($tmdb_score * 10) . '%';
+            if (!$meta_db) $omdb_mc = round($tmdb_score * 10);
             
             // Ambil data Sutradara, Penulis, dan Pemeran (Credits)
             curl_setopt($ch, CURLOPT_URL, "https://api.themoviedb.org/3/movie/" . $movie_id . "/credits?api_key=" . $tmdb_api_key);
@@ -244,6 +248,49 @@ $json_ld_director = [
     ],
 ];
 
+// ── Cinema Info Metadata ────────────────────────────────────
+
+// Durasi: "120 menit" / "120" / "2h 0m" → "2j 0m"
+function format_durasi_cinema($d) {
+    $d = trim($d);
+    // Sudah format "Xj Ym" atau "Xh Ym"
+    if (preg_match('/(\d+)\s*[jh]\s*(\d+)\s*m/i', $d, $m)) return $m[1].'j '.$m[2].'m';
+    // Menit saja: "120 menit" / "120"
+    $min = (int) preg_replace('/[^0-9]/', '', $d);
+    if ($min <= 0) return $d;
+    return floor($min/60).'j '.($min%60).'m';
+}
+$durasi_fmt = format_durasi_cinema($durasi);
+
+// Format tayang: kumpulkan studio unik dari jadwal_grouped
+$studios_flat = [];
+foreach ($jadwal_grouped as $sesi)
+    foreach ($sesi as $s) $studios_flat[] = strtolower($s['studio']);
+
+$formats_avail = [];
+if (array_filter($studios_flat, fn($s) => str_contains($s,'imax')))            $formats_avail[] = ['label'=>'IMAX',        'bg'=>'#0ea5e9','fg'=>'#fff'];
+if (array_filter($studios_flat, fn($s) => str_contains($s,'dolby')))           $formats_avail[] = ['label'=>'Dolby Atmos', 'bg'=>'#8b5cf6','fg'=>'#fff'];
+if (array_filter($studios_flat, fn($s) => str_contains($s,'premiere')||str_contains($s,'premier')))
+                                                                                 $formats_avail[] = ['label'=>'Premiere',    'bg'=>'#f59e0b','fg'=>'#000'];
+if (array_filter($studios_flat, fn($s) => preg_match('/studio|\b2d\b/', $s))) $formats_avail[] = ['label'=>'2D',          'bg'=>'rgba(255,255,255,0.1)','fg'=>'#fff'];
+if (empty($formats_avail))                                                       $formats_avail[] = ['label'=>'2D',          'bg'=>'rgba(255,255,255,0.1)','fg'=>'#fff'];
+
+// Jadwal range
+$tgl_labels   = array_keys($jadwal_grouped);
+$jadwal_range = !empty($tgl_labels)
+    ? $tgl_labels[0] . ' &ndash; ' . end($tgl_labels)
+    : 'Lihat jadwal';
+
+// Rating usia (berdasarkan genre)
+$gl = strtolower($genre);
+if (str_contains($gl,'horror')||str_contains($gl,'thriller')) {
+    $rating_usia = '17+'; $usia_bg = '#ef4444'; $usia_fg = '#fff';
+} elseif (str_contains($gl,'animation')||str_contains($gl,'family')||str_contains($gl,'comedy')) {
+    $rating_usia = 'SU';  $usia_bg = '#22c55e'; $usia_fg = '#fff';
+} else {
+    $rating_usia = '13+'; $usia_bg = '#f97316'; $usia_fg = '#fff';
+}
+
 require_once __DIR__ . '/includes/header.php';
 ?>
 
@@ -263,8 +310,8 @@ require_once __DIR__ . '/includes/header.php';
             <h1 class="hero-title-large" style="margin-bottom: 8px; font-size: 24px; font-weight:800;"><?= htmlspecialchars($judul) ?></h1>
             
             <div class="hero-actions" style="margin-bottom: 14px; gap: 8px; align-items: center;">
-                <a href="#pilihJadwal" class="btn-play" style="background: var(--primary); font-weight:700; font-size: 11.5px; padding: 8px 18px; border-radius: var(--radius-sm); display: inline-flex; align-items: center; justify-content: center; height: 34px;">
-                    Pilih Sesi Tayang
+                <a href="#pilihJadwal" class="btn-play cta-button-magnetic" data-magnetic="true" style="background: var(--primary); font-weight:700; font-size: 11.5px; padding: 8px 18px; border-radius: var(--radius-sm); display: inline-flex; align-items: center; justify-content: center; height: 34px;">
+                    <span class="magnetic-text">Pilih Sesi Tayang</span>
                 </a>
                 <button id="btnWatchlist" class="btn-watchlist <?= $is_wishlist ? 'active' : '' ?>" data-film="<?= htmlspecialchars($film_id_safe) ?>" title="Wishlist" style="margin-left: 8px;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
@@ -282,21 +329,31 @@ require_once __DIR__ . '/includes/header.php';
                 <?php if ($omdb_rt !== 'N/A'): ?>
                 <span class="meta-item" style="color:#ff4444; font-weight:700;" title="Rotten Tomatoes">🍅 <?= htmlspecialchars($omdb_rt) ?></span>
                 <?php endif; ?>
+                
                 <?php if ($omdb_mc !== 'N/A'): ?>
                 <span class="meta-item" style="color:#66cc33; font-weight:700;" title="Metacritic">Ⓜ️ <?= htmlspecialchars($omdb_mc) ?></span>
                 <?php endif; ?>
+                
                 <span class="meta-item">⏱️ <?= htmlspecialchars($durasi) ?></span>
                 <span class="meta-item" style="border: 1px solid var(--border-subtle); padding: 1px 6px; border-radius:3px;">HD</span>
                 <span class="meta-item" style="color:var(--text-secondary);"><?= htmlspecialchars($genre) ?></span>
             </div>
 
-            <div id="synopsisContainer" style="margin-top: 10px;">
-                <p id="synopsisShort" style="font-size: 13.5px; line-height: 1.65; color: #cbd5e1; max-width: 900px; margin-bottom: 0; font-weight: 500;">
-                    <?= htmlspecialchars(mb_strimwidth($sinopsis, 0, 160)) ?>... <span id="moreTrigger" style="color: #fff; font-weight: 800; cursor: pointer; text-decoration: none; margin-left: 5px;">MORE</span>
-                </p>
-                <p id="synopsisFull" style="display: none; font-size: 13.5px; line-height: 1.65; color: #cbd5e1; max-width: 900px; margin-bottom: 0; font-weight: 500;">
-                    <?= htmlspecialchars($sinopsis) ?>
-                </p>
+            <div id="synopsisContainer" class="synopsis" style="margin-top: 10px; position: relative; max-width: 900px; overflow: hidden;">
+                <?php if (strlen($sinopsis) > 160): ?>
+                    <p id="synopsisShort" style="font-size: 13.5px; line-height: 1.65; color: #cbd5e1; font-weight: 500; margin-bottom: 0;">
+                        <?= htmlspecialchars(mb_strimwidth($sinopsis, 0, 160)) ?>... 
+                        <span id="moreTrigger" style="color: #fff; font-weight: 800; cursor: pointer; text-decoration: none; margin-left: 5px;">MORE</span>
+                    </p>
+                    <p id="synopsisFull" style="display: none; font-size: 13.5px; line-height: 1.65; color: #cbd5e1; font-weight: 500; margin-bottom: 0;">
+                        <?= htmlspecialchars($sinopsis) ?>
+                        <span id="lessTrigger" style="color: #fff; font-weight: 800; cursor: pointer; text-decoration: none; margin-left: 5px;">LESS</span>
+                    </p>
+                <?php else: ?>
+                    <p style="font-size: 13.5px; line-height: 1.65; color: #cbd5e1; font-weight: 500; margin-bottom: 0;">
+                        <?= htmlspecialchars($sinopsis) ?>
+                    </p>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -393,68 +450,494 @@ require_once __DIR__ . '/includes/header.php';
     });
 </script>
 
+<!-- ══════════════════════════════════════════════════════
+     CINEMA INFO STRIP — Info ringkas "bioskop-ready"
+     ══════════════════════════════════════════════════════ -->
+<style>
+.cinema-info-section {
+    /* In grid layout, no max-width/margin needed – handled by wrapper */
+    width: 100%;
+}
+.cinema-info-title {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.cinema-info-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.06);
+}
+
+/* Grid info cards: 2 kolom eksplisit */
+.cinema-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+/* Layout wrapper: info (kiri) + booking (kanan) */
+.detail-layout-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 28px;
+    max-width: 1240px;
+    margin: 20px auto 0;
+    padding: 0 40px;
+    align-items: start;
+}
+
+/* Past showtime chips */
+.chip-time.past {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
+    position: relative;
+}
+.chip-time.past .ct-time {
+    text-decoration: line-through;
+    color: rgba(255,255,255,0.35);
+}
+.chip-time.past::after {
+    content: 'Sudah lewat';
+    position: absolute;
+    bottom: 5px;
+    left: 50%; transform: translateX(-50%);
+    font-size: 8px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+.info-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+    padding: 14px 16px;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+.info-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(229,9,20,0.04) 0%, transparent 60%);
+    pointer-events: none;
+}
+.info-card:hover {
+    border-color: rgba(229,9,20,0.25);
+    background: rgba(229,9,20,0.04);
+}
+.info-card-label {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.28);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.info-card-value {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.4;
+}
+
+/* Format badges */
+.format-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 2px;
+}
+.format-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    line-height: 1;
+}
+
+/* Rating usia badge */
+.rating-usia-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+}
+
+/* Jadwal range style */
+.jadwal-range {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.8);
+    line-height: 1.5;
+}
+.jadwal-range strong {
+    color: var(--primary);
+    font-weight: 800;
+}
+
+/* Durasi row */
+.durasi-display {
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+}
+.durasi-num  { font-size: 22px; font-weight: 900; color: #fff; }
+.durasi-unit { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.45); }
+
+/* Bahasa flags */
+.lang-flag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.85);
+}
+.lang-flag + .lang-flag { margin-top: 4px; }
+.flag-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+</style>
+
+<!-- ══ MAIN LAYOUT GRID: Info (left) + Booking (right) ══ -->
+<div class="detail-layout-grid">
+
+<section class="cinema-info-section" aria-label="Informasi Penayangan">
+    <div class="cinema-info-title">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        Info Penayangan
+    </div>
+
+    <div class="cinema-info-grid">
+
+        <!-- Format Tayang -->
+        <div class="info-card">
+            <div class="info-card-label">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <rect x="2" y="2" width="20" height="20" rx="2"/>
+                    <path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/>
+                </svg>
+                Format
+            </div>
+            <div class="format-badges">
+                <?php foreach ($formats_avail as $f): ?>
+                <span class="format-badge"
+                      style="background:<?= $f['bg'] ?>;color:<?= $f['fg'] ?>">
+                    <?= htmlspecialchars($f['label']) ?>
+                </span>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+        <!-- Rating Usia -->
+        <div class="info-card" style="display:flex;align-items:center;gap:14px;">
+            <div style="flex:1;">
+                <div class="info-card-label">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    Rating Usia
+                </div>
+                <div class="info-card-value" style="color:<?= $usia_bg ?>;">
+                    <?= htmlspecialchars($rating_usia) ?>
+                    <span style="font-size:11px;color:rgba(255,255,255,0.3);font-weight:500;margin-left:3px;">
+                        <?php
+                        $usia_label = match($rating_usia) {
+                            '17+' => 'Dewasa',
+                            'SU'  => 'Semua Umur',
+                            default => 'Remaja'
+                        };
+                        echo $usia_label;
+                        ?>
+                    </span>
+                </div>
+            </div>
+            <div class="rating-usia-badge"
+                 style="background:<?= $usia_bg ?>20;border:2px solid <?= $usia_bg ?>;color:<?= $usia_bg ?>;">
+                <?= htmlspecialchars($rating_usia) ?>
+            </div>
+        </div>
+
+        <!-- Durasi -->
+        <div class="info-card">
+            <div class="info-card-label">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                </svg>
+                Durasi
+            </div>
+            <?php
+            // Parse kembali untuk split angka & satuan
+            preg_match('/(\d+)j(?:\s*(\d+)m)?/', $durasi_fmt, $dp);
+            $d_jam = $dp[1] ?? '';
+            $d_min = $dp[2] ?? '';
+            ?>
+            <?php if ($d_jam !== ''): ?>
+            <div class="durasi-display">
+                <span class="durasi-num"><?= $d_jam ?></span><span class="durasi-unit">j</span>
+                <?php if ($d_min !== ''): ?>
+                <span class="durasi-num" style="margin-left:4px;"><?= $d_min ?></span><span class="durasi-unit">m</span>
+                <?php endif; ?>
+            </div>
+            <?php else: ?>
+            <div class="info-card-value"><?= htmlspecialchars($durasi_fmt) ?></div>
+            <?php endif; ?>
+        </div>
+
+        <!-- Bahasa -->
+        <div class="info-card">
+            <div class="info-card-label">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+                Bahasa
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;margin-top:2px;">
+                <div class="lang-flag">
+                    <span class="flag-dot" style="background:#3b82f6;"></span>
+                    Inggris
+                </div>
+                <div class="lang-flag" style="opacity:0.55;">
+                    <span class="flag-dot" style="background:#ef4444;"></span>
+                    Indonesia (Dub)
+                </div>
+            </div>
+        </div>
+
+        <!-- Subtitle -->
+        <div class="info-card">
+            <div class="info-card-label">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                Subtitle
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;margin-top:2px;">
+                <div class="lang-flag">
+                    <span class="flag-dot" style="background:#ef4444;"></span>
+                    Indonesia
+                </div>
+                <div class="lang-flag" style="opacity:0.55;">
+                    <span class="flag-dot" style="background:#3b82f6;"></span>
+                    English
+                </div>
+            </div>
+        </div>
+
+        <!-- Jadwal Tayang -->
+        <div class="info-card" style="grid-column: span 2;">
+            <div class="info-card-label">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+                </svg>
+                Jadwal Tayang
+            </div>
+            <div class="jadwal-range">
+                <?= $jadwal_range ?>
+                <span style="display:inline-flex;align-items:center;gap:4px;margin-left:10px;
+                            background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);
+                            color:#22c55e;font-size:10px;font-weight:700;padding:2px 8px;
+                            border-radius:100px;letter-spacing:0.4px;">
+                    <span style="width:6px;height:6px;border-radius:50%;background:#22c55e;
+                                 box-shadow:0 0 6px #22c55e;animation:pulse-dot 1.5s infinite;"></span>
+                    SEDANG TAYANG
+                </span>
+            </div>
+        </div>
+
+    </div><!-- /cinema-info-grid -->
+</section><!-- /cinema-info-section -->
+
+<style>
+@keyframes pulse-dot {
+    0%,100% { opacity:1; transform:scale(1); }
+    50%      { opacity:0.5; transform:scale(1.4); }
+}
+</style>
+
 <div class="detail-content" style="padding-top: 0;" id="pilihJadwal">
 
-    <!-- Booking Card -->
-    <div class="booking-card" style="margin-bottom: 40px; background: rgba(18, 18, 29, 0.6); border: 1px solid var(--border-subtle); padding: 30px; border-radius: var(--radius-md);">
-        <div class="booking-card-title" style="font-family:'Outfit',sans-serif; font-size:18px; font-weight:800; margin-bottom:14px; display:flex; align-items:center; gap:8px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+    <!-- Booking Card – redesigned -->
+    <div class="booking-card" style="margin-bottom: 40px;">
+
+        <!-- ── Pilih Tanggal ── -->
+        <div class="booking-card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;">
+                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
             Pilih Tanggal Tayang
         </div>
         <div class="date-chips-row">
             <?php if (empty($jadwal_grouped)): ?>
             <p style="color:var(--text-muted); font-size:14px; font-style:italic;">Belum ada jadwal tayang untuk film ini.</p>
             <?php else: ?>
-            <?php $first_tgl = true; $idx = 0; foreach ($jadwal_grouped as $tgl => $list): ?>
+            <?php $first_tgl = true; $idx = 0; foreach ($jadwal_grouped as $tgl => $list):
+                // Parse: "Hari Ini, 11 Jul" → day="Hari Ini", num="11", mon="Jul"
+                $parts    = explode(', ', $tgl, 2);
+                $day_name = $parts[0] ?? $tgl;
+                $date_str = $parts[1] ?? '';
+                $dp       = explode(' ', $date_str);
+                $day_num  = $dp[0] ?? '';
+                $month    = $dp[1] ?? '';
+            ?>
             <div class="chip-date <?= $first_tgl ? 'active' : '' ?>"
-                 onclick="selectDate(this, <?= $idx ?>)">
-                <?= htmlspecialchars($tgl) ?>
+                 onclick="selectDate(this, <?= $idx ?>)"
+                 data-tgl="<?= htmlspecialchars($tgl) ?>"
+                 data-is-today="<?= $first_tgl ? '1' : '0' ?>">
+                
+                <span class="cd-day"><?= htmlspecialchars($day_name) ?></span>
+                <span class="cd-num"><?= htmlspecialchars($day_num) ?></span>
+                <span class="cd-mon"><?= htmlspecialchars($month) ?></span>
             </div>
             <?php $first_tgl = false; $idx++; endforeach; ?>
             <?php endif; ?>
         </div>
 
-        <div class="booking-card-title" style="font-family:'Outfit',sans-serif; font-size:18px; font-weight:800; margin-top:30px; margin-bottom:14px; display:flex; align-items:center; gap:8px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-            Pilih Jam Sesi & Lokasi Studio
+        <!-- ── Pilih Jam ── -->
+        <div style="height:1px;background:rgba(255,255,255,0.06);margin:8px 0 22px;"></div>
+        <div class="booking-card-title" style="margin-top:0;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            Pilih Jam Sesi &amp; Lokasi Studio
         </div>
         <div class="time-chips-row">
-            <?php $first_outer = true; $idx = 0; foreach ($jadwal_grouped as $tgl => $list): ?>
-            <?php $first_inner = true; foreach ($list as $sesi):
-                $date_class = 'date-group-' . $idx;
-                $show_class = $first_outer ? '' : 'hidden';
-                $active_cls = ($first_outer && $first_inner) ? 'active' : '';
+            <?php $first_outer = true; $idx = 0; foreach ($jadwal_grouped as $tgl => $list):
+                foreach ($list as $sesi):
+                    $date_class  = 'date-group-' . $idx;
+                    $show_class  = $first_outer ? '' : 'hidden';
+                    $active_cls  = ($first_outer && $sesi === $list[0]) ? 'active' : '';
+
+                    // ── Studio type for badge color ──
+                    $studio_lc   = strtolower($sesi['studio']);
+                    $studio_type = str_contains($studio_lc, 'imax') ? 'imax'
+                                 : (str_contains($studio_lc, 'premiere') || str_contains($studio_lc, 'premier') ? 'premiere' : 'regular');
+
+                    // ── Seat Availability (pseudo-random by jam + studio) ──
+                    $total_seats  = 40;
+                    $jam_hour     = (int) explode(':', $sesi['jam'])[0];
+                    // Semakin sore/malam → makin penuh
+                    $base_pct = match(true) {
+                        $jam_hour <= 13 => 82,  // pagi  → banyak tersedia
+                        $jam_hour <= 16 => 58,  // siang → sedang
+                        $jam_hour <= 19 => 32,  // sore  → cukup penuh
+                        default         => 14,  // malam → hampir penuh
+                    };
+                    // Sedikit variasi deterministik berdasarkan nama studio
+                    $studio_mod  = (abs(crc32($sesi['studio'])) % 18) - 9;   // -9 … +9
+                    $avail_pct   = max(5, min(95, $base_pct + $studio_mod));
+                    $avail_seats = (int) round($total_seats * $avail_pct / 100);
+
+                    if ($avail_pct >= 50) {
+                        $avail_cls   = 'banyak';
+                        $avail_label = 'Banyak Tersedia';
+                    } elseif ($avail_pct >= 22) {
+                        $avail_cls   = 'sedang';
+                        $avail_label = 'Tersisa ' . $avail_seats . ' kursi';
+                    } else {
+                        $avail_cls   = 'terbatas';
+                        $avail_label = 'Hampir Penuh!';
+                    }
             ?>
-            <div class="chip-time <?= $active_cls ?> <?= $show_class ?> <?= $date_class ?>"
+            <div class="chip-time schedule-time schedule-time <?= $active_cls ?> <?= $show_class ?> <?= $date_class ?>"
                  onclick="selectTime(this, '<?= htmlspecialchars($sesi['jam']) ?>')"
-                 data-studio="<?= htmlspecialchars($sesi['studio']) ?>">
-                <?= htmlspecialchars($sesi['jam']) ?> (<?= htmlspecialchars($sesi['studio']) ?>)
+                 data-studio="<?= htmlspecialchars($sesi['studio']) ?>"
+                 data-studio-type="<?= $studio_type ?>">
+                <span class="ct-time"><?= htmlspecialchars($sesi['jam']) ?></span>
+                <span class="ct-studio"><?= htmlspecialchars($sesi['studio']) ?></span>
+                <span class="seat-avail <?= $avail_cls ?>">
+                    <span class="seat-avail-dot"></span>
+                    <?= $avail_label ?>
+                </span>
             </div>
-            <?php $first_inner = false; endforeach; $first_outer = false; $idx++; endforeach; ?>
+            <?php endforeach; $first_outer = false; $idx++; endforeach; ?>
         </div>
-    </div>
 
+    </div><!-- /booking-card -->
 
-    <!-- CTA / Pesan Tiket -->
-    <div class="cta-bar" style="text-align: center; margin: 40px 0 60px;">
-        <a href="javascript:void(0)" id="btnPesan" class="btn-cta" onclick="validateAndGo(event)" style="padding: 16px 50px; font-size:16px; font-weight:800; letter-spacing:0.5px; background: var(--primary); border-radius: var(--radius-sm); color:#fff; box-shadow: var(--shadow-glow);">
-            Konfirmasi & Pesan Tiket
-        </a>
-    </div>
+    <!-- OLD inline CTA removed – now using sticky bar below -->
+    <div style="height: 80px;"></div><!-- spacer for sticky bar -->
 
 </div><!-- /.detail-content -->
+</div><!-- /.detail-layout-grid -->
+
+<!-- ══════════════════════════════════════════════════════
+     STICKY BAR — Konfirmasi & Pesan Tiket (fixed bottom)
+     ══════════════════════════════════════════════════════ -->
+<div class="detail-sticky-bar" id="detailStickyBar" aria-label="Pesan Tiket">
+    <div class="detail-sticky-info">
+        <div class="detail-sticky-film"><?= htmlspecialchars($judul) ?></div>
+        <div class="detail-sticky-session" id="stickySession">
+            Pilih tanggal &amp; jam tayang
+        </div>
+    </div>
+    <a href="javascript:void(0)" id="btnPesanSticky"
+       class="btn-pesan-sticky disabled cta-button-magnetic" data-magnetic="true"
+       onclick="validateAndGo(event)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+        <span class="magnetic-text">Konfirmasi &amp; Pesan Tiket</span>
+    </a>
+</div>
 
 <script>
 let tanggalTerpilih = '';
 let jamTerpilih     = '';
+let studioTerpilih  = '';
 const filmId = '<?= htmlspecialchars($film_id) ?>';
+
+// ── Update sticky bar session label ──
+function updateStickyBar() {
+    const bar     = document.getElementById('detailStickyBar');
+    const sess    = document.getElementById('stickySession');
+    const btnS    = document.getElementById('btnPesanSticky');
+
+    if (tanggalTerpilih && jamTerpilih) {
+        const url = `/FILMKU_PHP/kursi.php?film=${encodeURIComponent(filmId)}&tanggal=${encodeURIComponent(tanggalTerpilih)}&jam=${encodeURIComponent(jamTerpilih)}`;
+        if (sess) sess.innerHTML = `<span>${tanggalTerpilih}</span> &nbsp;·&nbsp; <span>${jamTerpilih}</span>${studioTerpilih ? ' &nbsp;·&nbsp; ' + studioTerpilih : ''}`;
+        if (btnS) { btnS.href = url; btnS.classList.remove('disabled'); }
+        if (bar)  bar.classList.add('visible');
+    } else {
+        if (sess) sess.innerHTML = 'Pilih tanggal &amp; jam tayang';
+        if (btnS) { btnS.href = 'javascript:void(0)'; btnS.classList.add('disabled'); }
+        // Tetap visible setelah section booking terlihat
+    }
+}
 
 function selectDate(el, idx) {
     document.querySelectorAll('.chip-date').forEach(c => c.classList.remove('active'));
     el.classList.add('active');
-    tanggalTerpilih = el.textContent.trim();
+    tanggalTerpilih = el.dataset.tgl || el.textContent.trim().replace('TODAY','').trim();
 
-    // Tampilkan jam sesuai tanggal
     document.querySelectorAll('.chip-time').forEach(c => {
         c.classList.remove('active');
         c.classList.add('hidden');
@@ -464,40 +947,99 @@ function selectDate(el, idx) {
         c.classList.remove('hidden');
         if (i === 0) {
             c.classList.add('active');
-            jamTerpilih = c.textContent.trim().split(' ')[0];
-            updateStudio(c.dataset.studio);
+            jamTerpilih    = c.querySelector('.ct-time')?.textContent.trim() || c.textContent.trim().split(' ')[0];
+            studioTerpilih = c.dataset.studio || '';
+            updateStudio(studioTerpilih);
         }
     });
-    updateBtn();
+    disablePastTimes();
+    updateStickyBar();
 }
 
 function selectTime(el, jam) {
     document.querySelectorAll('.chip-time').forEach(c => c.classList.remove('active'));
     el.classList.add('active');
-    jamTerpilih = jam;
-    updateStudio(el.dataset.studio);
-    updateBtn();
+    jamTerpilih    = jam;
+    studioTerpilih = el.dataset.studio || '';
+    updateStudio(studioTerpilih);
+    updateStickyBar();
 }
 
 function updateStudio(studio) {
-    studio = studio || 'Studio 1';
+    studio = studio || '';
+    studioTerpilih = studio;
     const activeStudio = document.getElementById('activeStudio');
     const activeStudioBadge = document.getElementById('activeStudioBadge');
     if (activeStudio) activeStudio.textContent = studio;
     if (activeStudioBadge) activeStudioBadge.textContent = studio;
 }
 
-function updateBtn() {
-    const btn = document.getElementById('btnPesan');
-    if (tanggalTerpilih && jamTerpilih) {
-        btn.href = `/FILMKU_PHP/kursi.php?film=${encodeURIComponent(filmId)}&tanggal=${encodeURIComponent(tanggalTerpilih)}&jam=${encodeURIComponent(jamTerpilih)}`;
+function updateBtn() { updateStickyBar(); }
+
+function validateAndGo(e) {
+    e.preventDefault(); // selalu cegah default <a> agar tidak double-navigate
+    if (!tanggalTerpilih || !jamTerpilih) {
+        // Highlight booking card agar user tahu pilih dulu
+        const bc = document.querySelector('.booking-card');
+        if (bc) {
+            bc.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            bc.style.outline = '2px solid var(--primary)';
+            bc.style.outlineOffset = '4px';
+            setTimeout(() => { bc.style.outline = ''; bc.style.outlineOffset = ''; }, 1500);
+        }
+    } else {
+        window.location.assign(`/FILMKU_PHP/kursi.php?film=${encodeURIComponent(filmId)}&tanggal=${encodeURIComponent(tanggalTerpilih)}&jam=${encodeURIComponent(jamTerpilih)}`);
     }
 }
 
-function validateAndGo(e) {
-    if (!tanggalTerpilih || !jamTerpilih) {
-        e.preventDefault();
-        alert('Silakan pilih Tanggal Tayang dan Jam Sesi terlebih dahulu!');
+// ── Disable past showtimes (today only) ──
+function disablePastTimes() {
+    const activeDateChip = document.querySelector('.chip-date.active');
+    const isToday = activeDateChip?.dataset.isToday === '1';
+
+    // Tanggal bukan hari ini: pastikan semua chip aktif kembali
+    if (!isToday) {
+        document.querySelectorAll('.chip-time:not(.hidden)').forEach(c => {
+            c.classList.remove('past');
+            const jam = c.querySelector('.ct-time')?.textContent.trim() || '';
+            c.setAttribute('onclick', `selectTime(this,'${jam}')`);
+        });
+        return;
+    }
+
+    const now    = new Date();
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    let firstValidChip = null;
+
+    document.querySelectorAll('.chip-time').forEach(chip => {
+        const timeText = chip.querySelector('.ct-time')?.textContent.trim() || '';
+        const [h, m]   = timeText.split(':').map(Number);
+        const chipMin  = h * 60 + (m || 0);
+
+        if (chipMin <= nowMin) {
+            chip.classList.add('past');
+            chip.setAttribute('onclick', 'return false;');
+        } else {
+            chip.classList.remove('past');
+            chip.setAttribute('onclick', `selectTime(this,'${timeText}')`);
+            if (!chip.classList.contains('hidden') && !firstValidChip) firstValidChip = chip;
+        }
+    });
+
+    // Jika waktu aktif sudah lewat, auto-pilih yang pertama valid
+    const activeTime = document.querySelector('.chip-time.active:not(.hidden)');
+    if (activeTime?.classList.contains('past')) {
+        activeTime.classList.remove('active');
+        if (firstValidChip) {
+            firstValidChip.classList.add('active');
+            jamTerpilih    = firstValidChip.querySelector('.ct-time')?.textContent.trim() || '';
+            studioTerpilih = firstValidChip.dataset.studio || '';
+            updateStudio(studioTerpilih);
+        } else {
+            jamTerpilih = '';
+            studioTerpilih = '';
+        }
+        updateStickyBar();
     }
 }
 
@@ -505,12 +1047,28 @@ function validateAndGo(e) {
 document.addEventListener('DOMContentLoaded', () => {
     const firstDate = document.querySelector('.chip-date.active');
     const firstTime = document.querySelector('.chip-time.active');
-    if (firstDate) tanggalTerpilih = firstDate.textContent.trim();
-    if (firstTime) {
-        jamTerpilih = firstTime.textContent.trim();
-        updateStudio(firstTime.dataset.studio);
+    if (firstDate) {
+        tanggalTerpilih = firstDate.dataset.tgl || firstDate.textContent.replace('TODAY','').trim();
     }
-    updateBtn();
+    if (firstTime) {
+        jamTerpilih    = firstTime.querySelector('.ct-time')?.textContent.trim() || firstTime.textContent.trim();
+        studioTerpilih = firstTime.dataset.studio || '';
+        updateStudio(studioTerpilih);
+    }
+    updateStickyBar();
+    disablePastTimes(); // cek jam sudah lewat untuk hari ini
+
+    // ── Sticky bar: muncul saat section booking terlihat ──
+    const bookingSection = document.querySelector('.booking-card');
+    const stickyBar = document.getElementById('detailStickyBar');
+    if (bookingSection && stickyBar) {
+        const stickyObserver = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+                if (e.isIntersecting) stickyBar.classList.add('visible');
+            });
+        }, { threshold: 0.1 });
+        stickyObserver.observe(bookingSection);
+    }
 
     // ── YouTube Trailer Player for Detail Page ──
     const hero = document.getElementById('detailsHero');
@@ -529,6 +1087,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const ytId = getYouTubeId(url);
     if (!ytId) return;
 
+    let videoLoaded = false;
+
     // Tunggu 3 detik sebelum autoplay video trailer
     setTimeout(() => {
         const playerBg = document.getElementById('detailsYtPlayer');
@@ -541,8 +1101,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 </iframe>
             `;
             hero.classList.add('video-playing');
+            videoLoaded = true;
         }
     }, 3000);
+
+    // ── AUTO-PAUSE saat hero scroll keluar viewport ──
+    const videoPauseObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (!videoLoaded) return;
+            const iframe = document.querySelector('#detailsYtPlayer iframe');
+            if (!iframe) return;
+            const fn = entry.isIntersecting ? 'playVideo' : 'pauseVideo';
+            try {
+                iframe.contentWindow.postMessage(
+                    JSON.stringify({ event: 'command', func: fn, args: [] }), '*'
+                );
+            } catch(err) {}
+        });
+    }, { threshold: 0.15 });
+    videoPauseObserver.observe(hero);
 
     // Mute/Unmute toggle handler
     const muteBtn = document.getElementById('detailMuteBtn');
@@ -568,17 +1145,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (muteIcon) muteIcon.style.display = 'block';
                 if (unmuteIcon) unmuteIcon.style.display = 'none';
             }
-        });
-    }
-
-    // click event expand MORE synopsis
-    const moreTrigger = document.getElementById('moreTrigger');
-    if (moreTrigger) {
-        moreTrigger.addEventListener('click', () => {
-            const shortEl = document.getElementById('synopsisShort');
-            const fullEl = document.getElementById('synopsisFull');
-            if (shortEl) shortEl.style.display = 'none';
-            if (fullEl) fullEl.style.display = 'block';
         });
     }
 
@@ -632,6 +1198,19 @@ document.addEventListener('DOMContentLoaded', () => {
         'ratingCount' => '1500',
     ],
 ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?>
+</script>
+
+<script src="/FILMKU_PHP/assets/js/animations/jadwal-cards.js"></script>
+<script src="/FILMKU_PHP/assets/js/animations/synopsis-expand.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof initJadwalCardsAnimation === 'function') {
+        initJadwalCardsAnimation();
+    }
+    if (typeof initSynopsisExpand === 'function') {
+        initSynopsisExpand();
+    }
+});
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

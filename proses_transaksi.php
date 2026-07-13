@@ -4,6 +4,8 @@
 // ============================================================
 session_start();
 require_once __DIR__ . '/config/sparql.php';
+require_once __DIR__ . '/includes/mailer.php';
+require_once __DIR__ . '/includes/email_template.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: /FILMKU_PHP/index.php');
@@ -58,7 +60,54 @@ foreach ($kursi_list as $k) {
     sparql_update($query_update);
 }
 
-$email = trim($_POST['email'] ?? 'didosyukur123@gmail.com');
+$email = trim($_POST['email'] ?? '');
+$total = trim($_POST['total'] ?? 0);
+
+if (!empty($email)) {
+    // Ambil detail film dari database untuk email
+    $query_film = "
+        PREFIX f: <" . ONTOLOGY_PREFIX . ">
+        SELECT ?judul ?poster WHERE {
+            f:{$film_id_safe} f:judul ?judul .
+            OPTIONAL { f:{$film_id_safe} f:poster_film ?poster . }
+        } LIMIT 1
+    ";
+    $result_film = sparql_query($query_film);
+    $film_title = "Unknown Film";
+    $poster_url = "";
+    
+    $info_row = get_bindings($result_film ?? [])[0] ?? [];
+    if (!empty($info_row)) {
+        $film_title = $info_row['judul']['value'] ?? "Unknown Film";
+        $poster_url = $info_row['poster']['value'] ?? "";
+    }
+    
+    // Dapatkan path poster asli
+    $real_poster_url = get_poster_url($poster_url);
+    
+    // Cek apakah file lokal
+    $is_local_poster = (strpos($real_poster_url, 'http') !== 0);
+    $poster_absolute_path = null;
+    
+    if ($is_local_poster) {
+        // Lokasi absolut file gambar (Gunakan __DIR__ yang dijamin mengarah ke direktori root aplikasi FILMKU_PHP)
+        // $real_poster_url formatnya: /FILMKU_PHP/static/images/...
+        // Kita buang prefix /FILMKU_PHP lalu gabung dengan __DIR__
+        $relative_path = preg_replace('#^/FILMKU_PHP#', '', $real_poster_url);
+        $poster_absolute_path = __DIR__ . $relative_path;
+    }
+    
+    // Format tanggal untuk email (Gunakan langsung karena sudah diformat dari sistem)
+    $tanggal_formatted = $tanggal;
+    $total_formatted = 'Rp ' . number_format((float)$total, 0, ',', '.');
+    
+    // Generate HTML Body
+    $htmlBody = generateETicketHTML($film_title, $tanggal_formatted, $jam_safe, $kursi, $total_formatted, $real_poster_url, $is_local_poster);
+    
+    // Kirim Email
+    $subject = "E-Tiket Anda: " . $film_title;
+    sendETicketEmail($email, $subject, $htmlBody, $poster_absolute_path);
+}
 
 // Save to history session for mockup
 if (!isset($_SESSION['histori_tiket'])) {

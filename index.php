@@ -81,11 +81,12 @@ if (!empty($_SESSION['user_name'])) {
     $user_name_safe = addslashes($_SESSION['user_name']);
     $res_wl = sparql_query("
         PREFIX f: <" . ONTOLOGY_PREFIX . ">
-        SELECT ?film ?judul ?poster WHERE {
+        SELECT ?film ?judul ?poster ?durasi WHERE {
             ?userURI a f:Pengguna ; f:nama_pengguna \"$user_name_safe\" ; f:menyimpanWatchlist ?film .
             ?film f:judul ?judul .
             OPTIONAL { ?film f:poster_url ?poster . }
             OPTIONAL { ?film f:poster_film ?poster . }
+            OPTIONAL { ?film f:durasi ?durasi . }
         }
     ");
     $wl_raw = get_bindings($res_wl ?? []);
@@ -209,14 +210,22 @@ if (!empty($_SESSION['user_name'])) {
                         $judul   = $film['judul']['value'];
                         $poster  = $film['poster']['value'];
                     ?>
-                        <div class="rail-card" data-aos="fade-up" data-aos-delay="<?= $aos_delay ?>">
-                            <a href="/FILMKU_PHP/detail.php?film=<?= htmlspecialchars($film_id) ?>">
-                                <img src="<?= htmlspecialchars(get_poster_url($poster)) ?>" alt="<?= htmlspecialchars($judul) ?>" class="lazy-img" loading="lazy" onload="this.classList.add('loaded')">
-                                <div class="card-overlay">
-                                    <div class="card-title"><?= htmlspecialchars($judul) ?></div>
+                        <a href="/FILMKU_PHP/detail.php?film=<?= urlencode($film_id) ?>" class="movie-card" data-aos="fade-up" data-aos-delay="<?= $aos_delay ?>">
+                            <img src="<?= htmlspecialchars(get_poster_url($poster)) ?>" alt="<?= htmlspecialchars($judul) ?>" class="movie-poster lazy-img" loading="lazy" onload="this.classList.add('loaded')" onerror="this.onerror=null; this.src='https://placehold.co/200x300/12121d/cbd5e1?text=No+Poster'">
+                            <div class="overlay-info">
+                                <h3 class="movie-title"><?= htmlspecialchars($judul) ?></h3>
+                                <div class="movie-meta">
+                                    <span class="movie-duration">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                        120 Menit
+                                    </span>
+                                    <span class="movie-format">2D / IMAX</span>
                                 </div>
-                            </a>
-                        </div>
+                                <div class="movie-actions">
+                                    <div class="btn-movie-action btn-buy cta-button-magnetic" data-magnetic="true"><span class="magnetic-text">Pesan</span></div>
+                                </div>
+                            </div>
+                        </a>
                     <?php 
                         $aos_delay += 100;
                     endforeach; ?>
@@ -248,24 +257,40 @@ if (!empty($_SESSION['user_name'])) {
                         $poster  = $film['poster']['value'];
                     ?>
                         <?php if ($genre_title === "Tangga Teratas Box Office"): ?>
-                            <!-- Layout dengan Angka Besar untuk Top Box Office -->
                             <div class="rail-card-wrapper" data-aos="fade-up" data-aos-delay="<?= $aos_delay ?>">
                                 <div class="rail-card-number"><?= $rank++ ?></div>
-                                <a href="/FILMKU_PHP/detail.php?film=<?= urlencode($film_id) ?>" class="rail-card">
-                                    <img src="<?= htmlspecialchars(get_poster_url($poster)) ?>" alt="<?= htmlspecialchars($judul) ?>" class="lazy-img" loading="lazy" onload="this.classList.add('loaded')" onerror="this.onerror=null; this.src='https://placehold.co/200x300/12121d/cbd5e1?text=No+Poster'">
-                                    <div class="rail-card-overlay">
-                                        <div class="rail-card-title"><?= htmlspecialchars($judul) ?></div>
-                                        <div class="rail-card-btn">▶ Pesan</div>
+                                <a href="/FILMKU_PHP/detail.php?film=<?= urlencode($film_id) ?>" class="movie-card">
+                                    <img src="<?= htmlspecialchars(get_poster_url($poster)) ?>" alt="<?= htmlspecialchars($judul) ?>" class="movie-poster lazy-img" loading="lazy" onload="this.classList.add('loaded')" onerror="this.onerror=null; this.src='https://placehold.co/200x300/12121d/cbd5e1?text=No+Poster'">
+                                    <div class="overlay-info">
+                                        <h3 class="movie-title"><?= htmlspecialchars($judul) ?></h3>
+                                        <div class="movie-meta">
+                                            <span class="movie-duration">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                                120 Menit
+                                            </span>
+                                            <span class="movie-format">2D / IMAX</span>
+                                        </div>
+                                        <div class="movie-actions">
+                                            <div class="btn-movie-action btn-buy cta-button-magnetic" data-magnetic="true"><span class="magnetic-text">Pesan</span></div>
+                                        </div>
                                     </div>
                                 </a>
                             </div>
                         <?php else: ?>
-                            <!-- Layout Normal -->
-                            <a href="/FILMKU_PHP/detail.php?film=<?= urlencode($film_id) ?>" class="rail-card" data-aos="fade-up" data-aos-delay="<?= $aos_delay ?>">
-                                <img src="<?= htmlspecialchars(get_poster_url($poster)) ?>" alt="<?= htmlspecialchars($judul) ?>" class="lazy-img" loading="lazy" onload="this.classList.add('loaded')" onerror="this.onerror=null; this.src='https://placehold.co/200x300/12121d/cbd5e1?text=No+Poster'">
-                                <div class="rail-card-overlay">
-                                    <div class="rail-card-title"><?= htmlspecialchars($judul) ?></div>
-                                    <div class="rail-card-btn">▶ Pesan</div>
+                            <a href="/FILMKU_PHP/detail.php?film=<?= urlencode($film_id) ?>" class="movie-card" data-aos="fade-up" data-aos-delay="<?= $aos_delay ?>">
+                                <img src="<?= htmlspecialchars(get_poster_url($poster)) ?>" alt="<?= htmlspecialchars($judul) ?>" class="movie-poster lazy-img" loading="lazy" onload="this.classList.add('loaded')" onerror="this.onerror=null; this.src='https://placehold.co/200x300/12121d/cbd5e1?text=No+Poster'">
+                                <div class="overlay-info">
+                                    <h3 class="movie-title"><?= htmlspecialchars($judul) ?></h3>
+                                    <div class="movie-meta">
+                                        <span class="movie-duration">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                            120 Menit
+                                        </span>
+                                        <span class="movie-format">2D / IMAX</span>
+                                    </div>
+                                    <div class="movie-actions">
+                                        <div class="btn-movie-action btn-buy cta-button-magnetic" data-magnetic="true"><span class="magnetic-text">Pesan</span></div>
+                                    </div>
                                 </div>
                             </a>
                         <?php endif; ?>

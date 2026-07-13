@@ -53,7 +53,12 @@ require_once __DIR__ . '/../includes/header.php';
             <a href="/FILMKU_PHP/admin/kelola_film.php" class="nav-link" style="display: block; padding: 12px 20px; border-radius: 0; border: none; border-left: 3px solid transparent;">
                 🎬 Kelola Film
             </a>
-            <!-- Fitur lain bisa ditambahkan nanti -->
+            <a href="/FILMKU_PHP/admin/kelola_kategori_fnb.php" class="nav-link" style="display: block; padding: 12px 20px; border-radius: 0; border: none; border-left: 3px solid transparent;">
+                🏷️ Kelola Kategori F&B
+            </a>
+            <a href="/FILMKU_PHP/admin/kelola_fnb.php" class="nav-link" style="display: block; padding: 12px 20px; border-radius: 0; border: none; border-left: 3px solid transparent;">
+                🍿 Kelola Menu F&B
+            </a>
         </div>
     </aside>
 

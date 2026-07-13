@@ -2,7 +2,7 @@
 // ============================================================
 //  FILMKU — Histori Pemesanan Tiket
 // ============================================================
-$page_title = 'Histori Tiket';
+$page_title = 'My Order';
 $active_nav = 'histori';
 require_once __DIR__ . '/config/sparql.php';
 require_once __DIR__ . '/includes/header.php';
@@ -13,9 +13,23 @@ $histori = $_SESSION['histori_tiket'] ?? [];
 <div style="max-width: 900px; margin: 40px auto; padding: 0 20px;">
     <h1 style="color: #fff; margin-bottom: 24px; font-weight: 800; display: flex; align-items: center; gap: 12px;">
         <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" style="width: 28px; height: 28px;"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-        Histori Pemesanan Tiket
+        Pesanan Saya
     </h1>
+    
+    <!-- Tab Navigation -->
+    <div style="display: flex; gap: 32px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 24px;">
+        <button class="order-tab active" onclick="switchOrderTab('film')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>
+            Film
+        </button>
+        <button class="order-tab" onclick="switchOrderTab('food')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+            Food & Beverage
+        </button>
+    </div>
 
+    <!-- Film Tab Content -->
+    <div id="tab-film" class="order-tab-content" style="display: block;">
     <?php if (empty($histori)): ?>
         <div style="background: rgba(18, 18, 29, 0.8); border: 1px solid rgba(255,255,255,0.1); padding: 40px; border-radius: 8px; text-align: center; color: #cbd5e1;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.5;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
@@ -98,7 +112,58 @@ $histori = $_SESSION['histori_tiket'] ?? [];
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
+    </div> <!-- End Film Tab -->
+    
+    <!-- Food Tab Content -->
+    <div id="tab-food" class="order-tab-content" style="display: none;">
+        <div style="background: rgba(18, 18, 29, 0.8); border: 1px solid rgba(255,255,255,0.1); padding: 40px; border-radius: 8px; text-align: center; color: #cbd5e1;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.5;"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+            <h3 style="color: #fff; margin-bottom: 8px;">Belum Ada Pesanan F&B</h3>
+            <p>Anda belum pernah memesan makanan & minuman.</p>
+        </div>
+    </div>
 </div>
+
+<style>
+    .order-tab {
+        background: none;
+        border: none;
+        color: #94a3b8;
+        font-size: 16px;
+        font-weight: 600;
+        padding: 0 0 12px 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-bottom: 3px solid transparent;
+        transition: all 0.2s;
+        font-family: 'Outfit', sans-serif;
+    }
+    .order-tab svg { width: 18px; height: 18px; }
+    .order-tab:hover { color: #fff; }
+    .order-tab.active {
+        color: var(--primary);
+        border-bottom-color: var(--primary);
+    }
+    .order-tab-content {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<script>
+    function switchOrderTab(tabId) {
+        document.querySelectorAll('.order-tab-content').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.order-tab').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById('tab-' + tabId).style.display = 'block';
+        event.currentTarget.classList.add('active');
+    }
+</script>
 
 <!-- Modal QR Code Tiket -->
 <div id="ticketModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(8, 8, 16, 0.9); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px); opacity: 0; transition: opacity 0.3s ease;">

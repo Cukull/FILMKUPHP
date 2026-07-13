@@ -1,389 +1,355 @@
 /**
  * ============================================================
- *  LightRays — Vanilla JS WebGL (Konversi dari React Bits)
- *  FILMKU Cinema — Cinematic Theme
- *
- *  Cara pakai (ES Module):
- *    import { initLightRays } from './light-rays.js';
- *    const destroy = initLightRays('container-id', { ...config });
- *    // Untuk membersihkan: destroy();
- *
- *  Library: ogl (via ES Module CDN)
+ *  LightRays — Vanilla JS + Raw WebGL (v3, No Dependencies)
+ *  Konversi dari React Bits LightRays component
+ *  Fix: Tidak pakai IntersectionObserver, init langsung
  * ============================================================
  */
 
-// ── Import OGL micro-library via CDN ES Module ────────────
-import { Renderer, Program, Triangle, Mesh } from 'https://cdn.jsdelivr.net/npm/ogl@1.0.9/+esm';
-
-// ── Helper: Hex "#RRGGBB" → [R, G, B] float 0–1 ──────────
+// ── Helper: hex → [r, g, b] float 0–1 ────────────────────
 function hexToRgb(hex) {
     const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return m
         ? [parseInt(m[1], 16) / 255, parseInt(m[2], 16) / 255, parseInt(m[3], 16) / 255]
-        : [1, 1, 1];
+        : [1, 0.05, 0.05];
 }
 
-// ── Helper: Hitung posisi anchor & arah ray dari string origin ──
-// Mengembalikan { anchor: [x, y], dir: [dx, dy] } dalam koordinat piksel
+// ── Helper: origin string → {anchor, dir} dalam piksel ───
 function getAnchorAndDir(origin, w, h) {
-    // outside = seberapa jauh sumber ray berada di luar batas kanvas
-    const outside = 0.2;
+    const o = 0.2;
     switch (origin) {
-        case 'top-left':
-            return { anchor: [0, -outside * h],            dir: [0,  1] };
-        case 'top-right':
-            return { anchor: [w, -outside * h],            dir: [0,  1] };
-        case 'left':
-            return { anchor: [-outside * w, 0.5 * h],      dir: [1,  0] };
-        case 'right':
-            return { anchor: [(1 + outside) * w, 0.5 * h], dir: [-1, 0] };
-        case 'bottom-left':
-            return { anchor: [0,       (1 + outside) * h], dir: [0, -1] };
-        case 'bottom-center':
-            return { anchor: [0.5 * w, (1 + outside) * h], dir: [0, -1] };
-        case 'bottom-right':
-            return { anchor: [w,       (1 + outside) * h], dir: [0, -1] };
-        default: // 'top-center'
-            return { anchor: [0.5 * w, -outside * h],      dir: [0,  1] };
+        case 'top-left':     return { anchor: [0,         -o * h],     dir: [0,  1] };
+        case 'top-right':    return { anchor: [w,         -o * h],     dir: [0,  1] };
+        case 'left':         return { anchor: [-o * w,    h * 0.5],    dir: [1,  0] };
+        case 'right':        return { anchor: [(1+o)*w,   h * 0.5],    dir: [-1, 0] };
+        case 'bottom-left':  return { anchor: [0,         (1+o)*h],    dir: [0, -1] };
+        case 'bottom-center':return { anchor: [w * 0.5,  (1+o)*h],    dir: [0, -1] };
+        case 'bottom-right': return { anchor: [w,         (1+o)*h],    dir: [0, -1] };
+        default:             return { anchor: [w * 0.5,  -o * h],      dir: [0,  1] };
     }
 }
 
-// ── GLSL Vertex Shader ────────────────────────────────────
-// Full-screen triangle (lebih efisien dari quad) + pass UV ke fragment
+// ══════════════════════════════════════════════════════════
+//  GLSL SHADERS
+// ══════════════════════════════════════════════════════════
+
 const VERT = `
-attribute vec2 position;
-varying vec2 vUv;
+attribute vec2 a_pos;
 void main() {
-    /* Konversi clip-space [-1,1] ke UV [0,1] */
-    vUv = position * 0.5 + 0.5;
-    gl_Position = vec4(position, 0.0, 1.0);
+    gl_Position = vec4(a_pos, 0.0, 1.0);
 }`;
 
-// ── GLSL Fragment Shader — Inti Efek LightRays ───────────
-const FRAG = `precision highp float;
+const FRAG = `
+precision highp float;
 
-/* ── Uniforms: dikirim dari JS setiap frame / saat config berubah ── */
-uniform float iTime;          /* Waktu animasi (detik) */
-uniform vec2  iResolution;    /* Ukuran kanvas (px × DPR) */
+uniform float uTime;
+uniform vec2  uRes;
+uniform vec2  uRayPos;
+uniform vec2  uRayDir;
+uniform vec3  uColor;
+uniform float uSpeed;
+uniform float uSpread;
+uniform float uLength;
+uniform float uPulsating;
+uniform float uFade;
+uniform float uSaturation;
+uniform vec2  uMouse;
+uniform float uMouseInf;
+uniform float uNoise;
+uniform float uDistortion;
 
-uniform vec2  rayPos;         /* Posisi sumber ray (anchor point, px) */
-uniform vec2  rayDir;         /* Arah utama ray (unit vector) */
-uniform vec3  raysColor;      /* Warna ray (RGB float 0-1) */
-uniform float raysSpeed;      /* Kecepatan animasi */
-uniform float lightSpread;    /* Lebar sudut spread ray */
-uniform float rayLength;      /* Panjang maksimum ray (× lebar kanvas) */
-uniform float pulsating;      /* 1.0 = aktif, 0.0 = mati */
-uniform float fadeDistance;   /* Jarak fade-out dari sumber */
-uniform float saturation;     /* Saturasi warna (1.0 = normal) */
-uniform vec2  mousePos;       /* Posisi mouse normalize [0,1] */
-uniform float mouseInfluence; /* Seberapa kuat mouse memengaruhi arah */
-uniform float noiseAmount;    /* Intensitas grain/noise (0-1) */
-uniform float distortion;     /* Amplitudo distorsi gelombang (0-1) */
-
-varying vec2 vUv;
-
-/* ── Fungsi noise sederhana (hash-based) ── */
-float noise(vec2 st) {
-    return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+/* Noise sederhana */
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
 }
 
-/* ── Fungsi hitung kekuatan satu ray di koordinat tertentu ── */
-float rayStrength(
-    vec2  raySource,       /* Posisi sumber cahaya */
-    vec2  rayRefDirection, /* Arah referensi (sudah terpengaruh mouse) */
-    vec2  coord,           /* Koordinat piksel yang dihitung */
-    float seedA,           /* Seed noise gelombang A */
-    float seedB,           /* Seed noise gelombang B */
-    float speed            /* Kecepatan waktu gelombang ini */
-) {
-    vec2  sourceToCoord = coord - raySource;
-    vec2  dirNorm = normalize(sourceToCoord);
-    float cosAngle = dot(dirNorm, rayRefDirection);
+/* Kekuatan satu berkas ray di titik 'coord' */
+float rayStr(vec2 src, vec2 refDir, vec2 coord, float sA, float sB, float spd) {
+    vec2  v    = coord - src;
+    float dist = length(v);
+    if (dist < 0.001) return 0.0;
 
-    /* Distorsi gelombang pada sudut — efek bergoyang organik */
-    float distortedAngle = cosAngle + distortion
-        * sin(iTime * 2.0 + length(sourceToCoord) * 0.01) * 0.2;
+    vec2  dn   = normalize(v);
+    float ca   = dot(dn, refDir);
 
-    /* Spread factor: semakin tinggi lightSpread, semakin lebar kipas */
-    float spreadFactor = pow(max(distortedAngle, 0.0), 1.0 / max(lightSpread, 0.001));
+    /* Distorsi gelombang organik */
+    float da = ca + uDistortion * sin(uTime * 2.0 + dist * 0.01) * 0.2;
 
-    /* Falloff berdasarkan jarak (rayLength membatasi panjang maksimum) */
-    float distance    = length(sourceToCoord);
-    float maxDistance = iResolution.x * rayLength;
-    float lengthFalloff = clamp((maxDistance - distance) / maxDistance, 0.0, 1.0);
+    /* Lebar pancaran */
+    float sf = pow(max(da, 0.0), 1.0 / max(uSpread, 0.001));
 
-    /* Fadeout tambahan dari fadeDistance uniform */
-    float fadeFalloff = clamp(
-        (iResolution.x * fadeDistance - distance) / (iResolution.x * fadeDistance),
-        0.5, 1.0
-    );
+    /* Falloff jarak */
+    float maxD  = uRes.x * uLength;
+    float lfall = clamp((maxD - dist) / maxD, 0.0, 1.0);
+    float ffall = clamp((uRes.x * uFade - dist) / (uRes.x * uFade), 0.5, 1.0);
 
-    /* Efek pulsating (denyut): modulasi sinusoidal jika aktif */
-    float pulse = pulsating > 0.5
-        ? (0.8 + 0.2 * sin(iTime * speed * 3.0))
-        : 1.0;
+    /* Denyut (pulsating) */
+    float pulse = uPulsating > 0.5 ? (0.8 + 0.2 * sin(uTime * spd * 3.0)) : 1.0;
 
-    /* Kekuatan dasar ray: kombinasi dua gelombang sinusoidal */
-    float baseStrength = clamp(
-        (0.45 + 0.15 * sin(distortedAngle * seedA + iTime * speed)) +
-        (0.30 + 0.20 * cos(-distortedAngle * seedB + iTime * speed)),
+    /* Kekuatan dasar — dua gelombang sinus dijumlahkan */
+    float base = clamp(
+        (0.45 + 0.15 * sin(da * sA + uTime * spd)) +
+        (0.30 + 0.20 * cos(-da * sB + uTime * spd)),
         0.0, 1.0
     );
 
-    return baseStrength * lengthFalloff * fadeFalloff * spreadFactor * pulse;
-}
-
-/* ── Main: hitung warna tiap piksel ── */
-void mainImage(out vec4 fragColor, in vec2 fragCoord) {
-    /* Konversi koordinat: GLSL origin bawah-kiri → kita pakai atas-kiri */
-    vec2 coord = vec2(fragCoord.x, iResolution.y - fragCoord.y);
-
-    /* Hitung arah final ray (terpengaruh mouse jika mouseInfluence > 0) */
-    vec2 finalRayDir = rayDir;
-    if (mouseInfluence > 0.0) {
-        /* Posisi mouse dalam koordinat piksel kanvas */
-        vec2 mouseScreenPos = mousePos * iResolution.xy;
-        vec2 mouseDirection = normalize(mouseScreenPos - rayPos);
-        /* Interpolasi antara arah default dan arah ke mouse */
-        finalRayDir = normalize(mix(rayDir, mouseDirection, mouseInfluence));
-    }
-
-    /* Render dua layer ray dengan seed berbeda agar tidak sinkron */
-    vec4 rays1 = vec4(1.0) * rayStrength(rayPos, finalRayDir, coord, 36.2214, 21.11349, 1.5 * raysSpeed);
-    vec4 rays2 = vec4(1.0) * rayStrength(rayPos, finalRayDir, coord, 22.3991, 18.0234,  1.1 * raysSpeed);
-
-    /* Campur dua layer */
-    fragColor = rays1 * 0.5 + rays2 * 0.4;
-
-    /* Tambahkan grain/noise jika diaktifkan */
-    if (noiseAmount > 0.0) {
-        float n = noise(coord * 0.01 + iTime * 0.1);
-        fragColor.rgb *= (1.0 - noiseAmount + noiseAmount * n);
-    }
-
-    /* Modulasi warna berdasarkan posisi vertikal (efek langit sinematik) */
-    float brightness = 1.0 - (coord.y / iResolution.y);
-    fragColor.x *= 0.1 + brightness * 0.8;
-    fragColor.y *= 0.3 + brightness * 0.6;
-    fragColor.z *= 0.5 + brightness * 0.5;
-
-    /* Kontrol saturasi: mix antara grayscale dan warna penuh */
-    if (saturation != 1.0) {
-        float gray = dot(fragColor.rgb, vec3(0.299, 0.587, 0.114));
-        fragColor.rgb = mix(vec3(gray), fragColor.rgb, saturation);
-    }
-
-    /* Terapkan warna ray ke output — alpha otomatis dari kecerahan */
-    fragColor.rgb *= raysColor;
+    return base * lfall * ffall * sf * pulse;
 }
 
 void main() {
-    vec4 color;
-    mainImage(color, gl_FragCoord.xy);
-    gl_FragColor = color;
+    /* Konversi: GLSL origin kiri-bawah → kita pakai kiri-atas */
+    vec2 coord = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y);
+
+    /* Arah ray final (terpengaruh mouse) */
+    vec2 dir = uRayDir;
+    if (uMouseInf > 0.0) {
+        vec2 mPx = uMouse * uRes;
+        dir = normalize(mix(uRayDir, normalize(mPx - uRayPos), uMouseInf));
+    }
+
+    /* Dua layer ray dengan seed berbeda */
+    float r1 = rayStr(uRayPos, dir, coord, 36.2214, 21.11349, 1.5 * uSpeed);
+    float r2 = rayStr(uRayPos, dir, coord, 22.3991, 18.0234,  1.1 * uSpeed);
+
+    float strength = r1 * 0.55 + r2 * 0.45;
+
+    /* Noise / grain sinematik */
+    if (uNoise > 0.0) {
+        float n = hash(coord * 0.008 + uTime * 0.07);
+        strength *= (1.0 - uNoise * 0.5 + uNoise * n);
+    }
+
+    /* Gradien vertikal: lebih terang di dekat sumber, jangkauan diperluas */
+    float gy = 1.0 - (coord.y / uRes.y);
+    float gx = 1.0 - abs(coord.x / uRes.x - 0.5) * 0.3; /* lebih lebar secara horizontal */
+    float glow = strength * (0.15 + gy * 0.85) * gx;
+
+    vec3 col = uColor * glow * 1.6;
+
+    /* Saturasi */
+    if (uSaturation != 1.0) {
+        float gray = dot(col, vec3(0.299, 0.587, 0.114));
+        col = mix(vec3(gray), col, uSaturation);
+    }
+
+    float alpha = clamp(glow * 2.4, 0.0, 1.0);
+
+    gl_FragColor = vec4(col, alpha);
 }`;
 
-// ─────────────────────────────────────────────────────────────
-//  FUNGSI UTAMA: initLightRays
-// ─────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+//  WebGL Helpers
+// ══════════════════════════════════════════════════════════
+
+function makeShader(gl, type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+        console.error('[LightRays] Shader error:', gl.getShaderInfoLog(s));
+        gl.deleteShader(s);
+        return null;
+    }
+    return s;
+}
+
+function makeProgram(gl) {
+    const vs = makeShader(gl, gl.VERTEX_SHADER,   VERT);
+    const fs = makeShader(gl, gl.FRAGMENT_SHADER, FRAG);
+    if (!vs || !fs) return null;
+    const p = gl.createProgram();
+    gl.attachShader(p, vs);
+    gl.attachShader(p, fs);
+    gl.linkProgram(p);
+    gl.deleteShader(vs);
+    gl.deleteShader(fs);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
+        console.error('[LightRays] Link error:', gl.getProgramInfoLog(p));
+        return null;
+    }
+    return p;
+}
+
+// ══════════════════════════════════════════════════════════
+//  EXPORT: initLightRays
+// ══════════════════════════════════════════════════════════
 /**
- * Inisialisasi efek LightRays WebGL pada elemen HTML.
- *
- * @param {string} containerId  - ID elemen container (tanpa '#')
- * @param {object} config       - Konfigurasi efek (semua opsional)
- * @returns {Function}          - Fungsi destroy() untuk cleanup manual
+ * @param {string} id      - ID container element (tanpa '#')
+ * @param {object} opts    - Konfigurasi (semua opsional)
+ * @returns {Function}     - destroy() untuk cleanup
  */
-export function initLightRays(containerId, config = {}) {
+export function initLightRays(id, opts = {}) {
 
-    // ── Gabung config user + default FILMKU ──────────────────
-    const cfg = Object.assign({
-        raysOrigin:     'top-center', // Asal ray
-        raysColor:      '#fedbdb',    // Warna merah muda hangat
-        raysSpeed:      1.5,          // Kecepatan animasi
-        lightSpread:    1.5,          // Lebar kipas
-        rayLength:      1.2,          // Panjang ray
-        pulsating:      true,         // Efek denyut
-        fadeDistance:   1.0,          // Jarak fade
-        saturation:     1.5,          // Saturasi warna
-        followMouse:    true,         // Ray mengikuti mouse
-        mouseInfluence: 0.1,          // Seberapa kuat pengaruh mouse
-        noiseAmount:    0.1,          // Grain noise
-        distortion:     0.05,         // Distorsi gelombang
-    }, config);
+    const cfg = {
+        raysOrigin:     opts.raysOrigin     ?? 'top-center',
+        raysColor:      opts.raysColor      ?? '#E50914',
+        raysSpeed:      opts.raysSpeed      ?? 2.0,
+        lightSpread:    opts.lightSpread    ?? 1.8,
+        rayLength:      opts.rayLength      ?? 1.5,
+        pulsating:      opts.pulsating      ?? true,
+        fadeDistance:   opts.fadeDistance   ?? 1.0,
+        saturation:     opts.saturation     ?? 1.8,
+        followMouse:    opts.followMouse    ?? true,
+        mouseInfluence: opts.mouseInfluence ?? 0.15,
+        noiseAmount:    opts.noiseAmount    ?? 0.15,
+        distortion:     opts.distortion     ?? 0.08,
+    };
 
-    // Cari elemen container
-    const container = document.getElementById(containerId);
+    const container = document.getElementById(id);
     if (!container) {
-        console.warn(`[LightRays] Container "#${containerId}" tidak ditemukan.`);
+        console.warn('[LightRays] container #' + id + ' tidak ditemukan');
         return () => {};
     }
 
-    // ── State internal (pengganti useRef React) ───────────────
-    let renderer    = null;  // OGL Renderer instance
-    let uniforms    = null;  // Objek uniforms GLSL
-    let mesh        = null;  // OGL Mesh (geometry + shader)
-    let animId      = null;  // ID requestAnimationFrame aktif
-    let isRunning   = false; // Flag: sudah berjalan atau belum
+    // ── State ───────────────────────────────────────────────
+    let canvas, gl, prog, vbuf, uloc;
+    let rafId  = null;
+    let alive  = false;
+    const mouse = { x: 0.5, y: 0.5 };
+    const smMouse = { x: 0.5, y: 0.5 };
 
-    // State mouse: posisi raw & posisi smooth (lerp)
-    const mouse       = { x: 0.5, y: 0.5 };
-    const smoothMouse = { x: 0.5, y: 0.5 };
+    // ── Init WebGL ──────────────────────────────────────────
+    function init() {
+        canvas = document.createElement('canvas');
 
-    // ── Mouse move handler (untuk followMouse) ────────────────
-    function onMouseMove(e) {
-        if (!container) return;
-        const rect = container.getBoundingClientRect();
-        // Normalisasi posisi kursor ke [0, 1]
-        mouse.x = (e.clientX - rect.left) / rect.width;
-        mouse.y = (e.clientY - rect.top)  / rect.height;
-    }
+        /* Canvas menutupi seluruh container */
+        canvas.style.cssText =
+            'position:absolute;top:0;left:0;width:100%;height:100%;' +
+            'display:block;pointer-events:none;';
 
-    // ── Inisialisasi Renderer WebGL ───────────────────────────
-    function initWebGL() {
-        if (isRunning) return;
-        isRunning = true;
-
-        // Buat renderer OGL: alpha=true agar transparan
-        renderer = new Renderer({
-            dpr:   Math.min(window.devicePixelRatio, 2),
-            alpha: true,
-        });
-
-        const gl = renderer.gl;
-
-        // Atur canvas: 100% container, non-blocking untuk klik
-        gl.canvas.style.width        = '100%';
-        gl.canvas.style.height       = '100%';
-        gl.canvas.style.display      = 'block';
-        gl.canvas.style.pointerEvents = 'none';
-
-        // Kosongkan container dan masukkan canvas baru
+        /* Bersihkan container & tambah canvas */
         container.innerHTML = '';
-        container.appendChild(gl.canvas);
+        container.appendChild(canvas);
 
-        // ── Buat uniforms awal ────────────────────────────────
-        uniforms = {
-            iTime:          { value: 0 },
-            iResolution:    { value: [1, 1] },
-            rayPos:         { value: [0, 0] },
-            rayDir:         { value: [0, 1] },
-            raysColor:      { value: hexToRgb(cfg.raysColor) },
-            raysSpeed:      { value: cfg.raysSpeed },
-            lightSpread:    { value: cfg.lightSpread },
-            rayLength:      { value: cfg.rayLength },
-            pulsating:      { value: cfg.pulsating ? 1.0 : 0.0 },
-            fadeDistance:   { value: cfg.fadeDistance },
-            saturation:     { value: cfg.saturation },
-            mousePos:       { value: [0.5, 0.5] },
-            mouseInfluence: { value: cfg.followMouse ? cfg.mouseInfluence : 0.0 },
-            noiseAmount:    { value: cfg.noiseAmount },
-            distortion:     { value: cfg.distortion },
-        };
+        /* Ambil WebGL context */
+        const ctxOpts = { alpha: true, premultipliedAlpha: false,
+                          antialias: false, depth: false, stencil: false };
+        gl = canvas.getContext('webgl', ctxOpts)
+          || canvas.getContext('experimental-webgl', ctxOpts);
 
-        // Buat geometry + compile shader
-        const geometry = new Triangle(gl);
-        const program  = new Program(gl, { vertex: VERT, fragment: FRAG, uniforms });
-        mesh           = new Mesh(gl, { geometry, program });
+        if (!gl) { console.warn('[LightRays] WebGL tidak tersedia'); return false; }
 
-        // ── Fungsi resize ─────────────────────────────────────
-        function updatePlacement() {
-            if (!container || !renderer) return;
+        /* Compile shaders */
+        prog = makeProgram(gl);
+        if (!prog) return false;
 
-            renderer.dpr = Math.min(window.devicePixelRatio, 2);
-            const wCSS = container.clientWidth;
-            const hCSS = container.clientHeight;
-            renderer.setSize(wCSS, hCSS);
+        /* Full-screen triangle: 3 vertex mengisi clip space [-1,1]² */
+        const verts = new Float32Array([-1,-1, 3,-1, -1,3]);
+        vbuf = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbuf);
+        gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
 
-            const dpr = renderer.dpr;
-            const w   = wCSS * dpr;
-            const h   = hCSS * dpr;
+        /* Attribute */
+        const aPos = gl.getAttribLocation(prog, 'a_pos');
+        gl.enableVertexAttribArray(aPos);
+        gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
 
-            // Update resolusi ke shader
-            uniforms.iResolution.value = [w, h];
+        /* Cache uniform locations */
+        const uNames = ['uTime','uRes','uRayPos','uRayDir','uColor','uSpeed',
+                         'uSpread','uLength','uPulsating','uFade','uSaturation',
+                         'uMouse','uMouseInf','uNoise','uDistortion'];
+        uloc = {};
+        gl.useProgram(prog);
+        uNames.forEach(n => { uloc[n] = gl.getUniformLocation(prog, n); });
 
-            // Hitung ulang anchor & direction dari origin config
-            const { anchor, dir } = getAnchorAndDir(cfg.raysOrigin, w, h);
-            uniforms.rayPos.value = anchor;
-            uniforms.rayDir.value = dir;
-        }
+        /* Set uniform statis */
+        const rgb = hexToRgb(cfg.raysColor);
+        gl.uniform3f(uloc.uColor,     rgb[0], rgb[1], rgb[2]);
+        gl.uniform1f(uloc.uSpeed,     cfg.raysSpeed);
+        gl.uniform1f(uloc.uSpread,    cfg.lightSpread);
+        gl.uniform1f(uloc.uLength,    cfg.rayLength);
+        gl.uniform1f(uloc.uPulsating, cfg.pulsating ? 1.0 : 0.0);
+        gl.uniform1f(uloc.uFade,      cfg.fadeDistance);
+        gl.uniform1f(uloc.uSaturation,cfg.saturation);
+        gl.uniform1f(uloc.uMouseInf,  cfg.followMouse ? cfg.mouseInfluence : 0.0);
+        gl.uniform1f(uloc.uNoise,     cfg.noiseAmount);
+        gl.uniform1f(uloc.uDistortion,cfg.distortion);
+        gl.uniform2f(uloc.uMouse,     0.5, 0.5);
 
-        // ── Render loop (RAF) ─────────────────────────────────
-        function loop(timestamp) {
-            if (!renderer || !uniforms || !mesh) return;
+        /* Alpha blending */
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-            // Update waktu (ms → detik)
-            uniforms.iTime.value = timestamp * 0.001;
+        resize();
+        return true;
+    }
 
-            // Smooth mouse (lerp untuk gerakan halus)
-            if (cfg.followMouse && cfg.mouseInfluence > 0) {
-                const smoothing = 0.92; // Semakin tinggi = semakin lambat responsnya
-                smoothMouse.x = smoothMouse.x * smoothing + mouse.x * (1 - smoothing);
-                smoothMouse.y = smoothMouse.y * smoothing + mouse.y * (1 - smoothing);
-                uniforms.mousePos.value = [smoothMouse.x, smoothMouse.y];
-            }
+    // ── Resize canvas & update resolution uniform ───────────
+    function resize() {
+        if (!canvas || !gl) return;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const w   = Math.max(container.clientWidth,  window.innerWidth);
+        const h   = Math.max(container.clientHeight, window.innerHeight);
 
-            try {
-                renderer.render({ scene: mesh });
-                animId = requestAnimationFrame(loop);
-            } catch (e) {
-                // Hentikan loop saat WebGL context lost
-                console.warn('[LightRays] Render error, loop dihentikan.', e);
-            }
-        }
+        canvas.width  = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+        gl.viewport(0, 0, canvas.width, canvas.height);
 
-        // Pasang listener & jalankan
-        window.addEventListener('resize', updatePlacement);
+        gl.useProgram(prog);
+        gl.uniform2f(uloc.uRes, canvas.width, canvas.height);
+
+        const { anchor, dir } = getAnchorAndDir(cfg.raysOrigin, canvas.width, canvas.height);
+        gl.uniform2f(uloc.uRayPos, anchor[0], anchor[1]);
+        gl.uniform2f(uloc.uRayDir, dir[0],    dir[1]);
+    }
+
+    // ── Render loop ─────────────────────────────────────────
+    function loop(ts) {
+        if (!alive || !gl) return;
+
+        gl.useProgram(prog);
+        gl.uniform1f(uloc.uTime, ts * 0.001);
+
+        /* Smooth mouse lerp */
         if (cfg.followMouse) {
-            window.addEventListener('mousemove', onMouseMove);
+            smMouse.x += (mouse.x - smMouse.x) * 0.08;
+            smMouse.y += (mouse.y - smMouse.y) * 0.08;
+            gl.uniform2f(uloc.uMouse, smMouse.x, smMouse.y);
         }
-        renderer._updatePlacement = updatePlacement; // Simpan referensi untuk cleanup
 
-        updatePlacement();
-        animId = requestAnimationFrame(loop);
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbuf);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+        rafId = requestAnimationFrame(loop);
     }
 
-    // ── Fungsi cleanup (bebaskan GPU & memory) ────────────────
-    function cleanup() {
-        if (animId) {
-            cancelAnimationFrame(animId);
-            animId = null;
-        }
-
-        if (renderer) {
-            window.removeEventListener('resize', renderer._updatePlacement);
-            window.removeEventListener('mousemove', onMouseMove);
-
-            try {
-                const ext = renderer.gl.getExtension('WEBGL_lose_context');
-                if (ext) ext.loseContext(); // Paksa GPU release context
-                const canvas = renderer.gl.canvas;
-                if (canvas?.parentNode) canvas.parentNode.removeChild(canvas);
-            } catch (_) { /* abaikan */ }
-
-            renderer = null;
-        }
-
-        uniforms  = null;
-        mesh      = null;
-        isRunning = false;
+    // ── Mouse listener ──────────────────────────────────────
+    function onMouse(e) {
+        const r = container.getBoundingClientRect();
+        mouse.x = (e.clientX - r.left) / r.width;
+        mouse.y = (e.clientY - r.top)  / r.height;
     }
 
-    // ── IntersectionObserver: hemat GPU saat tidak terlihat ──
-    // RAF hanya berjalan saat container masuk viewport (10%+),
-    // otomatis berhenti dan membersihkan GPU saat keluar viewport.
-    const observer = new IntersectionObserver(entries => {
-        if (entries[0].isIntersecting) {
-            initWebGL(); // Container terlihat → mulai render
-        } else {
-            cleanup();   // Container keluar → hentikan & bebaskan GPU
+    // ── Cleanup ─────────────────────────────────────────────
+    function destroy() {
+        alive = false;
+        if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+        window.removeEventListener('resize',    resize);
+        window.removeEventListener('mousemove', onMouse);
+        if (gl) {
+            if (vbuf)  gl.deleteBuffer(vbuf);
+            if (prog)  gl.deleteProgram(prog);
+            const ext = gl.getExtension('WEBGL_lose_context');
+            if (ext) ext.loseContext();
         }
-    }, { threshold: 0.1 });
+        if (canvas?.parentNode) canvas.parentNode.removeChild(canvas);
+        canvas = gl = prog = vbuf = uloc = null;
+    }
 
-    observer.observe(container);
+    // ── START: init setelah satu frame agar DOM layout siap ─
+    requestAnimationFrame(() => {
+        const ok = init();
+        if (!ok) return;
 
-    // ── Return destroy() untuk cleanup dari luar ──────────────
-    return function destroy() {
-        observer.disconnect();
-        cleanup();
-    };
+        alive = true;
+        window.addEventListener('resize',    resize,  { passive: true });
+        if (cfg.followMouse) {
+            window.addEventListener('mousemove', onMouse, { passive: true });
+        }
+        rafId = requestAnimationFrame(loop);
+    });
+
+    return destroy;
 }

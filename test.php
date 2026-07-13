@@ -1,4 +1,4 @@
 <?php
-require 'config/sparql.php';
-$q = 'PREFIX f: <'.ONTOLOGY_PREFIX.'> SELECT ?s ?p ?o WHERE { ?s f:bermainDi <http://www.semanticweb.org/filmku/ontologies/2026/filmku_ontology#Film_Obsession2026> }';
-print_r(get_bindings(sparql_query($q) ?? []));
+require_once 'config/sparql.php';
+$res = sparql_query('PREFIX f: <http://example.org/filmku#> SELECT ?judul ?poster WHERE { f:Dilan_1997 f:judul ?judul . OPTIONAL { f:Dilan_1997 f:poster_film ?poster . } } LIMIT 1');
+var_dump($res);

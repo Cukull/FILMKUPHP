@@ -89,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const toggleSidebar = () => {
             sidebar.classList.toggle('open');
             overlay.classList.toggle('active');
+            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
         };
 
         toggleBtn.addEventListener('click', toggleSidebar);
@@ -378,3 +379,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
+
+<!-- GSAP Dark Glassmorphism Hover Effects -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    if (typeof gsap === "undefined") return;
+
+    // Gunakan event delegation atau attach listener ke semua movie-card
+    const attachHoverEffects = () => {
+        document.querySelectorAll(".movie-card").forEach(card => {
+            // Prevent multiple bindings
+            if (card.dataset.hoverBound) return;
+            card.dataset.hoverBound = "true";
+
+            const overlay = card.querySelector(".overlay-info");
+            const poster = card.querySelector(".movie-poster");
+
+            card.addEventListener("mouseenter", () => {
+                gsap.to(overlay, { y: 0, opacity: 1, duration: 0.4, ease: "power2.out", overwrite: "auto" });
+                gsap.to(poster, { scale: 1.05, duration: 0.4, ease: "power2.out", overwrite: "auto" });
+            });
+
+            card.addEventListener("mouseleave", () => {
+                gsap.to(overlay, { y: "100%", opacity: 0, duration: 0.3, ease: "power2.in", overwrite: "auto" });
+                gsap.to(poster, { scale: 1, duration: 0.3, ease: "power2.in", overwrite: "auto" });
+            });
+        });
+    };
+    
+    attachHoverEffects();
+    // Jika ada elemen yang diload secara dinamis via AJAX, panggil lagi attachHoverEffects()
+});
+</script>
+

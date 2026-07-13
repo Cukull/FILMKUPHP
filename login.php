@@ -122,10 +122,14 @@ body.auth-page {
 /* ── Background WebGL Layer ── */
 #side-rays-bg {
     position: fixed;
-    inset: 0;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
     z-index: 0;
     pointer-events: none;
-    background: #080810;
+    overflow: hidden;
+    /* background transparan agar canvas WebGL terlihat */
+    background: transparent;
 }
 .auth-vignette {
     position: fixed;
@@ -929,26 +933,23 @@ body.auth-page {
 </script>
 
 <!-- LightRays WebGL Background (ES Module) -->
+<!-- ?v=3 → cache bust setelah update file -->
 <script type="module">
-    /**
-     * LightRays — menggantikan SideRays sebagai background login page.
-     * Import dari file Vanilla JS hasil konversi React Bits component.
-     */
-    import { initLightRays } from '/FILMKU_PHP/static/js/light-rays.js';
+    import { initLightRays } from '/FILMKU_PHP/static/js/light-rays.js?v=6';
 
     initLightRays('side-rays-bg', {
-        raysOrigin:     'top-center', // Ray memancar dari tengah atas
-        raysColor:      '#E50914',    // Merah sinematik ikonik FILMKU
-        raysSpeed:      2.0,          // Animasi lebih intens (dari 1.5)
-        lightSpread:    1.8,          // Lebar kipas sedikit diperbesar
-        rayLength:      1.5,          // Ray mencapai bawah layar
-        pulsating:      true,         // Aktifkan efek denyut dramatis
-        fadeDistance:   1.0,          // Jarak fade dari sumber
-        saturation:     1.8,          // Warna merah lebih membara
-        followMouse:    true,         // Ray mengikuti kursor mouse
-        mouseInfluence: 0.15,         // Pengaruh kursor sedikit ditambah
-        noiseAmount:    0.15,         // Grain noise sinematik (vintage feel)
-        distortion:     0.08,         // Gelombang cahaya lebih organik
+        raysOrigin:     'top-center',
+        raysColor:      '#E50914',
+        raysSpeed:      2.0,
+        lightSpread:    1.9,
+        rayLength:      1.6,
+        pulsating:      true,
+        fadeDistance:   1.1,
+        saturation:     1.9,
+        followMouse:    true,
+        mouseInfluence: 0.15,
+        noiseAmount:    0.12,
+        distortion:     0.08,
     });
 </script>
 
