@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String      @id @default(uuid())
+  email     String      @unique
+  password  String
+  name      String
+  role      Role        @default(USER)
+  avatarUrl String?
+  orders    Order[]
+  posts     ForumPost[]
+  createdAt DateTime    @default(now())
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Movie {
+  id          String      @id @default(uuid())
+  title       String
+  synopsis    String?
+  posterUrl   String?
+  trailerUrl  String?
+  durationMin Int?
+  rating      Float?
+  status      MovieStatus
+  category    Category?   @relation(fields: [categoryId], references: [id])
+  categoryId  String?
+  showtimes   Showtime[]
+}
+
+enum MovieStatus {
+  NOW_PLAYING
+  UPCOMING
+}
+
+model Category {
+  id     String  @id @default(uuid())
+  name   String  @unique
+  movies Movie[]
+}
+
+model Showtime {
+  id        String   @id @default(uuid())
+  movieId   String
+  movie     Movie    @relation(fields: [movieId], references: [id])
+  startTime DateTime
+  studio    String
+  price     Float
+  seats     Seat[]
+}
+
+model Seat {
+  id         String     @id @default(uuid())
+  showtimeId String
+  showtime   Showtime   @relation(fields: [showtimeId], references: [id])
+  seatNumber String
+  status     SeatStatus @default(AVAILABLE)
+  userId     String?
+  orderId    String?
+}
+
+enum SeatStatus {
+  AVAILABLE
+  LOCKED
+  BOOKED
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  totalAmount Float
+  status      OrderStatus @default(PENDING)
+  type        OrderType
+  createdAt   DateTime    @default(now())
+}
+
+enum OrderStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum OrderType {
+  TICKET_ONLY
+  FNB_ONLY
+  MIXED
+}
+
+model ForumTopic {
+  id        String      @id @default(uuid())
+  title     String
+  createdAt DateTime    @default(now())
+  posts     ForumPost[]
+}
+
+model ForumPost {
+  id        String     @id @default(uuid())
+  content   String
+  topicId   String
+  topic     ForumTopic @relation(fields: [topicId], references: [id])
+  userId    String
+  user      User       @relation(fields: [userId], references: [id])
+  createdAt DateTime   @default(now())
+}
