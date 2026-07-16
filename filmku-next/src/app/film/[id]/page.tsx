@@ -3,26 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import WishlistButton from "./WishlistButton";
 
-
-
-// Generate next 7 days for date picker
-function getNext7Days() {
-  const days = [];
-  const dayNames = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
-  const monthNames = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date();
-    d.setDate(d.getDate() + i);
-    days.push({
-      num: d.getDate(),
-      day: dayNames[d.getDay()],
-      month: monthNames[d.getMonth()],
-      isToday: i === 0,
-    });
-  }
-  return days;
-}
-
+import ShowtimeSelector from "./ShowtimeSelector";
 export default async function MovieDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
@@ -33,7 +14,6 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
 
   if (!movie) notFound();
 
-  const days = getNext7Days();
 
   // Build YouTube embed URL
   let embedUrl: string | null = null;
@@ -161,32 +141,6 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
         </div>
       </section>
 
-      {/* ── INFO BAR ── */}
-      <div className="detail-infobar">
-        <div className="detail-infobar-meta">
-          <span className="detail-infobar-title">{movie.title}</span>
-          {todayShowtimes[0] && (
-            <>
-              <span className="detail-infobar-item">
-                📅 Hari Ini, {new Date().toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
-              </span>
-              <span className="detail-infobar-item">
-                🕐 {new Date(todayShowtimes[0].startTime).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
-              </span>
-              <span className="detail-infobar-item">
-                🎭 {todayShowtimes[0].studio}
-              </span>
-            </>
-          )}
-        </div>
-        {todayShowtimes[0] && (
-          <Link href={`/kursi/${todayShowtimes[0].id}`} style={{ textDecoration: "none", flexShrink: 0 }}>
-            <button className="btn-primary" style={{ padding: "0.6rem 1.5rem", fontSize: "0.9rem" }}>
-              → Konfirmasi & Pesan Tiket
-            </button>
-          </Link>
-        )}
-      </div>
 
       {/* ── MAIN CONTENT ── */}
       <div className="detail-two-col" style={{ padding: "2.5rem 4rem", display: "flex", gap: "2.5rem", alignItems: "flex-start" }}>
@@ -309,68 +263,7 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
         </div>
 
         {/* ── RIGHT COLUMN: Date + Time Picker ── */}
-        <div id="jadwal" style={{ width: "340px", flexShrink: 0 }}>
-          <div className="glass-static" style={{ padding: "1.5rem" }}>
-            {/* Date Picker */}
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
-              <span style={{ fontSize: "0.8rem" }}>📅</span>
-              <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--text-primary)" }}>Pilih Tanggal Tayang</h3>
-            </div>
-            <div className="date-picker-scroll">
-              {days.map((day, i) => (
-                <div key={i} className={`date-pill ${day.isToday ? "active" : ""}`}>
-                  <span className="day-num">{day.num}</span>
-                  <span className="day-label">{day.day}</span>
-                  <span className="day-label" style={{ fontSize: "0.6rem" }}>{day.month}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Divider */}
-            <div style={{ height: "1px", background: "var(--glass-border)", margin: "1.25rem 0" }} />
-
-            {/* Time + Studio Picker */}
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
-              <span style={{ fontSize: "0.8rem" }}>🕐</span>
-              <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--text-primary)" }}>Pilih Jam Sesi & Lokasi Studio</h3>
-            </div>
-
-            {todayShowtimes.length > 0 ? (
-              <div className="session-grid">
-                {todayShowtimes.map((st) => {
-                  const availableCount = totalSeats - Math.floor(Math.random() * 15);
-                  const availClass = availableCount > 20 ? "ok" : availableCount > 5 ? "warn" : "full";
-                  const availText = availableCount > 5
-                    ? `Tersisa ${availableCount} kursi`
-                    : "Hampir Penuh!";
-                  return (
-                    <Link href={`/kursi/${st.id}`} key={st.id} className="session-pill" style={{ textDecoration: "none" }}>
-                      <span className="session-time">
-                        {new Date(st.startTime).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
-                      </span>
-                      <span className="session-studio">{st.studio}</span>
-                      <span className={`session-avail ${availClass}`}>{availText}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="empty-state">
-                <span className="empty-icon">🎭</span>
-                <p>Belum ada jadwal tayang tersedia.</p>
-              </div>
-            )}
-          </div>
-
-          {/* Back button */}
-          <div style={{ marginTop: "1rem" }}>
-            <Link href="/" style={{ textDecoration: "none" }}>
-              <button className="btn-outline" style={{ width: "100%" }}>
-                ← Kembali ke Beranda
-              </button>
-            </Link>
-          </div>
-        </div>
+        <ShowtimeSelector movieTitle={movie.title} movieId={movie.id} showtimes={movie.showtimes} />
       </div>
     </div>
   );
