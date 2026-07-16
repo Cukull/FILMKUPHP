@@ -43,7 +43,7 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
     setIsFetchingOMDB(true);
     setOmdbError('');
     try {
-      const res = await fetch(`/api/omdb?title=${encodeURIComponent(formData.title)}`);
+      const res = await fetch(`/api/fetch-movie?title=${encodeURIComponent(formData.title)}`);
       const data = await res.json();
       
       if (data.error) {
@@ -51,19 +51,19 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
       } else {
         setFormData(prev => ({
           ...prev,
-          title: data.title || prev.title,
-          synopsis: data.synopsis || prev.synopsis,
-          posterUrl: data.posterUrl || prev.posterUrl,
-          rating: data.rating?.toString() || prev.rating,
-          durationMin: data.durationMin?.toString() || prev.durationMin,
-          rottenTomatoes: data.rottenTomatoes || prev.rottenTomatoes,
-          metacritic: data.metacritic || prev.metacritic,
-          director: data.director || prev.director,
-          cast: data.cast || prev.cast,
+          title: data.data?.title || prev.title,
+          synopsis: data.data?.synopsis || prev.synopsis,
+          posterUrl: data.data?.posterUrl || prev.posterUrl,
+          rating: data.data?.rating?.toString() || prev.rating,
+          durationMin: data.data?.durationMin?.toString() || prev.durationMin,
+          rottenTomatoes: data.data?.rottenTomatoes || prev.rottenTomatoes,
+          metacritic: data.data?.metacritic || prev.metacritic,
+          director: data.data?.director || prev.director,
+          cast: data.data?.cast || prev.cast,
         }));
 
-        if (data.genre) {
-          const fetchedGenres = data.genre.split(',').map((g: string) => g.trim());
+        if (data.data?.genre) {
+          const fetchedGenres = data.data.genre.split(',').map((g: string) => g.trim());
           const validGenres = fetchedGenres.filter((g: string) => GENRES.includes(g));
           setSelectedGenres(validGenres);
         }
@@ -124,7 +124,7 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
               onClick={handleOMDBFetch}
               disabled={isFetchingOMDB}
               className="btn-primary"
-              style={{ padding: '0 1.5rem', whiteSpace: 'nowrap' }}
+              style={{ padding: '0 1.5rem', whiteSpace: 'nowrap', backgroundColor: '#e50914', border: 'none', borderRadius: '0.5rem', color: 'white', fontWeight: 600, cursor: 'pointer' }}
             >
               {isFetchingOMDB ? 'Menarik...' : 'Tarik Data OMDB'}
             </button>
@@ -221,43 +221,27 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
           </div>
         </div>
 
-        {/* Director & Cast */}
-        <div>
-          <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Sutradara (Kru)</label>
-          <input 
-            type="text" 
-            value={formData.director}
-            onChange={e => setFormData({...formData, director: e.target.value})}
-            className="input-field"
-          />
-        </div>
-        <div>
-          <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Aktor (Cast)</label>
-          <input 
-            type="text" 
-            value={formData.cast}
-            onChange={e => setFormData({...formData, cast: e.target.value})}
-            className="input-field"
-          />
-        </div>
+        {/* Director & Cast hidden as they are fetched automatically */}
+        <input type="hidden" value={formData.director} />
+        <input type="hidden" value={formData.cast} />
 
         {/* Media URLs */}
         <div>
-          <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>URL Poster Gambar</label>
+          <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Nama File Poster / URL</label>
           <input 
-            type="url" 
+            type="text" 
             value={formData.posterUrl}
             onChange={e => setFormData({...formData, posterUrl: e.target.value})}
             className="input-field"
           />
         </div>
         <div>
-          <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>ID Video YouTube Trailer</label>
+          <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Link Trailer YouTube</label>
           <input 
             type="text" 
             value={formData.trailerUrl}
             onChange={e => setFormData({...formData, trailerUrl: e.target.value})}
-            placeholder="Misal: dQw4w9WgXcQ (Hanya ID-nya saja, bukan url lengkap)"
+            placeholder="<iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/...&quot;>"
             className="input-field"
           />
         </div>

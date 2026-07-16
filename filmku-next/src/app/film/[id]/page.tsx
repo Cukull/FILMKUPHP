@@ -3,16 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import WishlistButton from "./WishlistButton";
 
-// Placeholder cast data (bisa diganti dengan data DB nanti)
-const PLACEHOLDER_CAST = [
-  { name: "Curry Barker", role: "Sutradara", avatar: "🎬" },
-  { name: "Michael Johnston", role: "Pemeran", avatar: "👤" },
-  { name: "Inde Navarrette", role: "Nikki", avatar: "👤" },
-  { name: "Cooper Tomlinson", role: "Pemeran", avatar: "👤" },
-  { name: "Megan Lawless", role: "Sarah", avatar: "👤" },
-  { name: "Andy Richter", role: "Carter", avatar: "👤" },
-  { name: "Haley Fitzgerald", role: "Pemeran", avatar: "👤" },
-];
+
 
 // Generate next 7 days for date picker
 function getNext7Days() {
@@ -66,6 +57,23 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
 
   const todayShowtimes = movie.showtimes;
   const totalSeats = 40;
+
+  // Parse Cast and Crew
+  let parsedCrew: any[] = [];
+  try {
+    if (movie.director) parsedCrew = JSON.parse(movie.director);
+  } catch (e) {
+    if (movie.director) parsedCrew = [{ name: movie.director, role: "Sutradara", imageUrl: "" }];
+  }
+
+  let parsedCast: any[] = [];
+  try {
+    if (movie.cast) parsedCast = JSON.parse(movie.cast);
+  } catch (e) {
+    if (movie.cast) parsedCast = [{ name: movie.cast, role: "Pemeran", imageUrl: "" }];
+  }
+
+  const allCastAndCrew = [...parsedCrew, ...parsedCast];
 
   return (
     <div className="page-transition">
@@ -197,22 +205,28 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
           </section>
 
           {/* Aktor & Kru */}
-          <section style={{ marginBottom: "2.5rem" }}>
-            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1.25rem", color: "var(--text-primary)" }}>
-              Aktor & Kru
-            </h2>
-            <div className="cast-scroll">
-              {PLACEHOLDER_CAST.map((person, i) => (
-                <div key={i} className="cast-item">
-                  <div className="cast-avatar" style={{ fontSize: "1.8rem" }}>
-                    {person.avatar}
+          {allCastAndCrew.length > 0 && (
+            <section style={{ marginBottom: "2.5rem" }}>
+              <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1.25rem", color: "var(--text-primary)" }}>
+                Aktor & Kru
+              </h2>
+              <div className="cast-scroll">
+                {allCastAndCrew.map((person, i) => (
+                  <div key={i} className="cast-item">
+                    {person.imageUrl ? (
+                      <img src={person.imageUrl} alt={person.name} className="cast-avatar" style={{ objectFit: 'cover' }} />
+                    ) : (
+                      <div className="cast-avatar" style={{ fontSize: "1.8rem", display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {person.role.toLowerCase().includes('director') || person.role.toLowerCase().includes('sutradara') ? "🎬" : "👤"}
+                      </div>
+                    )}
+                    <span className="cast-name">{person.name}</span>
+                    <span className="cast-role">{person.role}</span>
                   </div>
-                  <span className="cast-name">{person.name}</span>
-                  <span className="cast-role">{person.role}</span>
-                </div>
-              ))}
-            </div>
-          </section>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Trailer */}
           {embedUrl && (
@@ -235,26 +249,7 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
             </section>
           )}
 
-          {/* Kru & Aktor (OMDB Data) */}
-        {(movie.cast || movie.director) && (
-          <section style={{ marginBottom: "4rem" }}>
-            <h2 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "1.5rem" }}>Kru & Aktor</h2>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
-              {movie.director && (
-                <div className="glass" style={{ padding: "1rem 1.5rem", borderRadius: "1rem", flex: "1 1 300px" }}>
-                  <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: "0.25rem" }}>Sutradara</div>
-                  <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>{movie.director}</div>
-                </div>
-              )}
-              {movie.cast && (
-                <div className="glass" style={{ padding: "1rem 1.5rem", borderRadius: "1rem", flex: "2 1 400px" }}>
-                  <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: "0.25rem" }}>Pemeran</div>
-                  <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>{movie.cast}</div>
-                </div>
-              )}
-            </div>
-          </section>
-        )}
+
 
         {/* ── INFO PENAYANGAN ── */}
           <section style={{ marginBottom: "2.5rem" }}>
