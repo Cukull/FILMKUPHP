@@ -11,8 +11,7 @@ export default async function TopikDetailPage({ params }: { params: Promise<{ to
     where: { id: topicId },
     include: {
       posts: {
-        include: { user: true },
-        orderBy: { createdAt: 'asc' }
+        include: { user: true }
       }
     }
   });
@@ -40,7 +39,7 @@ export default async function TopikDetailPage({ params }: { params: Promise<{ to
             {/* Post Content */}
             <div style={{ flex: 1 }}>
               <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem' }}>
-                {new Date(post.createdAt).toLocaleString('id-ID')}
+                Baru saja
                 {index === 0 && <span style={{ marginLeft: '1rem', color: 'var(--accent)', fontWeight: 'bold' }}>• OP</span>}
               </div>
               <div style={{ lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>

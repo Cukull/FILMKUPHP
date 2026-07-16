@@ -12,6 +12,7 @@ const HERO_FILM = {
   backdrop: "https://image.tmdb.org/t/p/original/tElnmtQ6snFIg4VfS768kK9rS9X.jpg",
   rating: "8.3",
   genre: "Horror",
+  trailerUrl: "dQw4w9WgXcQ", // Example YouTube ID
 };
 
 const FEATURES = [
@@ -49,13 +50,18 @@ export default async function Home() {
   return (
     <div>
       {/* ── HERO BANNER ── */}
-      <section className="home-hero">
-        <div
-          className="home-hero-bg"
-          style={{ backgroundImage: `url("${HERO_FILM.backdrop}")` }}
-        />
-        <div className="home-hero-overlay" />
-        <div className="home-hero-content">
+      <section className="home-hero" style={{ position: 'relative', overflow: 'hidden' }}>
+        {/* YouTube iframe background */}
+        <div style={{ position: 'absolute', width: '100vw', height: '56.25vw', minHeight: '100vh', minWidth: '177.77vh', transform: 'translate(-50%, -50%)', top: '50%', left: '50%', zIndex: 0, pointerEvents: 'none' }}>
+          <iframe 
+            src={`https://www.youtube.com/embed/${HERO_FILM.trailerUrl}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=${HERO_FILM.trailerUrl}&modestbranding=1`} 
+            style={{ width: '100%', height: '100%', border: 'none', transform: 'scale(1.2)' }}
+            allow="autoplay; encrypted-media"
+            title="Trailer"
+          />
+        </div>
+        <div className="home-hero-overlay" style={{ zIndex: 1, position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(to right, var(--bg-base) 0%, rgba(8,8,16,0.8) 40%, rgba(8,8,16,0.2) 100%), linear-gradient(to top, var(--bg-base) 0%, transparent 40%)' }} />
+        <div className="home-hero-content" style={{ zIndex: 2, position: 'relative' }}>
           {/* Badges */}
           <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem", flexWrap: "wrap" }}>
             <span className="badge badge-gold">⭐ {HERO_FILM.rating} / 10</span>

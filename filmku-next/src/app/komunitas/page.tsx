@@ -7,8 +7,7 @@ export default async function KomunitasPage() {
   const topics = await prisma.forumTopic.findMany({
     include: {
       posts: {
-        include: { user: true },
-        orderBy: { createdAt: 'asc' }
+        include: { user: true }
       }
     },
     orderBy: { createdAt: 'desc' }

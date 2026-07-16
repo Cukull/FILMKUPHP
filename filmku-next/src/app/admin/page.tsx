@@ -37,7 +37,7 @@ export default async function AdminDashboard() {
   });
 
   return (
-    <div style={{ padding: '2rem 4rem' }}>
+    <div>
       <h1 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '2rem' }}>Dashboard Admin ⚙️</h1>
       
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem', marginBottom: '4rem' }}>

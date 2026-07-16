@@ -37,6 +37,14 @@ model Movie {
   category    Category?   @relation(fields: [categoryId], references: [id])
   categoryId  String?
   showtimes   Showtime[]
+
+  // OMDB integration fields
+  rottenTomatoes String?
+  metacritic     String?
+  cast           String?
+  director       String?
+  genre          String?
+  sections       String?
 }
 
 enum MovieStatus {
@@ -112,5 +120,14 @@ model ForumPost {
   topic     ForumTopic @relation(fields: [topicId], references: [id])
   userId    String
   user      User       @relation(fields: [userId], references: [id])
-  createdAt DateTime   @default(now())
+}
+
+model FnBItem {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+  imageUrl    String?
+  category    String   // e.g., "Snack", "Minuman", "Combo"
+  isAvailable Boolean  @default(true)
 }

@@ -47,10 +47,14 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
   // Build YouTube embed URL
   let embedUrl: string | null = null;
   if (movie.trailerUrl) {
+    // Check if it's already an embed URL or video ID
+    let videoId = movie.trailerUrl;
     const match = movie.trailerUrl.match(/(?:v=|\/embed\/|youtu\.be\/)([^&?\/]+)/);
-    const videoId = match ? match[1] : null;
+    if (match) {
+      videoId = match[1];
+    }
     if (videoId) {
-      embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&rel=0`;
+      embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=${videoId}&modestbranding=1`;
     }
   }
 
@@ -66,17 +70,30 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
   return (
     <div className="page-transition">
       {/* ── HERO BACKDROP ── */}
-      <section className="hero-backdrop" style={{ minHeight: "85vh" }}>
-        <img className="hero-backdrop-img" src={backdropUrl} alt={movie.title} />
-        <div className="hero-backdrop-overlay" />
+      <section className="hero-backdrop" style={{ minHeight: "85vh", position: 'relative', overflow: 'hidden' }}>
+        {embedUrl ? (
+          <div style={{ position: 'absolute', width: '100vw', height: '56.25vw', minHeight: '100vh', minWidth: '177.77vh', transform: 'translate(-50%, -50%)', top: '50%', left: '50%', zIndex: 0, pointerEvents: 'none' }}>
+            <iframe 
+              src={embedUrl}
+              style={{ width: '100%', height: '100%', border: 'none', transform: 'scale(1.2)' }}
+              allow="autoplay; encrypted-media"
+              title={movie.title}
+            />
+          </div>
+        ) : (
+          <img className="hero-backdrop-img" src={backdropUrl} alt={movie.title} style={{ zIndex: 0 }} />
+        )}
+        <div className="hero-backdrop-overlay" style={{ zIndex: 1, position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(to right, var(--bg-base) 0%, rgba(8,8,16,0.8) 40%, rgba(8,8,16,0.2) 100%), linear-gradient(to top, var(--bg-base) 0%, transparent 40%)' }} />
 
         <div className="hero-content" style={{ paddingBottom: "4rem" }}>
           {/* Badges */}
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1.25rem" }}>
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1.25rem", zIndex: 2, position: 'relative' }}>
             {movie.rating && <span className="badge badge-gold">⭐ {movie.rating} / 10</span>}
+            {movie.rottenTomatoes && <span className="badge" style={{ background: '#fa320a', color: 'white' }}>🍅 {movie.rottenTomatoes}</span>}
+            {movie.metacritic && <span className="badge" style={{ background: '#f5c518', color: 'black' }}>Ⓜ️ {movie.metacritic}</span>}
             {movie.durationMin && <span className="badge badge-muted">⏱ {durationHours}j {durationMins}m</span>}
             <span className="badge badge-muted">HD</span>
-            {movie.category && <span className="badge badge-accent">{movie.category.name}</span>}
+            {(movie.category || movie.genre) && <span className="badge badge-accent">{movie.genre || movie.category?.name}</span>}
             {movie.status === "NOW_PLAYING" && <span className="badge badge-now-playing" style={{ borderRadius: "999px" }}>Sedang Tayang</span>}
           </div>
 
@@ -218,7 +235,28 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
             </section>
           )}
 
-          {/* INFO PENAYANGAN */}
+          {/* Kru & Aktor (OMDB Data) */}
+        {(movie.cast || movie.director) && (
+          <section style={{ marginBottom: "4rem" }}>
+            <h2 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "1.5rem" }}>Kru & Aktor</h2>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+              {movie.director && (
+                <div className="glass" style={{ padding: "1rem 1.5rem", borderRadius: "1rem", flex: "1 1 300px" }}>
+                  <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: "0.25rem" }}>Sutradara</div>
+                  <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>{movie.director}</div>
+                </div>
+              )}
+              {movie.cast && (
+                <div className="glass" style={{ padding: "1rem 1.5rem", borderRadius: "1rem", flex: "2 1 400px" }}>
+                  <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: "0.25rem" }}>Pemeran</div>
+                  <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>{movie.cast}</div>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* ── INFO PENAYANGAN ── */}
           <section style={{ marginBottom: "2.5rem" }}>
             <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1rem", color: "var(--text-primary)" }}>
               ℹ Info Penayangan
