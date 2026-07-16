@@ -168,7 +168,7 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
       </div>
 
       {/* ── MAIN CONTENT ── */}
-      <div style={{ padding: "2.5rem 4rem", display: "flex", gap: "2.5rem", alignItems: "flex-start" }}>
+      <div className="detail-two-col" style={{ padding: "2.5rem 4rem", display: "flex", gap: "2.5rem", alignItems: "flex-start" }}>
 
         {/* ── LEFT COLUMN ── */}
         <div style={{ flex: 1, minWidth: 0 }}>

@@ -1096,3 +1096,189 @@ body {
   font-weight: 700;
 }
 
+/* ══════════════════════════════════════════════════════
+   GSAP ANIMATION INITIAL STATE
+   (elemen dimulai invisible, GSAP akan reveal-nya)
+════════════════════════════════════════════════════════ */
+.gsap-fade-up {
+  opacity: 0;
+  transform: translateY(40px);
+}
+.gsap-fade-in {
+  opacity: 0;
+}
+.gsap-slide-left {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+/* ══════════════════════════════════════════════════════
+   RESPONSIVE — TABLET (max-width: 900px)
+════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  /* Navbar */
+  .navbar {
+    padding: 0 1.5rem;
+    height: 64px;
+  }
+  .navbar ul {
+    display: none !important; /* hide nav links on tablet */
+  }
+
+  /* Hero */
+  .home-hero-content,
+  .hero-content {
+    padding: 0 1.5rem 2.5rem;
+    max-width: 100%;
+  }
+  .home-hero { height: 55vh; }
+
+  /* Movie Lane */
+  .movie-lane { padding: 0 1.5rem; }
+  .movie-lane-card { width: 140px; }
+  .movie-lane-card img { height: 210px; }
+
+  /* Feature grid: 2 kolom */
+  .feature-grid { grid-template-columns: repeat(2, 1fr); }
+  .feature-section { padding: 3rem 1.5rem; }
+
+  /* Info Penayangan: 2 kolom */
+  .info-penayangan-grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* Detail film: stack vertical */
+  .hero-backdrop { min-height: 65vh; }
+
+  /* Detail infobar */
+  .detail-infobar { padding: 1rem 1.5rem; }
+
+  /* FAQ */
+  .faq-section { padding: 2rem 1.5rem 3rem; }
+
+  /* Section title */
+  .section-title { padding: 1.5rem 1.5rem 0.75rem; }
+
+  /* Footer */
+  .footer-premium { padding: 1.5rem; }
+  .footer-top { flex-direction: column; align-items: flex-start; gap: 1rem; }
+
+  /* Order sidebar */
+  .order-sidebar {
+    position: static;
+    min-width: 100%;
+    max-width: 100%;
+  }
+
+  /* Seat selection layout */
+  .kursi-layout { flex-direction: column !important; }
+
+  /* Date picker */
+  .date-pill { min-width: 52px; padding: 0.6rem 0.75rem; }
+}
+
+/* ══════════════════════════════════════════════════════
+   RESPONSIVE — MOBILE (max-width: 600px)
+════════════════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  /* Body */
+  body { font-size: 15px; }
+
+  /* Navbar */
+  .navbar { padding: 0 1rem; height: 58px; }
+  .navbar > div:first-child { gap: 1rem; }
+
+  /* Hero Homepage */
+  .home-hero { height: 70vh; min-height: 420px; }
+  .home-hero-content {
+    padding: 0 1rem 2rem;
+  }
+  .home-hero-content h1 { font-size: 1.75rem !important; }
+  .home-hero-content p { display: none; }
+
+  /* Hero Film Detail */
+  .hero-backdrop { min-height: 60vh; }
+  .hero-content {
+    padding: 0 1rem 2rem;
+    max-width: 100%;
+  }
+  .hero-content h1 { font-size: 1.6rem !important; }
+  .hero-content p { display: none; }
+
+  /* Movie Lane */
+  .movie-lane { padding: 0 1rem; }
+  .movie-lane-card { width: 120px; }
+  .movie-lane-card img { height: 180px; }
+  .movie-lane-title { font-size: 1rem; }
+
+  /* Feature grid: 1 kolom */
+  .feature-grid { grid-template-columns: 1fr; }
+
+  /* Info penayangan: 1 kolom */
+  .info-penayangan-grid { grid-template-columns: 1fr; }
+
+  /* Cast scroll */
+  .cast-item { width: 65px; }
+  .cast-avatar { width: 58px; height: 58px; }
+
+  /* Info bar */
+  .detail-infobar {
+    padding: 0.75rem 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  .detail-infobar-meta { flex-direction: column; gap: 0.3rem; }
+
+  /* Seat grid */
+  .seat { width: 28px; height: 28px; font-size: 0.45rem; border-radius: 4px; }
+  .seat-row { gap: 0.25rem; }
+  .seat-grid { gap: 0.35rem; }
+  .seat-aisle { width: 12px; }
+  .seat-row-label { display: none; }
+
+  /* Cinema screen */
+  .cinema-screen { width: 90%; }
+
+  /* Poster detail */
+  .poster-detail { width: 100%; min-width: unset; }
+
+  /* Film detail main content */
+  .detail-two-col { flex-direction: column !important; }
+
+  /* Session pills */
+  .session-grid { gap: 0.5rem; }
+  .session-pill { min-width: 75px; padding: 0.5rem 0.75rem; }
+
+  /* FAQ */
+  .faq-section { padding: 1.5rem 1rem 3rem; max-width: 100%; }
+  .faq-title { font-size: 1.3rem; }
+
+  /* Footer */
+  .footer-premium { padding: 1.25rem 1rem; }
+  .footer-links { flex-wrap: wrap; gap: 0.75rem; }
+  .footer-bottom { display: none; }
+
+  /* Buttons */
+  .btn-primary, .btn-outline { padding: 0.6rem 1.2rem; font-size: 0.85rem; }
+
+  /* Page padding */
+  .page-transition > div:not(nav):not(footer) {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* Glass static */
+  .glass-static { border-radius: 0.75rem; }
+
+  /* Sticky CTA bar */
+  .sticky-cta { padding: 0.75rem 1rem !important; }
+
+  /* Badge row wrapping */
+  .badge { font-size: 0.7rem; padding: 0.2rem 0.6rem; }
+
+  /* Date picker */
+  .date-picker-scroll { gap: 0.4rem; }
+  .date-pill { min-width: 48px; padding: 0.5rem 0.6rem; }
+  .date-pill .day-num { font-size: 1rem; }
+}
+
+
