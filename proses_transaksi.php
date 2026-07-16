@@ -104,9 +104,15 @@ if (!empty($email)) {
     // Generate HTML Body
     $htmlBody = generateETicketHTML($film_title, $tanggal_formatted, $jam_safe, $kursi, $total_formatted, $real_poster_url, $is_local_poster);
     
+    // Generate QR Code URL to be embedded by Mailer
+    $qr_data = urlencode("FILMKU-TICKET-" . $film_title . "-" . $tanggal_formatted . "-" . $kursi);
+    $qr_url = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . $qr_data . "&bgcolor=ffffff&color=000000";
+    
     // Kirim Email
     $subject = "E-Tiket Anda: " . $film_title;
-    sendETicketEmail($email, $subject, $htmlBody, $poster_absolute_path);
+    // Gunakan $poster_absolute_path jika lokal, jika tidak gunakan $real_poster_url
+    $final_poster_path = $is_local_poster ? $poster_absolute_path : $real_poster_url;
+    sendETicketEmail($email, $subject, $htmlBody, $final_poster_path, $qr_url);
 }
 
 // Save to history session for mockup

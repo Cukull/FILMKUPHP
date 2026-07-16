@@ -9,10 +9,13 @@
 function generateETicketHTML($filmTitle, $tanggal_tayang, $jam_sesi, $kursi_str, $total_bayar, $poster_url, $is_local = false) {
     // Generate QR Code dinamis menggunakan api.qrserver.com
     $qr_data = urlencode("FILMKU-TICKET-" . $filmTitle . "-" . $tanggal_tayang . "-" . $kursi_str);
+    // Kita tidak menggunakan URL QR langsung di src agar tidak diblokir Spam
+    // Kita akan generate file URL dan minta mailer.php untuk mendownload & attach (embed)
     $qr_url = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . $qr_data . "&bgcolor=ffffff&color=000000";
     
-    // Gunakan Content-ID (CID) jika file adalah gambar lokal yang di-embed
-    $img_src = $is_local ? "cid:poster_img" : $poster_url;
+    // SELALU gunakan Content-ID (CID) untuk semua gambar agar aman dari filter Spam Gmail
+    $img_src = "cid:poster_img";
+    $qr_src  = "cid:qr_img";
 
     return <<<HTML
 <!DOCTYPE html>
@@ -78,7 +81,7 @@ function generateETicketHTML($filmTitle, $tanggal_tayang, $jam_sesi, $kursi_str,
                     </td>
                     <td align="right" valign="middle">
                         <div style="background: #fff; padding: 6px; border-radius: 8px; display: inline-block;">
-                            <img src="{$qr_url}" alt="QR Code" width="80" height="80" style="display: block;">
+                            <img src="{$qr_src}" alt="QR Code" width="80" height="80" style="display: block;">
                         </div>
                     </td>
                 </tr>
