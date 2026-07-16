@@ -3,9 +3,11 @@ import FilmForm from '../../FilmForm';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-export default async function EditFilmPage({ params }: { params: { id: string } }) {
+export default async function EditFilmPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  
   const movie = await prisma.movie.findUnique({
-    where: { id: params.id }
+    where: { id }
   });
 
   if (!movie) {
