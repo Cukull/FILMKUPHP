@@ -54,8 +54,8 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
           title: data.data?.title || prev.title,
           synopsis: data.data?.synopsis || prev.synopsis,
           posterUrl: data.data?.posterUrl || prev.posterUrl,
-          rating: data.data?.rating?.toString() || prev.rating,
-          durationMin: data.data?.durationMin?.toString() || prev.durationMin,
+          rating: data.data?.rating ? String(data.data.rating) : prev.rating,
+          durationMin: data.data?.durationMin ? String(data.data.durationMin) + 'm' : prev.durationMin,
           rottenTomatoes: data.data?.rottenTomatoes || prev.rottenTomatoes,
           metacritic: data.data?.metacritic || prev.metacritic,
           director: data.data?.director || prev.director,
@@ -78,15 +78,19 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     startTransition(async () => {
+      // clean duration string (e.g. "120m" -> 120)
+      let parsedDuration = formData.durationMin;
+      if (typeof parsedDuration === 'string') {
+        const match = parsedDuration.match(/(\d+)/);
+        parsedDuration = match ? match[1] : '';
+      }
+
       const payload = {
         ...formData,
-        durationMin: formData.durationMin ? Number(formData.durationMin) : undefined,
+        durationMin: parsedDuration ? Number(parsedDuration) : undefined,
         rating: formData.rating ? Number(formData.rating) : undefined,
         genre: selectedGenres.join(', '),
         sections: selectedSections.join(', '),
-        // Dummy categoryId since it's required by Prisma schema
-        // Normally we'd select this, but we're relying on sections now.
-        // We can just leave it undefined if it's optional in update, or null.
       };
 
       try {
@@ -103,53 +107,90 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
     });
   };
 
+  const inputStyle = {
+    width: '100%',
+    padding: '0.8rem 1rem',
+    borderRadius: '0.5rem',
+    background: 'rgba(255,255,255,0.03)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    color: '#fff',
+    fontSize: '0.9rem',
+    outline: 'none',
+    transition: 'border-color 0.2s',
+  };
+
+  const labelStyle = {
+    display: 'block',
+    marginBottom: '0.5rem',
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: '0.85rem',
+  };
+
   return (
-    <form onSubmit={handleSubmit} style={{ maxWidth: '800px' }}>
-      <div className="glass" style={{ padding: '2rem', borderRadius: '1rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <form onSubmit={handleSubmit} style={{ maxWidth: '700px' }}>
+      <div style={{ 
+        padding: '2rem', 
+        borderRadius: '1rem', 
+        background: 'rgba(15, 15, 25, 0.4)',
+        border: '1px solid rgba(255,255,255,0.05)',
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: '1.5rem',
+        boxShadow: '0 10px 40px rgba(0,0,0,0.5)'
+      }}>
         
         {/* Title + OMDB */}
         <div>
-          <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Judul Film</label>
+          <label style={labelStyle}>Judul Film</label>
           <div style={{ display: 'flex', gap: '1rem' }}>
             <input 
               type="text" 
               value={formData.title}
               onChange={e => setFormData({...formData, title: e.target.value})}
               required
-              className="input-field"
-              style={{ flex: 1 }}
+              style={{ ...inputStyle, flex: 1 }}
             />
             <button 
               type="button" 
               onClick={handleOMDBFetch}
               disabled={isFetchingOMDB}
-              className="btn-primary"
-              style={{ padding: '0 1.5rem', whiteSpace: 'nowrap', backgroundColor: '#e50914', border: 'none', borderRadius: '0.5rem', color: 'white', fontWeight: 600, cursor: 'pointer' }}
+              style={{ 
+                padding: '0 1.5rem', 
+                whiteSpace: 'nowrap', 
+                backgroundColor: '#e50914', 
+                border: 'none', 
+                borderRadius: '0.5rem', 
+                color: 'white', 
+                fontWeight: 600, 
+                cursor: isFetchingOMDB ? 'not-allowed' : 'pointer',
+                opacity: isFetchingOMDB ? 0.7 : 1
+              }}
             >
               {isFetchingOMDB ? 'Menarik...' : 'Tarik Data OMDB'}
             </button>
           </div>
-          {omdbError && <div style={{ color: 'var(--primary)', fontSize: '0.8rem', marginTop: '0.5rem' }}>{omdbError}</div>}
+          {omdbError && <div style={{ color: '#e50914', fontSize: '0.8rem', marginTop: '0.5rem' }}>{omdbError}</div>}
         </div>
 
         {/* Rating & Durasi */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Rating (1-10)</label>
+            <label style={labelStyle}>Rating (1-10)</label>
             <input 
               type="text" 
               value={formData.rating}
               onChange={e => setFormData({...formData, rating: e.target.value})}
-              className="input-field"
+              style={inputStyle}
             />
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Durasi (menit)</label>
+            <label style={labelStyle}>Durasi</label>
             <input 
-              type="number" 
+              type="text" 
               value={formData.durationMin}
               onChange={e => setFormData({...formData, durationMin: e.target.value})}
-              className="input-field"
+              placeholder="Misal: 2h 53m atau 173m"
+              style={inputStyle}
             />
           </div>
         </div>
@@ -157,35 +198,45 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
         {/* RT & Metacritic */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Rating Rotten Tomatoes</label>
+            <label style={labelStyle}>Rating Rotten Tomatoes</label>
             <input 
               type="text" 
               value={formData.rottenTomatoes}
               onChange={e => setFormData({...formData, rottenTomatoes: e.target.value})}
-              placeholder="Misal: 79%"
-              className="input-field"
+              placeholder="79%"
+              style={inputStyle}
             />
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Rating Metacritic</label>
+            <label style={labelStyle}>Rating Metacritic</label>
             <input 
               type="text" 
               value={formData.metacritic}
               onChange={e => setFormData({...formData, metacritic: e.target.value})}
-              placeholder="Misal: 73/100"
-              className="input-field"
+              placeholder="Contoh: 73/100"
+              style={inputStyle}
             />
           </div>
         </div>
 
         {/* Checkboxes Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '1.5rem', alignItems: 'start' }}>
           {/* Genre */}
           <div>
-            <label style={{ display: 'block', marginBottom: '1rem', color: 'var(--text-secondary)' }}>Genre</label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+            <label style={labelStyle}>Genre</label>
+            <div style={{ 
+              border: '1px solid rgba(255,255,255,0.1)', 
+              borderRadius: '0.5rem',
+              padding: '1rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.75rem',
+              background: 'rgba(255,255,255,0.01)',
+              maxHeight: '200px',
+              overflowY: 'auto'
+            }} className="hide-scrollbar">
               {GENRES.map(g => (
-                <label key={g} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
+                <label key={g} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', cursor: 'pointer' }}>
                   <input 
                     type="checkbox" 
                     checked={selectedGenres.includes(g)}
@@ -193,6 +244,7 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
                       if (e.target.checked) setSelectedGenres([...selectedGenres, g]);
                       else setSelectedGenres(selectedGenres.filter(x => x !== g));
                     }}
+                    style={{ accentColor: '#0070f3' }}
                   />
                   {g}
                 </label>
@@ -202,10 +254,18 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
           
           {/* Sections */}
           <div>
-            <label style={{ display: 'block', marginBottom: '1rem', color: 'var(--text-secondary)' }}>Kategori Section Dashboard</label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+            <label style={labelStyle}>Kategori Section Dashboard (Pilih 1 atau lebih)</label>
+            <div style={{ 
+              border: '1px solid rgba(255,255,255,0.1)', 
+              borderRadius: '0.5rem',
+              padding: '1rem',
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '0.75rem',
+              background: 'rgba(255,255,255,0.01)',
+            }}>
               {SECTIONS.map(s => (
-                <label key={s} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
+                <label key={s} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.85rem', cursor: 'pointer', lineHeight: 1.2 }}>
                   <input 
                     type="checkbox" 
                     checked={selectedSections.includes(s)}
@@ -213,11 +273,18 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
                       if (e.target.checked) setSelectedSections([...selectedSections, s]);
                       else setSelectedSections(selectedSections.filter(x => x !== s));
                     }}
+                    style={{ accentColor: '#0070f3', marginTop: '0.1rem' }}
                   />
                   {s}
                 </label>
               ))}
             </div>
+            
+            <input 
+              type="text" 
+              placeholder="Atau ketik nama section baru di sini..." 
+              style={{ ...inputStyle, marginTop: '0.75rem', background: 'transparent' }}
+            />
           </div>
         </div>
 
@@ -227,32 +294,32 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
 
         {/* Media URLs */}
         <div>
-          <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Nama File Poster / URL</label>
+          <label style={labelStyle}>Nama File Poster / URL</label>
           <input 
             type="text" 
             value={formData.posterUrl}
             onChange={e => setFormData({...formData, posterUrl: e.target.value})}
-            className="input-field"
+            style={inputStyle}
           />
         </div>
         <div>
-          <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Link Trailer YouTube</label>
+          <label style={labelStyle}>Link Trailer YouTube</label>
           <input 
             type="text" 
             value={formData.trailerUrl}
             onChange={e => setFormData({...formData, trailerUrl: e.target.value})}
             placeholder="<iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/...&quot;>"
-            className="input-field"
+            style={inputStyle}
           />
         </div>
 
         {/* Status */}
         <div>
-          <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Status Tayang</label>
+          <label style={labelStyle}>Status Tayang</label>
           <select 
             value={formData.status}
             onChange={e => setFormData({...formData, status: e.target.value})}
-            className="input-field"
+            style={{ ...inputStyle, appearance: 'auto' }}
           >
             <option value="NOW_PLAYING">Sedang Tayang (Now Playing)</option>
             <option value="UPCOMING">Akan Datang (Upcoming)</option>
@@ -261,11 +328,11 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
 
         {/* Synopsis */}
         <div>
-          <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Sinopsis</label>
+          <label style={labelStyle}>Sinopsis</label>
           <textarea 
             value={formData.synopsis}
             onChange={e => setFormData({...formData, synopsis: e.target.value})}
-            className="input-field"
+            style={{ ...inputStyle, resize: 'vertical' }}
             rows={5}
           />
         </div>
@@ -273,8 +340,21 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
         <button 
           type="submit" 
           disabled={isPending}
-          className="btn-primary"
-          style={{ padding: '1rem', fontSize: '1.1rem', marginTop: '1rem' }}
+          style={{ 
+            padding: '1rem', 
+            fontSize: '1rem', 
+            marginTop: '0.5rem',
+            backgroundColor: '#e50914',
+            border: 'none',
+            borderRadius: '0.5rem',
+            color: 'white',
+            fontWeight: 700,
+            cursor: isPending ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem'
+          }}
         >
           {isPending ? 'Menyimpan...' : '💾 Simpan Perubahan'}
         </button>
