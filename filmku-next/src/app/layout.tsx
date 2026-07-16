@@ -46,7 +46,7 @@ export default async function RootLayout({
               {/* Kiri: Hamburger + Logo + Nav Links */}
               <div style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
                 {/* MobileNav (Hamburger + Sidebar) */}
-                <MobileNav />
+                <MobileNav session={session} />
 
                 {/* Logo */}
                 <Link href="/" style={{ textDecoration: "none", flexShrink: 0 }}>

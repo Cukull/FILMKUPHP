@@ -35,7 +35,18 @@ export async function getSession() {
   const session = (await cookies()).get('session')?.value;
   if (!session) return null;
   try {
-    return await decrypt(session);
+    const payload = await decrypt(session);
+    
+    // Fetch latest user from DB to ensure role is up to date
+    const { prisma } = await import('@/lib/prisma');
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { role: true }
+    });
+    
+    if (!user) return null; // user deleted or not found
+    
+    return { ...payload, role: user.role };
   } catch (err) {
     return null;
   }

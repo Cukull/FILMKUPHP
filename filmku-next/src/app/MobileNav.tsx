@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
-export default function MobileNav() {
+export default function MobileNav({ session }: { session?: any }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -37,8 +37,9 @@ export default function MobileNav() {
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
-          backdropFilter: 'blur(4px)',
+          background: 'rgba(0,0,0,0.6)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
           opacity: isOpen ? 1 : 0,
           pointerEvents: isOpen ? 'auto' : 'none',
           transition: 'opacity 0.3s ease',
@@ -87,7 +88,7 @@ export default function MobileNav() {
           </button>
         </div>
 
-        <div style={{ padding: '2rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '2rem', overflowY: 'auto' }}>
+        <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', overflowY: 'auto' }}>
           
           {/* MENU UTAMA */}
           <div>
@@ -122,16 +123,18 @@ export default function MobileNav() {
           </div>
 
           {/* ADMIN PANEL */}
-          <div>
-            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.1em', marginBottom: '1rem' }}>ADMIN PANEL</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <Link href="/admin" onClick={() => setIsOpen(false)} style={{ textDecoration: 'none' }}>
-                <div style={{ padding: '0.75rem 1rem', borderRadius: '0.5rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <span>📊</span> <span style={{ fontWeight: 600 }}>Dashboard</span>
-                </div>
-              </Link>
+          {session?.role === 'ADMIN' && (
+            <div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.1em', marginBottom: '0.75rem' }}>ADMIN PANEL</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <Link href="/admin" onClick={() => setIsOpen(false)} style={{ textDecoration: 'none' }}>
+                  <div style={{ padding: '0.75rem 1rem', borderRadius: '0.5rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.75rem', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.03)' }}>
+                    <span>📊</span> <span style={{ fontWeight: 600 }}>Dashboard Admin</span>
+                  </div>
+                </Link>
+              </div>
             </div>
-          </div>
+          )}
           
         </div>
       </div>
