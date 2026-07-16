@@ -10,6 +10,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Ringkasan', path: '/admin', icon: '📊' },
     { name: 'Kelola Film', path: '/admin/film', icon: '🎬' },
     { name: 'Kelola Menu F&B', path: '/admin/fnb', icon: '🍔' },
+    { name: 'Kelola User', path: '/admin/users', icon: '👥' },
   ];
 
   return (

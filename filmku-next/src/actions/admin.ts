@@ -158,3 +158,13 @@ export async function deleteFnB(id: string) {
   revalidatePath('/cafe');
   return { success: true };
 }
+
+export async function updateUserRole(userId: string, role: 'ADMIN' | 'USER') {
+  await requireAdmin();
+  await prisma.user.update({
+    where: { id: userId },
+    data: { role }
+  });
+  revalidatePath('/admin/users');
+  return { success: true };
+}
