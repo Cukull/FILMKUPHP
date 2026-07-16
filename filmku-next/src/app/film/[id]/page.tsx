@@ -4,6 +4,7 @@ import Link from "next/link";
 import WishlistButton from "./WishlistButton";
 
 import ShowtimeSelector from "./ShowtimeSelector";
+import HeroTrailer from "./HeroTrailer";
 export default async function MovieDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
@@ -17,15 +18,17 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
 
   // Build YouTube embed URL
   let embedUrl: string | null = null;
+  let videoId: string | null = null;
+  
   if (movie.trailerUrl) {
     // Check if it's already an embed URL or video ID
-    let videoId = movie.trailerUrl;
+    videoId = movie.trailerUrl;
     const match = movie.trailerUrl.match(/(?:v=|\/embed\/|youtu\.be\/)([^&?\/]+)/);
     if (match) {
       videoId = match[1];
     }
     if (videoId) {
-      embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=${videoId}&modestbranding=1`;
+      embedUrl = `https://www.youtube.com/embed/${videoId}`;
     }
   }
 
@@ -59,15 +62,8 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
     <div className="page-transition">
       {/* ── HERO BACKDROP ── */}
       <section className="hero-backdrop" style={{ minHeight: "85vh", position: 'relative', overflow: 'hidden' }}>
-        {embedUrl ? (
-          <div style={{ position: 'absolute', width: '100vw', height: '56.25vw', minHeight: '100vh', minWidth: '177.77vh', transform: 'translate(-50%, -50%)', top: '50%', left: '50%', zIndex: 0, pointerEvents: 'none' }}>
-            <iframe 
-              src={embedUrl}
-              style={{ width: '100%', height: '100%', border: 'none', transform: 'scale(1.2)' }}
-              allow="autoplay; encrypted-media"
-              title={movie.title}
-            />
-          </div>
+        {videoId ? (
+          <HeroTrailer videoId={videoId} title={movie.title} />
         ) : (
           <img className="hero-backdrop-img" src={backdropUrl} alt={movie.title} style={{ zIndex: 0 }} />
         )}
@@ -182,26 +178,7 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
             </section>
           )}
 
-          {/* Trailer */}
-          {embedUrl && (
-            <section style={{ marginBottom: "2.5rem" }}>
-              <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1rem", color: "var(--text-primary)" }}>
-                🎞 Trailer Official
-              </h2>
-              <div style={{
-                position: "relative", paddingBottom: "56.25%", height: 0,
-                overflow: "hidden", borderRadius: "0.75rem",
-                border: "1px solid var(--glass-border)", boxShadow: "0 12px 40px rgba(0,0,0,0.6)",
-              }}>
-                <iframe
-                  src={embedUrl}
-                  style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }}
-                  allow="autoplay; encrypted-media; fullscreen"
-                  allowFullScreen
-                />
-              </div>
-            </section>
-          )}
+
 
 
 
