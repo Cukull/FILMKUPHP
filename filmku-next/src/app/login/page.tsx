@@ -3,13 +3,20 @@
 import { loginAction } from '@/actions/auth';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Login() {
   const [error, setError] = useState('');
 
+  const router = useRouter();
+
   const handleSubmit = async (formData: FormData) => {
     const res = await loginAction(formData);
-    if (res?.error) setError(res.error);
+    if (res?.error) {
+      setError(res.error);
+    } else if (res?.success) {
+      window.location.href = '/'; // Force a full page reload so session is picked up
+    }
   };
 
   return (

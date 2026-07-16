@@ -193,40 +193,6 @@ button, input, select, textarea, label,
   box-shadow: 0 8px 25px rgba(229, 9, 20, 0.6);
 }
 
-/* Splach Screen Animation */
-.splash-container {
-  position: fixed;
-  inset: 0;
-  background: var(--bg-base);
-  z-index: 9999;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  animation: fadeOutSplash 0.5s ease 2s forwards;
-}
-
-@keyframes fadeOutSplash {
-  to {
-    opacity: 0;
-    visibility: hidden;
-  }
-}
-
-.splash-logo {
-  font-size: 4rem;
-  font-weight: 900;
-  color: var(--primary);
-  text-transform: uppercase;
-  letter-spacing: 5px;
-  animation: pulseLogo 1.5s infinite alternate;
-  text-shadow: 0 0 20px var(--primary-glow);
-}
-
-@keyframes pulseLogo {
-  from { transform: scale(1); opacity: 0.8; }
-  to { transform: scale(1.1); opacity: 1; text-shadow: 0 0 40px var(--primary); }
-}
-
 /* Movie Grid Parallax setup */
 .movie-grid {
   display: grid;

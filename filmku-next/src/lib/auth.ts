@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
+import { prisma } from '@/lib/prisma';
 
 const secretKey = process.env.JWT_SECRET || 'secret-rahasia-filmku-2026';
 const key = new TextEncoder().encode(secretKey);
@@ -37,10 +38,8 @@ export async function getSession() {
   try {
     const payload = await decrypt(session);
     
-    // Fetch latest user from DB to ensure role is up to date
-    const { prisma } = await import('@/lib/prisma');
     const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
+      where: { id: payload.userId as string },
       select: { role: true }
     });
     

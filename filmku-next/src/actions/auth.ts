@@ -18,7 +18,7 @@ export async function loginAction(formData: FormData) {
   if (!isValid) return { error: 'Password salah.' };
 
   await setAuthCookie(user.id, user.email, user.name || 'User');
-  redirect('/');
+  return { success: true };
 }
 
 export async function registerAction(formData: FormData) {
@@ -37,7 +37,7 @@ export async function registerAction(formData: FormData) {
   });
 
   await setAuthCookie(user.id, user.email, user.name || 'User');
-  redirect('/');
+  return { success: true };
 }
 
 export async function logoutAction() {

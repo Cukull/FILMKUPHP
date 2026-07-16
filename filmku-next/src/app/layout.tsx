@@ -6,6 +6,8 @@ import SmoothScroll from "./SmoothScroll";
 import MobileNav from "./MobileNav";
 import HeaderRight from "./HeaderRight";
 import { logoutAction } from "@/actions/auth";
+import PageTransition from "./PageTransition";
+import SplashScreen from "./SplashScreen";
 
 export const metadata: Metadata = {
   title: "FILMKU | Platform Bioskop Premium",
@@ -34,9 +36,7 @@ export default async function RootLayout({
       </head>
       <body>
         {/* Premium Splash Screen */}
-        <div className="splash-container">
-          <div className="splash-logo">FILMKU</div>
-        </div>
+        <SplashScreen />
 
         <SmoothScroll>
           <div className="page-transition">
@@ -78,8 +78,10 @@ export default async function RootLayout({
             </nav>
 
             {/* ══════════════════ MAIN CONTENT ══════════════════ */}
-            <main style={{ paddingTop: "72px", minHeight: "100vh" }}>
-              {children}
+            <main style={{ paddingTop: "72px", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+              <PageTransition>
+                {children}
+              </PageTransition>
             </main>
 
             {/* ══════════════════ FOOTER PREMIUM ══════════════════ */}
