@@ -2,22 +2,48 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
+// Placeholder cast data (bisa diganti dengan data DB nanti)
+const PLACEHOLDER_CAST = [
+  { name: "Curry Barker", role: "Sutradara", avatar: "🎬" },
+  { name: "Michael Johnston", role: "Pemeran", avatar: "👤" },
+  { name: "Inde Navarrette", role: "Nikki", avatar: "👤" },
+  { name: "Cooper Tomlinson", role: "Pemeran", avatar: "👤" },
+  { name: "Megan Lawless", role: "Sarah", avatar: "👤" },
+  { name: "Andy Richter", role: "Carter", avatar: "👤" },
+  { name: "Haley Fitzgerald", role: "Pemeran", avatar: "👤" },
+];
+
+// Generate next 7 days for date picker
+function getNext7Days() {
+  const days = [];
+  const dayNames = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+  const monthNames = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    days.push({
+      num: d.getDate(),
+      day: dayNames[d.getDay()],
+      month: monthNames[d.getMonth()],
+      isToday: i === 0,
+    });
+  }
+  return days;
+}
+
 export default async function MovieDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
   const movie = await prisma.movie.findUnique({
     where: { id },
-    include: {
-      category: true,
-      showtimes: true,
-    },
+    include: { category: true, showtimes: true },
   });
 
-  if (!movie) {
-    notFound();
-  }
+  if (!movie) notFound();
 
-  // Build YouTube embed URL safely
+  const days = getNext7Days();
+
+  // Build YouTube embed URL
   let embedUrl: string | null = null;
   if (movie.trailerUrl) {
     const match = movie.trailerUrl.match(/(?:v=|\/embed\/|youtu\.be\/)([^&?\/]+)/);
@@ -27,107 +53,277 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
     }
   }
 
+  // Use posterUrl as backdrop fallback
+  const backdropUrl = movie.posterUrl || "https://image.tmdb.org/t/p/original/tElnmtQ6snFIg4VfS768kK9rS9X.jpg";
+
+  const durationHours = movie.durationMin ? Math.floor(movie.durationMin / 60) : null;
+  const durationMins = movie.durationMin ? movie.durationMin % 60 : null;
+
+  const todayShowtimes = movie.showtimes;
+  const totalSeats = 40;
+
   return (
-    <div className="page-transition" style={{ padding: "2rem 4rem", maxWidth: "1400px", margin: "0 auto" }}>
+    <div className="page-transition">
+      {/* ── HERO BACKDROP ── */}
+      <section className="hero-backdrop" style={{ minHeight: "85vh" }}>
+        <img className="hero-backdrop-img" src={backdropUrl} alt={movie.title} />
+        <div className="hero-backdrop-overlay" />
 
-      {/* ── TOP SECTION: Poster + Meta Info ── */}
-      <div
-        className="glass-static"
-        style={{
-          display: "flex",
-          gap: "2.5rem",
-          padding: "2rem",
-          marginBottom: "1.5rem",
-          alignItems: "flex-start",
-        }}
-      >
-        {/* Poster */}
-        <div className="poster-detail" style={{ aspectRatio: "2/3" }}>
-          <img
-            src={movie.posterUrl || "https://via.placeholder.com/400x600?text=No+Poster"}
-            alt={movie.title}
-          />
-        </div>
+        <div className="hero-content" style={{ paddingBottom: "4rem" }}>
+          {/* Badges */}
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1.25rem" }}>
+            {movie.rating && <span className="badge badge-gold">⭐ {movie.rating} / 10</span>}
+            {movie.durationMin && <span className="badge badge-muted">⏱ {durationHours}j {durationMins}m</span>}
+            <span className="badge badge-muted">HD</span>
+            {movie.category && <span className="badge badge-accent">{movie.category.name}</span>}
+            {movie.status === "NOW_PLAYING" && <span className="badge badge-now-playing" style={{ borderRadius: "999px" }}>Sedang Tayang</span>}
+          </div>
 
-        {/* Info Column */}
-        <div style={{ flex: 1, minWidth: 0 }}>
           {/* Title */}
-          <h1
-            style={{
-              fontSize: "clamp(1.8rem, 4vw, 3rem)",
-              fontWeight: 900,
-              margin: "0 0 1rem 0",
-              lineHeight: 1.15,
-              letterSpacing: "-0.02em",
-              color: "var(--text-primary)",
-            }}
-          >
+          <h1 style={{
+            fontSize: "clamp(2rem, 5vw, 3.5rem)",
+            fontWeight: 900,
+            lineHeight: 1.1,
+            marginBottom: "1.25rem",
+            letterSpacing: "-0.02em",
+            color: "#fff",
+            textShadow: "0 2px 20px rgba(0,0,0,0.5)",
+          }}>
             {movie.title}
           </h1>
 
-          {/* Badge row: Rating, Durasi, Genre */}
-          <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
-            {movie.rating && (
-              <span className="badge badge-gold">⭐ {movie.rating} / 10</span>
+          {/* Synopsis (short) */}
+          {movie.synopsis && (
+            <p style={{
+              color: "rgba(255,255,255,0.75)",
+              lineHeight: 1.7,
+              fontSize: "0.95rem",
+              marginBottom: "2rem",
+              maxWidth: "520px",
+              display: "-webkit-box",
+              WebkitLineClamp: 3,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+            }}>
+              {movie.synopsis}
+            </p>
+          )}
+
+          {/* CTA Buttons */}
+          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center" }}>
+            {todayShowtimes.length > 0 ? (
+              <a href="#jadwal" style={{ textDecoration: "none" }}>
+                <button className="btn-primary" style={{ fontSize: "1rem", padding: "0.85rem 2rem" }}>
+                  🎬 Pilih Sesi Tayang
+                </button>
+              </a>
+            ) : (
+              <button className="btn-primary" style={{ opacity: 0.5, cursor: "not-allowed" }}>
+                Belum Ada Jadwal
+              </button>
             )}
-            {movie.durationMin && (
-              <span className="badge badge-muted">⏱ {movie.durationMin} Menit</span>
-            )}
-            {movie.category && (
-              <span className="badge badge-accent">{movie.category.name}</span>
-            )}
+
+            {/* Wishlist + Share icons */}
+            <button aria-label="Tambah Wishlist" style={{
+              width: "44px", height: "44px", borderRadius: "50%",
+              background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)",
+              color: "white", fontSize: "1.1rem", cursor: "pointer", display: "flex",
+              alignItems: "center", justifyContent: "center", transition: "all 0.2s ease",
+            }}>🤍</button>
+            <button aria-label="Bagikan" style={{
+              width: "44px", height: "44px", borderRadius: "50%",
+              background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)",
+              color: "white", fontSize: "1rem", cursor: "pointer", display: "flex",
+              alignItems: "center", justifyContent: "center",
+            }}>🔗</button>
           </div>
+        </div>
+      </section>
 
-          {/* Divider */}
-          <div style={{ height: "1px", background: "var(--glass-border)", marginBottom: "1.5rem" }} />
+      {/* ── INFO BAR ── */}
+      <div className="detail-infobar">
+        <div className="detail-infobar-meta">
+          <span className="detail-infobar-title">{movie.title}</span>
+          {todayShowtimes[0] && (
+            <>
+              <span className="detail-infobar-item">
+                📅 Hari Ini, {new Date().toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
+              </span>
+              <span className="detail-infobar-item">
+                🕐 {new Date(todayShowtimes[0].startTime).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+              </span>
+              <span className="detail-infobar-item">
+                🎭 {todayShowtimes[0].studio}
+              </span>
+            </>
+          )}
+        </div>
+        {todayShowtimes[0] && (
+          <Link href={`/kursi/${todayShowtimes[0].id}`} style={{ textDecoration: "none", flexShrink: 0 }}>
+            <button className="btn-primary" style={{ padding: "0.6rem 1.5rem", fontSize: "0.9rem" }}>
+              → Konfirmasi & Pesan Tiket
+            </button>
+          </Link>
+        )}
+      </div>
 
-          {/* Sinopsis */}
-          <div className="glass-static" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
-            <h3
-              style={{
-                fontSize: "0.75rem",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "0.12em",
-                color: "var(--accent)",
-                marginBottom: "0.75rem",
-              }}
-            >
+      {/* ── MAIN CONTENT ── */}
+      <div style={{ padding: "2.5rem 4rem", display: "flex", gap: "2.5rem", alignItems: "flex-start" }}>
+
+        {/* ── LEFT COLUMN ── */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+
+          {/* Sinopsis Lengkap */}
+          <section style={{ marginBottom: "2.5rem" }}>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1rem", color: "var(--text-primary)" }}>
               Sinopsis
-            </h3>
-            <p style={{ color: "var(--text-secondary)", lineHeight: 1.75, margin: 0, fontSize: "0.95rem" }}>
+            </h2>
+            <p style={{ color: "var(--text-secondary)", lineHeight: 1.8, fontSize: "0.95rem" }}>
               {movie.synopsis || "Belum ada sinopsis untuk film ini."}
             </p>
-          </div>
+          </section>
 
-          {/* Jadwal Tayang */}
+          {/* Aktor & Kru */}
+          <section style={{ marginBottom: "2.5rem" }}>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1.25rem", color: "var(--text-primary)" }}>
+              Aktor & Kru
+            </h2>
+            <div className="cast-scroll">
+              {PLACEHOLDER_CAST.map((person, i) => (
+                <div key={i} className="cast-item">
+                  <div className="cast-avatar" style={{ fontSize: "1.8rem" }}>
+                    {person.avatar}
+                  </div>
+                  <span className="cast-name">{person.name}</span>
+                  <span className="cast-role">{person.role}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Trailer */}
+          {embedUrl && (
+            <section style={{ marginBottom: "2.5rem" }}>
+              <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1rem", color: "var(--text-primary)" }}>
+                🎞 Trailer Official
+              </h2>
+              <div style={{
+                position: "relative", paddingBottom: "56.25%", height: 0,
+                overflow: "hidden", borderRadius: "0.75rem",
+                border: "1px solid var(--glass-border)", boxShadow: "0 12px 40px rgba(0,0,0,0.6)",
+              }}>
+                <iframe
+                  src={embedUrl}
+                  style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }}
+                  allow="autoplay; encrypted-media; fullscreen"
+                  allowFullScreen
+                />
+              </div>
+            </section>
+          )}
+
+          {/* INFO PENAYANGAN */}
+          <section style={{ marginBottom: "2.5rem" }}>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1rem", color: "var(--text-primary)" }}>
+              ℹ Info Penayangan
+            </h2>
+            <div className="info-penayangan-grid">
+              <div className="info-penayangan-cell">
+                <div className="info-penayangan-label">🎞 Format</div>
+                <div className="info-penayangan-value">
+                  <span className="badge badge-accent" style={{ fontSize: "0.7rem", marginRight: "0.4rem" }}>Premiere</span>
+                  2D
+                </div>
+              </div>
+              <div className="info-penayangan-cell">
+                <div className="info-penayangan-label">🔞 Rating Usia</div>
+                <div className="info-penayangan-value" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <span style={{ background: "var(--primary)", color: "white", padding: "0.1rem 0.5rem", borderRadius: "0.3rem", fontSize: "0.85rem", fontWeight: 800 }}>17+</span>
+                  <span style={{ color: "var(--text-secondary)", fontSize: "0.8rem" }}>Dewasa</span>
+                </div>
+              </div>
+              <div className="info-penayangan-cell">
+                <div className="info-penayangan-label">⏱ Durasi</div>
+                <div className="info-penayangan-value">
+                  {movie.durationMin
+                    ? `${durationHours} jam ${durationMins} menit`
+                    : "—"}
+                </div>
+              </div>
+              <div className="info-penayangan-cell">
+                <div className="info-penayangan-label">🌐 Bahasa</div>
+                <div className="info-penayangan-value" style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><span style={{ color: "#22c55e" }}>●</span> Inggris</span>
+                  <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><span style={{ color: "#22c55e" }}>●</span> Indonesia (Dub)</span>
+                </div>
+              </div>
+              <div className="info-penayangan-cell">
+                <div className="info-penayangan-label">💬 Subtitel</div>
+                <div className="info-penayangan-value" style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><span style={{ color: "#22c55e" }}>●</span> Indonesia</span>
+                  <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><span style={{ color: "#3b82f6" }}>●</span> English</span>
+                </div>
+              </div>
+              <div className="info-penayangan-cell">
+                <div className="info-penayangan-label">📅 Jadwal Tayang</div>
+                <div className="info-penayangan-value" style={{ fontSize: "0.82rem" }}>
+                  Hari Ini, {new Date().toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
+                  {todayShowtimes.length > 0 && (
+                    <span className="badge badge-gold" style={{ marginLeft: "0.4rem", fontSize: "0.65rem" }}>
+                      {todayShowtimes.length} Sesi Tayang
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        {/* ── RIGHT COLUMN: Date + Time Picker ── */}
+        <div id="jadwal" style={{ width: "340px", flexShrink: 0 }}>
           <div className="glass-static" style={{ padding: "1.5rem" }}>
-            <h3
-              style={{
-                fontSize: "0.75rem",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "0.12em",
-                color: "var(--accent)",
-                marginBottom: "1rem",
-              }}
-            >
-              Jadwal Tayang Hari Ini
-            </h3>
+            {/* Date Picker */}
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
+              <span style={{ fontSize: "0.8rem" }}>📅</span>
+              <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--text-primary)" }}>Pilih Tanggal Tayang</h3>
+            </div>
+            <div className="date-picker-scroll">
+              {days.map((day, i) => (
+                <div key={i} className={`date-pill ${day.isToday ? "active" : ""}`}>
+                  <span className="day-num">{day.num}</span>
+                  <span className="day-label">{day.day}</span>
+                  <span className="day-label" style={{ fontSize: "0.6rem" }}>{day.month}</span>
+                </div>
+              ))}
+            </div>
 
-            {movie.showtimes.length > 0 ? (
-              <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
-                {movie.showtimes.map((st) => (
-                  <Link href={`/kursi/${st.id}`} key={st.id} style={{ textDecoration: "none" }}>
-                    <button className="showtime-btn">
-                      🎬{" "}
-                      {new Date(st.startTime).toLocaleTimeString("id-ID", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </button>
-                  </Link>
-                ))}
+            {/* Divider */}
+            <div style={{ height: "1px", background: "var(--glass-border)", margin: "1.25rem 0" }} />
+
+            {/* Time + Studio Picker */}
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+              <span style={{ fontSize: "0.8rem" }}>🕐</span>
+              <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--text-primary)" }}>Pilih Jam Sesi & Lokasi Studio</h3>
+            </div>
+
+            {todayShowtimes.length > 0 ? (
+              <div className="session-grid">
+                {todayShowtimes.map((st) => {
+                  const availableCount = totalSeats - Math.floor(Math.random() * 15);
+                  const availClass = availableCount > 20 ? "ok" : availableCount > 5 ? "warn" : "full";
+                  const availText = availableCount > 5
+                    ? `Tersisa ${availableCount} kursi`
+                    : "Hampir Penuh!";
+                  return (
+                    <Link href={`/kursi/${st.id}`} key={st.id} className="session-pill" style={{ textDecoration: "none" }}>
+                      <span className="session-time">
+                        {new Date(st.startTime).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                      <span className="session-studio">{st.studio}</span>
+                      <span className={`session-avail ${availClass}`}>{availText}</span>
+                    </Link>
+                  );
+                })}
               </div>
             ) : (
               <div className="empty-state">
@@ -135,75 +331,17 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
                 <p>Belum ada jadwal tayang tersedia.</p>
               </div>
             )}
+          </div>
 
-            {movie.showtimes.length > 0 && (
-              <p
-                style={{
-                  marginTop: "1rem",
-                  fontSize: "0.8rem",
-                  color: "var(--text-secondary)",
-                  borderTop: "1px solid var(--glass-border)",
-                  paddingTop: "1rem",
-                }}
-              >
-                Pilih jam tayang di atas untuk memilih kursi &amp; membeli tiket.
-              </p>
-            )}
+          {/* Back button */}
+          <div style={{ marginTop: "1rem" }}>
+            <Link href="/" style={{ textDecoration: "none" }}>
+              <button className="btn-outline" style={{ width: "100%" }}>
+                ← Kembali ke Beranda
+              </button>
+            </Link>
           </div>
         </div>
-      </div>
-
-      {/* ── TRAILER SECTION ── */}
-      {embedUrl && (
-        <div className="glass-static" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
-          <h3
-            style={{
-              fontSize: "0.75rem",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.12em",
-              color: "var(--accent)",
-              marginBottom: "1rem",
-            }}
-          >
-            🎞 Trailer Official
-          </h3>
-          {/* Responsive 16:9 wrapper */}
-          <div
-            style={{
-              position: "relative",
-              paddingBottom: "56.25%",
-              height: 0,
-              overflow: "hidden",
-              borderRadius: "0.75rem",
-              border: "1px solid var(--glass-border)",
-              boxShadow: "0 12px 40px rgba(0,0,0,0.6)",
-            }}
-          >
-            <iframe
-              src={embedUrl}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                border: 0,
-              }}
-              allow="autoplay; encrypted-media; fullscreen"
-              allowFullScreen
-            />
-          </div>
-        </div>
-      )}
-
-      {/* ── BACK BUTTON ── */}
-      <div style={{ marginTop: "1rem" }}>
-        <Link href="/" style={{ textDecoration: "none" }}>
-          <button className="btn-primary" style={{ background: "transparent", border: "1px solid var(--glass-border)", color: "var(--text-secondary)" }}>
-            ← Kembali ke Beranda
-          </button>
-        </Link>
       </div>
     </div>
   );

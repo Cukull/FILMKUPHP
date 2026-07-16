@@ -2,49 +2,46 @@
 
 import { useState } from 'react';
 
-const ROWS = ['A', 'B', 'C', 'D', 'E', 'F'];
+const ROWS = ['A', 'B', 'C', 'D'];
 const COLS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const AISLE_AFTER = 5; // lorong di antara kolom 5 dan 6
 
-export default function SeatSelector({ 
-  showtimeId, 
-  price, 
+export default function SeatSelector({
+  showtimeId,
+  price,
   bookedSeats,
-  isLoggedIn 
-}: { 
-  showtimeId: string, 
-  price: number, 
-  bookedSeats: string[],
-  isLoggedIn: boolean
+  isLoggedIn,
+}: {
+  showtimeId: string;
+  price: number;
+  bookedSeats: string[];
+  isLoggedIn: boolean;
 }) {
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleSeatClick = (seat: string) => {
-    if (bookedSeats.includes(seat)) return; // Prevent clicking booked seats
-    
-    setSelectedSeats(prev => 
-      prev.includes(seat) 
-        ? prev.filter(s => s !== seat) 
-        : [...prev, seat]
+    if (bookedSeats.includes(seat)) return;
+    setSelectedSeats((prev) =>
+      prev.includes(seat) ? prev.filter((s) => s !== seat) : [...prev, seat]
     );
   };
 
-  const total = selectedSeats.length * price;
-
-  const [isProcessing, setIsProcessing] = useState(false);
+  const serviceFee = selectedSeats.length * 3000;
+  const subtotal = selectedSeats.length * price;
+  const total = subtotal + serviceFee;
 
   const handleCheckout = async () => {
     if (!isLoggedIn) {
-      alert("Silakan login terlebih dahulu untuk membeli tiket.");
+      alert('Silakan login terlebih dahulu untuk membeli tiket.');
       return;
     }
     if (selectedSeats.length === 0) {
-      alert("Pilih minimal 1 kursi.");
+      alert('Pilih minimal 1 kursi.');
       return;
     }
-    
+
     setIsProcessing(true);
-    // Dynamic import to avoid client/server bundle issues if needed, but since it's an action we can just import it at top
-    // Wait, let's use dynamic import since we didn't import it at the top
     const { createTicketOrder } = await import('@/actions/order');
     const res = await createTicketOrder(showtimeId, selectedSeats, total);
     setIsProcessing(false);
@@ -52,103 +49,135 @@ export default function SeatSelector({
     if (res.error) {
       alert(res.error);
     } else {
-      alert(`Checkout berhasil! Pesanan ID: ${res.orderId}. Memesan kursi: ${selectedSeats.join(', ')}`);
-      // Reload page to reflect booked seats
-      window.location.reload();
+      // Redirect ke halaman sukses
+      window.location.href = `/sukses?orderId=${res.orderId}&seats=${selectedSeats.join(',')}&total=${total}&film=${encodeURIComponent(showtimeId)}`;
     }
   };
 
   return (
-    <div style={{ display: 'flex', gap: '4rem', flexWrap: 'wrap' }}>
-      <div className="glass" style={{ padding: '2rem', borderRadius: '1rem', flex: 2, minWidth: '300px' }}>
-        <div style={{ background: 'var(--glass-border)', height: '10px', borderRadius: '10px', marginBottom: '3rem', textAlign: 'center', position: 'relative' }}>
-          <span style={{ position: 'absolute', top: '15px', left: '50%', transform: 'translateX(-50%)', color: 'var(--text-secondary)', fontSize: '0.8rem', letterSpacing: '0.2rem' }}>LAYAR BIOSKOP</span>
-        </div>
+    <>
+      {/* ── Seat Grid ── */}
+      <div className="seat-grid">
+        {ROWS.map((row) => (
+          <div key={row} className="seat-row">
+            {/* Row label kiri */}
+            <span className="seat-row-label">{row}</span>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
-          {ROWS.map(row => (
-            <div key={row} style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-              <span style={{ width: '20px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>{row}</span>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                {COLS.map(col => {
-                  const seatId = `${row}${col}`;
-                  const isBooked = bookedSeats.includes(seatId);
-                  const isSelected = selectedSeats.includes(seatId);
-                  
-                  let bgColor = 'rgba(255,255,255,0.1)';
-                  if (isBooked) bgColor = 'rgba(255,255,255,0.02)';
-                  if (isSelected) bgColor = 'var(--accent)';
+            {COLS.map((col) => {
+              const seatId = `${row}${col}`;
+              const isBooked = bookedSeats.includes(seatId);
+              const isSelected = selectedSeats.includes(seatId);
 
-                  return (
-                    <button
-                      key={seatId}
-                      onClick={() => handleSeatClick(seatId)}
-                      disabled={isBooked}
-                      style={{
-                        width: '35px',
-                        height: '35px',
-                        borderRadius: '0.5rem',
-                        border: isSelected ? 'none' : '1px solid var(--glass-border)',
-                        background: bgColor,
-                        color: isBooked ? 'transparent' : 'white',
-                        cursor: isBooked ? 'not-allowed' : 'pointer',
-                        transition: 'all 0.2s',
-                        fontSize: '0.8rem'
-                      }}
-                    >
-                      {!isBooked && col}
-                    </button>
-                  );
-                })}
-              </div>
-              <span style={{ width: '20px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>{row}</span>
-            </div>
-          ))}
-        </div>
+              const seatClass = isBooked ? 'seat booked' : isSelected ? 'seat selected' : 'seat available';
 
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginTop: '3rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={{ width: '20px', height: '20px', background: 'rgba(255,255,255,0.1)', border: '1px solid var(--glass-border)', borderRadius: '4px' }}></div>
-            <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Tersedia</span>
+              return (
+                <>
+                  {/* Lorong tengah setelah kolom AISLE_AFTER */}
+                  {col === AISLE_AFTER + 1 && <div key={`aisle-${row}`} className="seat-aisle" />}
+                  <button
+                    key={seatId}
+                    className={seatClass}
+                    onClick={() => handleSeatClick(seatId)}
+                    disabled={isBooked}
+                    aria-label={`Kursi ${seatId}${isBooked ? ' (terisi)' : isSelected ? ' (terpilih)' : ''}`}
+                  >
+                    {seatId}
+                  </button>
+                </>
+              );
+            })}
+
+            {/* Row label kanan */}
+            <span className="seat-row-label" style={{ textAlign: "left", marginLeft: "0.5rem" }}>{row}</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={{ width: '20px', height: '20px', background: 'var(--accent)', borderRadius: '4px' }}></div>
-            <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Dipilih</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={{ width: '20px', height: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)', borderRadius: '4px' }}></div>
-            <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Terisi</span>
-          </div>
-        </div>
+        ))}
       </div>
 
-      <div className="glass" style={{ padding: '2rem', borderRadius: '1rem', flex: 1, minWidth: '300px', height: 'fit-content' }}>
-        <h3 style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '1.5rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem' }}>Ringkasan Pesanan</h3>
-        
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-          <span style={{ color: 'var(--text-secondary)' }}>Kursi Terpilih</span>
-          <span style={{ fontWeight: 600 }}>{selectedSeats.length > 0 ? selectedSeats.join(', ') : '-'}</span>
+      {/* ── Summary + CTA (update real-time) ── */}
+      {selectedSeats.length > 0 && (
+        <div style={{
+          marginTop: "1.5rem",
+          padding: "1.25rem",
+          background: "rgba(229,9,20,0.06)",
+          border: "1px solid rgba(229,9,20,0.2)",
+          borderRadius: "0.75rem",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: "1rem",
+        }}>
+          <div>
+            <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: "0.3rem" }}>
+              {selectedSeats.length} kursi terpilih
+            </div>
+            <div className="seat-chips">
+              {selectedSeats.map((s) => (
+                <span key={s} className="seat-chip">{s}</span>
+              ))}
+            </div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+              {selectedSeats.length}x Rp {price.toLocaleString("id-ID")} + Rp {serviceFee.toLocaleString("id-ID")} layanan
+            </div>
+            <div style={{ fontSize: "1.4rem", fontWeight: 900, color: "#f5c518" }}>
+              Rp {total.toLocaleString("id-ID")}
+            </div>
+          </div>
         </div>
-        
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-          <span style={{ color: 'var(--text-secondary)' }}>Harga per Tiket</span>
-          <span style={{ fontWeight: 600 }}>Rp {price.toLocaleString('id-ID')}</span>
-        </div>
-        
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid var(--glass-border)' }}>
-          <span style={{ fontSize: '1.1rem', fontWeight: 600 }}>Total Bayar</span>
-          <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--accent)' }}>Rp {total.toLocaleString('id-ID')}</span>
+      )}
+
+      {/* ── Sticky Bottom CTA ── */}
+      <div style={{
+        position: "fixed",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: "1rem 4rem",
+        background: "rgba(8,8,16,0.95)",
+        backdropFilter: "blur(20px)",
+        borderTop: "1px solid var(--glass-border)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        zIndex: 50,
+        gap: "1rem",
+      }}>
+        <div>
+          {selectedSeats.length > 0 ? (
+            <>
+              <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
+                {selectedSeats.length} kursi: {selectedSeats.join(", ")}
+              </div>
+              <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "#f5c518" }}>
+                Total: Rp {total.toLocaleString("id-ID")}
+              </div>
+            </>
+          ) : (
+            <span style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>
+              Pilih kursi untuk melanjutkan
+            </span>
+          )}
         </div>
 
-        <button 
-          className="btn-primary" 
-          style={{ width: '100%', marginTop: '2rem', padding: '1rem', fontSize: '1.1rem', opacity: selectedSeats.length === 0 || isProcessing ? 0.5 : 1 }}
+        <button
+          className="btn-primary"
+          style={{
+            padding: "0.85rem 2.5rem",
+            fontSize: "1rem",
+            opacity: selectedSeats.length === 0 || isProcessing ? 0.5 : 1,
+            minWidth: "200px",
+          }}
           onClick={handleCheckout}
           disabled={selectedSeats.length === 0 || isProcessing}
         >
-          {isProcessing ? 'Memproses...' : 'Lanjut ke Pembayaran'}
+          {isProcessing ? "⏳ Memproses..." : "→ Lanjut Bayar"}
         </button>
       </div>
-    </div>
+
+      {/* Spacer for sticky button */}
+      <div style={{ height: "80px" }} />
+    </>
   );
 }
