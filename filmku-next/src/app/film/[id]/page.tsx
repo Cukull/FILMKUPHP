@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import WishlistButton from "./WishlistButton";
 
 // Placeholder cast data (bisa diganti dengan data DB nanti)
 const PLACEHOLDER_CAST = [
@@ -124,12 +125,7 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
             )}
 
             {/* Wishlist + Share icons */}
-            <button aria-label="Tambah Wishlist" style={{
-              width: "44px", height: "44px", borderRadius: "50%",
-              background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)",
-              color: "white", fontSize: "1.1rem", cursor: "pointer", display: "flex",
-              alignItems: "center", justifyContent: "center", transition: "all 0.2s ease",
-            }}>🤍</button>
+            <WishlistButton movieId={movie.id} />
             <button aria-label="Bagikan" style={{
               width: "44px", height: "44px", borderRadius: "50%",
               background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)",

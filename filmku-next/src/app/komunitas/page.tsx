@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
-import Link from 'next/link';
+import KomunitasTabs from './KomunitasTabs';
 
 export default async function KomunitasPage() {
   const session = await getSession();
@@ -15,46 +15,36 @@ export default async function KomunitasPage() {
   });
 
   return (
-    <div style={{ padding: '2rem 4rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 800 }}>Forum Komunitas 🗣️</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>Diskusikan film, teori, dan ulasan bersama pecinta film lainnya.</p>
+    <div className="page-transition">
+      {/* Hero Section */}
+      <div style={{ padding: '6rem 4rem 4rem', textAlign: 'center', background: 'radial-gradient(ellipse at top, rgba(229,9,20,0.15), transparent 70%)' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(229,9,20,0.1)', border: '1px solid rgba(229,9,20,0.2)', padding: '0.25rem 1rem', borderRadius: '2rem', color: 'var(--primary)', fontWeight: 700, fontSize: '0.85rem', letterSpacing: '0.05em', marginBottom: '1.5rem' }}>
+          <span>👥</span> KOMUNITAS
         </div>
-        {session ? (
-          <Link href="/komunitas/baru">
-            <button className="btn-primary">+ Buat Topik Baru</button>
-          </Link>
-        ) : (
-          <div style={{ color: 'var(--text-secondary)' }}>Silakan login untuk membuat topik.</div>
-        )}
+        <h1 style={{ fontSize: '4rem', fontWeight: 900, marginBottom: '1.5rem' }}>
+          Cine-Community
+        </h1>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: '600px', margin: '0 auto 3rem', lineHeight: 1.6 }}>
+          Ruang para pecinta film — baca artikel eksklusif, bagikan pendapat, dan diskusikan film favoritmu bersama komunitas.
+        </p>
+
+        {/* Stats */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '3rem', borderTop: '1px solid var(--glass-border)', paddingTop: '3rem', maxWidth: '400px', margin: '0 auto' }}>
+          <div>
+            <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>1</div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.1em', marginTop: '0.5rem' }}>ARTIKEL</div>
+          </div>
+          <div style={{ width: '1px', background: 'var(--glass-border)' }}></div>
+          <div>
+            <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{topics.length}</div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.1em', marginTop: '0.5rem' }}>DISKUSI</div>
+          </div>
+        </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {topics.length === 0 ? (
-          <div className="glass" style={{ padding: '3rem', textAlign: 'center', borderRadius: '1rem', color: 'var(--text-secondary)' }}>
-            Belum ada topik diskusi. Jadilah yang pertama!
-          </div>
-        ) : (
-          topics.map(topic => (
-            <Link href={`/komunitas/${topic.id}`} key={topic.id} style={{ textDecoration: 'none' }}>
-              <div className="glass" style={{ padding: '1.5rem 2rem', borderRadius: '1rem', transition: 'all 0.2s', cursor: 'pointer' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <h3 style={{ fontSize: '1.3rem', fontWeight: 600, color: 'white', marginBottom: '0.5rem' }}>{topic.title}</h3>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                      Mulai oleh <span style={{ color: 'var(--accent)' }}>{topic.posts[0]?.user.name || 'Anonim'}</span> • {new Date(topic.createdAt).toLocaleDateString('id-ID')}
-                    </p>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.1)', padding: '0.5rem 1rem', borderRadius: '2rem' }}>
-                    <span style={{ fontSize: '1.2rem' }}>💬</span>
-                    <span style={{ fontWeight: 600, color: 'white' }}>{topic.posts.length} balasan</span>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          ))
-        )}
+      {/* Main Content Tabs */}
+      <div style={{ padding: '2rem 4rem 6rem', maxWidth: '1200px', margin: '0 auto' }}>
+        <KomunitasTabs topics={topics} hasSession={!!session} />
       </div>
     </div>
   );

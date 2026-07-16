@@ -3,6 +3,7 @@ import "./globals.css";
 import { getSession } from "@/lib/auth";
 import Link from "next/link";
 import SmoothScroll from "./SmoothScroll";
+import MobileNav from "./MobileNav";
 
 export const metadata: Metadata = {
   title: "FILMKU | Platform Bioskop Premium",
@@ -24,7 +25,10 @@ export default async function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800;12..96,900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet"
+        />
       </head>
       <body>
         {/* Premium Splash Screen */}
@@ -39,15 +43,8 @@ export default async function RootLayout({
             <nav className="navbar">
               {/* Kiri: Hamburger + Logo + Nav Links */}
               <div style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
-                {/* Hamburger (visual only, mobile) */}
-                <button
-                  aria-label="Menu"
-                  style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", padding: "0.25rem", display: "flex", flexDirection: "column", gap: "5px" }}
-                >
-                  <span style={{ display: "block", width: "20px", height: "2px", background: "currentColor", borderRadius: "2px" }} />
-                  <span style={{ display: "block", width: "20px", height: "2px", background: "currentColor", borderRadius: "2px" }} />
-                  <span style={{ display: "block", width: "20px", height: "2px", background: "currentColor", borderRadius: "2px" }} />
-                </button>
+                {/* MobileNav (Hamburger + Sidebar) */}
+                <MobileNav />
 
                 {/* Logo */}
                 <Link href="/" style={{ textDecoration: "none", flexShrink: 0 }}>

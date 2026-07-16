@@ -15,6 +15,9 @@
   --text-secondary: #94a3b8;
   --accent: #e50914;
   --shadow-card: 0 8px 32px rgba(0,0,0,0.45);
+  /* Typography */
+  --font-display: 'Bricolage Grotesque', Georgia, serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, sans-serif;
 }
 
 body {
@@ -25,12 +28,36 @@ body {
     radial-gradient(ellipse at 50% 100%, rgba(15, 15, 26, 0.8) 0px, transparent 60%);
   background-attachment: fixed;
   color: var(--text-primary);
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: var(--font-body);
   margin: 0;
   padding: 0;
   min-height: 100vh;
   overflow-x: hidden;
   animation: fadeInBody 1s ease-out;
+}
+
+/* Display/Heading font — Bricolage Grotesque */
+h1, h2, h3, h4, h5, h6,
+.home-hero-content h1,
+.hero-content h1,
+.movie-lane-title,
+.faq-title,
+.feature-title,
+.section-title,
+.detail-infobar-title,
+.splash-logo {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/* Body/UI font — Plus Jakarta Sans */
+button, input, select, textarea, label,
+.badge, .btn-primary, .btn-outline, .nav-link,
+.faq-question, .faq-answer,
+.feature-desc, .card-info,
+.order-row, .order-sidebar,
+.detail-infobar-item, .session-studio {
+  font-family: var(--font-body);
 }
 
 @keyframes fadeInBody {
