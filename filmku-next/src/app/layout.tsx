@@ -4,6 +4,8 @@ import { getSession } from "@/lib/auth";
 import Link from "next/link";
 import SmoothScroll from "./SmoothScroll";
 import MobileNav from "./MobileNav";
+import HeaderRight from "./HeaderRight";
+import { logoutAction } from "@/actions/auth";
 
 export const metadata: Metadata = {
   title: "FILMKU | Platform Bioskop Premium",
@@ -72,45 +74,7 @@ export default async function RootLayout({
               </div>
 
               {/* Kanan: Search + Auth */}
-              <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                {/* Search Icon */}
-                <button
-                  aria-label="Cari film"
-                  style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", fontSize: "1.1rem", padding: "0.25rem", transition: "color 0.2s ease" }}
-                >
-                  🔍
-                </button>
-
-                {session ? (
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                    <Link href="/admin" className="nav-link" style={{ fontSize: "0.8rem" }}>Dashboard</Link>
-                    {/* User Avatar Menu */}
-                    <div className="nav-user-menu">
-                      <div className="nav-avatar">{initials}</div>
-                      <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--text-primary)" }}>
-                        {session.name?.split(" ")[0]}
-                      </span>
-                      <span style={{ color: "var(--text-secondary)", fontSize: "0.75rem" }}>▾</span>
-                    </div>
-                    <form action={async () => {
-                      "use server";
-                      const { logoutAction } = await import("@/actions/auth");
-                      await logoutAction();
-                    }}>
-                      <button type="submit" className="btn-outline" style={{ fontSize: "0.8rem", padding: "0.35rem 0.9rem" }}>Keluar</button>
-                    </form>
-                  </div>
-                ) : (
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-                    <Link href="/login" style={{ textDecoration: "none" }}>
-                      <button className="btn-outline">Masuk</button>
-                    </Link>
-                    <Link href="/register" style={{ textDecoration: "none" }}>
-                      <button className="btn-primary">Daftar</button>
-                    </Link>
-                  </div>
-                )}
-              </div>
+              <HeaderRight session={session} logoutAction={logoutAction} />
             </nav>
 
             {/* ══════════════════ MAIN CONTENT ══════════════════ */}
