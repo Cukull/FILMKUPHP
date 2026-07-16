@@ -27,35 +27,58 @@ export default async function RootLayout({
 
         <SmoothScroll>
           <div className="page-transition">
-            <nav className="navbar glass">
-              <div className="flex items-center gap-4">
-                <Link href="/" style={{ textDecoration: 'none' }}>
-                  <h1 className="text-2xl font-bold" style={{ color: 'var(--accent)' }}>FILMKU</h1>
+            <nav className="navbar">
+              {/* ─── Kiri: Logo + Nav Items ─── */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '3rem' }}>
+                {/* Logo */}
+                <Link href="/" style={{ textDecoration: 'none', flexShrink: 0 }}>
+                  <span style={{
+                    fontSize: '1.5rem',
+                    fontWeight: 900,
+                    letterSpacing: '0.08em',
+                    color: 'var(--accent)',
+                    textTransform: 'uppercase',
+                    textShadow: '0 0 20px var(--primary-glow)',
+                  }}>
+                    FILMKU
+                  </span>
                 </Link>
-                <ul className="flex items-center gap-8 ml-8 text-sm font-medium" style={{ color: 'var(--text-secondary)', listStyle: 'none', margin: 0, padding: 0 }}>
-                  <li className="cursor-pointer hover:text-white transition-colors"><Link href="/" style={{ textDecoration: 'none', color: 'inherit', display: 'block', padding: '0.5rem 0' }}>Beranda</Link></li>
-                  <li className="cursor-pointer hover:text-white transition-colors"><Link href="/" style={{ textDecoration: 'none', color: 'inherit', display: 'block', padding: '0.5rem 0' }}>Kategori</Link></li>
-                  <li className="cursor-pointer hover:text-white transition-colors"><Link href="/cafe" style={{ textDecoration: 'none', color: 'inherit', display: 'block', padding: '0.5rem 0' }}>Cafe & FnB</Link></li>
-                  <li className="cursor-pointer hover:text-white transition-colors"><Link href="/komunitas" style={{ textDecoration: 'none', color: 'inherit', display: 'block', padding: '0.5rem 0' }}>Komunitas</Link></li>
+
+                {/* Nav Links */}
+                <ul style={{ display: 'flex', alignItems: 'center', gap: '2rem', listStyle: 'none', margin: 0, padding: 0 }}>
+                  <li><Link href="/" className="nav-link">Beranda</Link></li>
+                  <li><Link href="/" className="nav-link">Kategori</Link></li>
+                  <li><Link href="/cafe" className="nav-link">Cafe & FnB</Link></li>
+                  <li><Link href="/komunitas" className="nav-link">Komunitas</Link></li>
                 </ul>
               </div>
-              <div className="flex items-center gap-4">
+
+              {/* ─── Kanan: Auth Buttons ─── */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 {session ? (
                   <>
-                    <Link href="/admin" style={{ color: 'var(--text-secondary)', textDecoration: 'none', marginRight: '1rem', fontSize: '0.9rem' }}>Dashboard</Link>
-                    <span style={{ fontWeight: 600 }}>Hai, {session.name}</span>
+                    <Link href="/admin" className="nav-link" style={{ marginRight: '0.5rem' }}>
+                      Dashboard
+                    </Link>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                      Hai, <strong style={{ color: 'var(--text-primary)' }}>{session.name}</strong>
+                    </span>
                     <form action={async () => {
                       'use server';
                       const { logoutAction } = await import('@/actions/auth');
                       await logoutAction();
                     }}>
-                      <button type="submit" className="btn-primary" style={{ background: 'transparent', border: '1px solid var(--accent)', color: 'var(--accent)' }}>Logout</button>
+                      <button type="submit" className="btn-outline">Logout</button>
                     </form>
                   </>
                 ) : (
                   <>
-                    <Link href="/login"><button className="btn-primary" style={{ background: 'transparent', border: '1px solid var(--glass-border)' }}>Masuk</button></Link>
-                    <Link href="/register"><button className="btn-primary">Daftar</button></Link>
+                    <Link href="/login" style={{ textDecoration: 'none' }}>
+                      <button className="btn-outline">Masuk</button>
+                    </Link>
+                    <Link href="/register" style={{ textDecoration: 'none' }}>
+                      <button className="btn-primary">Daftar</button>
+                    </Link>
                   </>
                 )}
               </div>
