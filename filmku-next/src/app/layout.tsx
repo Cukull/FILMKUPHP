@@ -9,6 +9,7 @@ import { logoutAction } from "@/actions/auth";
 import PageTransition from "./PageTransition";
 import SplashScreen from "./SplashScreen";
 import NavbarScrollEffect from "./NavbarScrollEffect";
+import PageLoadingOverlay from "./PageLoadingOverlay";
 
 export const metadata: Metadata = {
   title: "FILMKU | Platform Bioskop Premium",
@@ -36,8 +37,11 @@ export default async function RootLayout({
         />
       </head>
       <body>
-        {/* Premium Splash Screen */}
+        {/* Premium Splash Screen — first visit only */}
         <SplashScreen />
+
+        {/* Global navigation progress bar — all page transitions */}
+        <PageLoadingOverlay />
 
         <SmoothScroll>
           <div className="page-transition">
