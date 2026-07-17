@@ -12,11 +12,20 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
   const [isPending, startTransition] = useTransition();
   const [isFetchingOMDB, setIsFetchingOMDB] = useState(false);
   const [omdbError, setOmdbError] = useState('');
+  const [omdbSuccess, setOmdbSuccess] = useState(false);
+
+  // Convert raw minutes to Xh Ym display
+  const formatDuration = (mins?: number | null) => {
+    if (!mins) return '';
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  };
 
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
     rating: initialData?.rating?.toString() || '',
-    durationMin: initialData?.durationMin?.toString() || '',
+    durationMin: formatDuration(initialData?.durationMin) || initialData?.durationMin?.toString() || '',
     rottenTomatoes: initialData?.rottenTomatoes || '',
     metacritic: initialData?.metacritic || '',
     posterUrl: initialData?.posterUrl || '',
@@ -42,34 +51,34 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
     }
     setIsFetchingOMDB(true);
     setOmdbError('');
+    setOmdbSuccess(false);
     try {
       const res = await fetch(`/api/fetch-movie?title=${encodeURIComponent(formData.title)}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       
       if (data.error) {
         setOmdbError(data.error);
+      } else if (!data.data) {
+        setOmdbError('Tidak ada data yang diterima dari API.');
       } else {
+        const d = data.data;
         setFormData(prev => ({
           ...prev,
-          title: data.data?.title || prev.title,
-          synopsis: data.data?.synopsis || prev.synopsis,
-          posterUrl: data.data?.posterUrl || prev.posterUrl,
-          rating: data.data?.rating ? String(data.data.rating) : prev.rating,
-          durationMin: data.data?.durationMin ? String(data.data.durationMin) + 'm' : prev.durationMin,
-          rottenTomatoes: data.data?.rottenTomatoes || prev.rottenTomatoes,
-          metacritic: data.data?.metacritic || prev.metacritic,
-          director: data.data?.director || prev.director,
-          cast: data.data?.cast || prev.cast,
+          synopsis: d.synopsis || prev.synopsis,
+          posterUrl: d.posterUrl || prev.posterUrl,
+          rating: d.rating != null ? String(d.rating) : prev.rating,
+          durationMin: d.durationMin != null ? formatDuration(d.durationMin) : prev.durationMin,
+          rottenTomatoes: d.rottenTomatoes || prev.rottenTomatoes,
+          metacritic: d.metacritic || prev.metacritic,
+          director: d.director || prev.director,
+          cast: d.cast || prev.cast,
         }));
-
-        if (data.data?.genre) {
-          const fetchedGenres = data.data.genre.split(',').map((g: string) => g.trim());
-          const validGenres = fetchedGenres.filter((g: string) => GENRES.includes(g));
-          setSelectedGenres(validGenres);
-        }
+        setOmdbSuccess(true);
+        setTimeout(() => setOmdbSuccess(false), 4000);
       }
-    } catch (err) {
-      setOmdbError('Gagal mengambil data OMDB');
+    } catch (err: any) {
+      setOmdbError('Gagal menghubungi API: ' + (err.message || 'unknown error'));
     } finally {
       setIsFetchingOMDB(false);
     }
@@ -169,7 +178,16 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
               {isFetchingOMDB ? 'Menarik...' : 'Tarik Data OMDB'}
             </button>
           </div>
-          {omdbError && <div style={{ color: '#e50914', fontSize: '0.8rem', marginTop: '0.5rem' }}>{omdbError}</div>}
+          {omdbError && (
+            <div style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.5rem', padding: '0.5rem 0.75rem', background: 'rgba(239,68,68,0.08)', borderRadius: '0.35rem', border: '1px solid rgba(239,68,68,0.2)' }}>
+              ⚠️ {omdbError}
+            </div>
+          )}
+          {omdbSuccess && (
+            <div style={{ color: '#22c55e', fontSize: '0.8rem', marginTop: '0.5rem', padding: '0.5rem 0.75rem', background: 'rgba(34,197,94,0.08)', borderRadius: '0.35rem', border: '1px solid rgba(34,197,94,0.2)' }}>
+              ✅ Data OMDB/TMDB berhasil ditarik dan diisi ke form!
+            </div>
+          )}
         </div>
 
         {/* Rating & Durasi */}

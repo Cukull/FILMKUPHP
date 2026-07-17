@@ -168,3 +168,38 @@ export async function updateUserRole(userId: string, role: 'ADMIN' | 'USER') {
   revalidatePath('/admin/users');
   return { success: true };
 }
+
+
+// ---------------------------------------------------------------------------
+// SHOWTIME ACTIONS
+// ---------------------------------------------------------------------------
+
+export async function createShowtime(data: {
+  movieId: string;
+  startTime: string; // ISO string
+  studio: string;
+  price?: number;
+}) {
+  await requireAdmin();
+  const showtime = await prisma.showtime.create({
+    data: {
+      movieId: data.movieId,
+      startTime: new Date(data.startTime),
+      studio: data.studio,
+      price: data.price ?? 50000,
+    },
+  });
+  revalidatePath(`/film/${data.movieId}`);
+  revalidatePath('/admin/film');
+  return { success: true, showtime };
+}
+
+export async function deleteShowtime(id: string, movieId: string) {
+  await requireAdmin();
+  // Delete seats first
+  await prisma.seat.deleteMany({ where: { showtimeId: id } });
+  await prisma.showtime.delete({ where: { id } });
+  revalidatePath(`/film/${movieId}`);
+  revalidatePath('/admin/film');
+  return { success: true };
+}
