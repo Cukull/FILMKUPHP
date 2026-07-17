@@ -89,7 +89,12 @@ export default function HomeHero({ films }: Props) {
     <section
       ref={heroRef}
       className="home-hero"
-      style={{ position: 'relative', overflow: 'hidden' }}
+      style={{
+        position: 'relative',
+        overflow: 'hidden',
+        marginTop: '-72px',        /* pull up behind transparent navbar */
+        minHeight: '100vh',        /* fill full viewport including navbar height */
+      }}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => {
         if (muteTimer.current) clearTimeout(muteTimer.current);

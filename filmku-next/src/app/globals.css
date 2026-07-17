@@ -681,8 +681,8 @@ button, input, select, textarea, label,
 ═══════════════════════════════════════════════ */
 .home-hero {
   position: relative;
-  height: 70vh;
-  min-height: 500px;
+  height: 100vh;          /* full viewport — fills behind transparent navbar */
+  min-height: 560px;
   display: flex;
   align-items: flex-end;
   overflow: hidden;
@@ -1139,7 +1139,7 @@ button, input, select, textarea, label,
     padding: 0 1.5rem 2.5rem;
     max-width: 100%;
   }
-  .home-hero { height: 55vh; }
+  .home-hero { height: 100vh; min-height: 420px; }
 
   /* Movie Lane */
   .movie-lane { padding: 0 1.5rem; }
@@ -1195,7 +1195,7 @@ button, input, select, textarea, label,
   .navbar > div:first-child { gap: 1rem; }
 
   /* Hero Homepage */
-  .home-hero { height: 70vh; min-height: 420px; }
+  .home-hero { height: 100svh; min-height: 420px; }
   .home-hero-content {
     padding: 0 1rem 2rem;
   }
