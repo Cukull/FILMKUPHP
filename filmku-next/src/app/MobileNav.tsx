@@ -117,7 +117,8 @@ export default function MobileNav({ session, logoutAction }: { session?: any; lo
           left: 0,
           bottom: 0,
           width: '260px',
-          background: '#0f0f1a',
+          backgroundColor: 'rgb(15, 15, 26)',
+          backgroundImage: 'none',
           borderRight: '1px solid rgba(255,255,255,0.08)',
           display: 'flex',
           flexDirection: 'column',
@@ -126,6 +127,7 @@ export default function MobileNav({ session, logoutAction }: { session?: any; lo
           transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           zIndex: 1100,
           boxShadow: '4px 0 30px rgba(0,0,0,0.8)',
+          isolation: 'isolate',
         }}
       >
         {/* Brand */}
