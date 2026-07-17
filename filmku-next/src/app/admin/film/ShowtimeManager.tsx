@@ -61,20 +61,26 @@ export default function ShowtimeManager({ movieId, showtimes }: { movieId: strin
       </h2>
 
       {/* Add Form */}
-      <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '0.75rem', padding: '1.25rem', marginBottom: '1.5rem' }}>
-        <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginBottom: '1rem' }}>Tambah Jadwal Baru</p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr auto', gap: '0.75rem', alignItems: 'end' }}>
+      <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '0.75rem', padding: '1.5rem', marginBottom: '1.5rem' }}>
+        <p style={{ fontSize: '0.8rem', fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: '1.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tambah Jadwal Baru</p>
+
+        {/* Row 1: Tanggal + Jam */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', marginBottom: '0.35rem' }}>Tanggal</label>
+            <label style={{ display: 'block', fontSize: '0.78rem', color: 'rgba(255,255,255,0.55)', marginBottom: '0.4rem', fontWeight: 600 }}>📅 Tanggal</label>
             <input type="date" value={date} onChange={e => setDate(e.target.value)} style={inputStyle} />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', marginBottom: '0.35rem' }}>Jam Mulai</label>
+            <label style={{ display: 'block', fontSize: '0.78rem', color: 'rgba(255,255,255,0.55)', marginBottom: '0.4rem', fontWeight: 600 }}>🕐 Jam Mulai</label>
             <input type="time" value={time} onChange={e => setTime(e.target.value)} style={inputStyle} />
           </div>
+        </div>
+
+        {/* Row 2: Studio + Harga + Button */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '1rem', alignItems: 'end' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', marginBottom: '0.35rem' }}>Studio</label>
-            <select value={studio} onChange={e => setStudio(e.target.value)} style={{ ...inputStyle, appearance: 'auto' }}>
+            <label style={{ display: 'block', fontSize: '0.78rem', color: 'rgba(255,255,255,0.55)', marginBottom: '0.4rem', fontWeight: 600 }}>🎬 Studio</label>
+            <select value={studio} onChange={e => setStudio(e.target.value)} style={{ ...inputStyle, appearance: 'auto', cursor: 'pointer' }}>
               <option>Studio 1</option>
               <option>Studio 2</option>
               <option>Studio 3</option>
@@ -83,19 +89,36 @@ export default function ShowtimeManager({ movieId, showtimes }: { movieId: strin
             </select>
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', marginBottom: '0.35rem' }}>Harga (Rp)</label>
+            <label style={{ display: 'block', fontSize: '0.78rem', color: 'rgba(255,255,255,0.55)', marginBottom: '0.4rem', fontWeight: 600 }}>💰 Harga (Rp)</label>
             <input type="number" value={price} onChange={e => setPrice(e.target.value)} min={0} style={inputStyle} />
           </div>
           <button
             type="button"
             onClick={handleAdd}
             disabled={isPending}
-            style={{ padding: '0.65rem 1.25rem', background: '#e50914', border: 'none', borderRadius: '0.5rem', color: '#fff', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', fontSize: '0.875rem' }}
+            style={{
+              padding: '0.75rem 1.5rem',
+              background: isPending ? 'rgba(229,9,20,0.5)' : 'linear-gradient(135deg, #e50914, #c0000f)',
+              border: 'none',
+              borderRadius: '0.625rem',
+              color: '#fff',
+              fontWeight: 700,
+              cursor: isPending ? 'not-allowed' : 'pointer',
+              whiteSpace: 'nowrap',
+              fontSize: '0.9rem',
+              boxShadow: '0 4px 15px rgba(229,9,20,0.35)',
+              height: 'fit-content',
+            }}
           >
             + Tambah
           </button>
         </div>
-        {msg && <p style={{ marginTop: '0.75rem', fontSize: '0.8rem', color: msg.startsWith('✅') ? '#22c55e' : '#ef4444' }}>{msg}</p>}
+
+        {msg && (
+          <p style={{ marginTop: '0.875rem', fontSize: '0.82rem', padding: '0.5rem 0.75rem', borderRadius: '0.4rem', background: msg.startsWith('✅') ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)', color: msg.startsWith('✅') ? '#22c55e' : '#ef4444', border: `1px solid ${msg.startsWith('✅') ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}` }}>
+            {msg}
+          </p>
+        )}
       </div>
 
       {/* Schedule List */}
