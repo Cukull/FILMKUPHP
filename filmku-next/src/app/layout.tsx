@@ -8,6 +8,7 @@ import HeaderRight from "./HeaderRight";
 import { logoutAction } from "@/actions/auth";
 import PageTransition from "./PageTransition";
 import SplashScreen from "./SplashScreen";
+import NavbarScrollEffect from "./NavbarScrollEffect";
 
 export const metadata: Metadata = {
   title: "FILMKU | Platform Bioskop Premium",
@@ -43,6 +44,8 @@ export default async function RootLayout({
 
             {/* ══════════════════ NAVBAR ══════════════════ */}
             <nav className="navbar">
+              {/* Scroll-aware transparent→glass effect */}
+              <NavbarScrollEffect />
               {/* Kiri: Hamburger + Logo + Nav Links */}
               <div style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
                 {/* MobileNav (Hamburger + Sidebar) */}
