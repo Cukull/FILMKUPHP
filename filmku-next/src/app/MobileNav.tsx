@@ -117,14 +117,15 @@ export default function MobileNav({ session, logoutAction }: { session?: any; lo
           left: 0,
           bottom: 0,
           width: '260px',
-          background: 'var(--bg-surface, #0f0f1a)',
-          borderRight: '1px solid rgba(255,255,255,0.07)',
+          background: '#0f0f1a',
+          borderRight: '1px solid rgba(255,255,255,0.08)',
           display: 'flex',
           flexDirection: 'column',
           padding: '30px 20px',
           transform: isOpen ? 'translateX(0)' : 'translateX(-100%)',
           transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           zIndex: 1100,
+          boxShadow: '4px 0 30px rgba(0,0,0,0.8)',
         }}
       >
         {/* Brand */}
