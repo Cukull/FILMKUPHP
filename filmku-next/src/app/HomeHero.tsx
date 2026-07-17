@@ -1,65 +1,155 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 
-type Props = {
-  trailerVideoId: string;
+type HeroFilm = {
+  id: string;
   title: string;
-  synopsis: string;
-  rating: string;
-  genre: string;
-  movieId?: string;
+  synopsis: string | null;
+  rating: number | null;
+  genre: string | null;
+  trailerVideoId: string;
 };
 
-export default function HomeHero({ trailerVideoId, title, synopsis, rating, genre, movieId }: Props) {
-  const [isMuted, setIsMuted] = useState(true);
+type Props = {
+  films: HeroFilm[];
+};
 
-  const embedUrl = `https://www.youtube.com/embed/${trailerVideoId}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&showinfo=0&rel=0&loop=1&playlist=${trailerVideoId}&modestbranding=1`;
+const AUTOPLAY_DURATION = 12000; // 12s per slide
+const MUTE_FADE_DELAY   = 1500;  // 1.5s inactivity → fade speaker icon
+
+export default function HomeHero({ films }: Props) {
+  const [index, setIndex]       = useState(0);
+  const [isMuted, setIsMuted]   = useState(true);
+  const [showMute, setShowMute] = useState(false); // speaker visibility
+  const [fading, setFading]     = useState(false); // crossfade between slides
+
+  const muteTimer    = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoTimer    = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const heroRef      = useRef<HTMLElement | null>(null);
+
+  const total = films.length;
+  const film  = films[index] ?? null;
+
+  /* ── Auto-advance carousel ── */
+  const scheduleNext = useCallback(() => {
+    if (autoTimer.current) clearTimeout(autoTimer.current);
+    if (total <= 1) return;
+    autoTimer.current = setTimeout(() => {
+      setIndex(prev => (prev + 1) % total);
+    }, AUTOPLAY_DURATION);
+  }, [total]);
+
+  useEffect(() => {
+    scheduleNext();
+    return () => { if (autoTimer.current) clearTimeout(autoTimer.current); };
+  }, [index, scheduleNext]);
+
+  /* ── Cleanup ── */
+  useEffect(() => () => {
+    if (muteTimer.current) clearTimeout(muteTimer.current);
+  }, []);
+
+  /* ── Speaker fade on cursor inactivity ── */
+  const handleMouseMove = useCallback(() => {
+    setShowMute(true);
+    if (muteTimer.current) clearTimeout(muteTimer.current);
+    muteTimer.current = setTimeout(() => setShowMute(false), MUTE_FADE_DELAY);
+  }, []);
+
+  /* ── Manual navigation ── */
+  const goTo = (i: number) => {
+    if (i === index) return;
+    setFading(true);
+    setTimeout(() => {
+      setIndex(i);
+      setFading(false);
+    }, 280);
+    scheduleNext();
+  };
+
+  const goPrev = () => goTo((index - 1 + total) % total);
+  const goNext = () => goTo((index + 1) % total);
+
+  if (!film) {
+    return (
+      <section className="home-hero" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎬</div>
+          <p>Belum ada film di Sorotan Layar Utama</p>
+        </div>
+      </section>
+    );
+  }
+
+  const embedUrl = `https://www.youtube.com/embed/${film.trailerVideoId}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&showinfo=0&rel=0&loop=1&playlist=${film.trailerVideoId}&modestbranding=1&enablejsapi=0`;
 
   return (
-    <section className="home-hero" style={{ position: 'relative', overflow: 'hidden' }}>
-      {/* YouTube iframe background */}
-      <div style={{ position: 'absolute', width: '100vw', height: '56.25vw', minHeight: '100vh', minWidth: '177.77vh', transform: 'translate(-50%, -50%)', top: '50%', left: '50%', zIndex: 0, pointerEvents: 'none' }}>
+    <section
+      ref={heroRef}
+      className="home-hero"
+      style={{ position: 'relative', overflow: 'hidden' }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => {
+        if (muteTimer.current) clearTimeout(muteTimer.current);
+        muteTimer.current = setTimeout(() => setShowMute(false), 600);
+      }}
+    >
+      {/* ── YouTube iframe background ── */}
+      <div style={{
+        position: 'absolute',
+        width: '100vw', height: '56.25vw',
+        minHeight: '100vh', minWidth: '177.77vh',
+        transform: 'translate(-50%, -50%)',
+        top: '50%', left: '50%',
+        zIndex: 0, pointerEvents: 'none',
+        opacity: fading ? 0 : 1,
+        transition: 'opacity 0.28s ease',
+      }}>
         <iframe
+          key={`${film.id}-${index}`}
           src={embedUrl}
           style={{ width: '100%', height: '100%', border: 'none', transform: 'scale(1.2)' }}
           allow="autoplay; encrypted-media"
-          title="Trailer"
+          title={film.title}
         />
       </div>
-      <div className="home-hero-overlay" style={{ zIndex: 1, position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(to right, var(--bg-base) 0%, rgba(8,8,16,0.8) 40%, rgba(8,8,16,0.2) 100%), linear-gradient(to top, var(--bg-base) 0%, transparent 40%)' }} />
 
-      {/* Mute/Unmute Button */}
+      {/* ── Gradient overlay ── */}
+      <div className="home-hero-overlay" style={{
+        zIndex: 1, position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+        background: 'linear-gradient(to right, var(--bg-base) 0%, rgba(8,8,16,0.75) 40%, rgba(8,8,16,0.15) 100%), linear-gradient(to top, var(--bg-base) 0%, transparent 40%)',
+      }} />
+
+      {/* ── Mute/Unmute button ── fades out on inactivity */}
       <button
-        onClick={() => setIsMuted(!isMuted)}
+        onClick={() => setIsMuted(m => !m)}
+        aria-label={isMuted ? 'Unmute trailer' : 'Mute trailer'}
         style={{
           position: 'absolute',
-          bottom: '15%',
+          bottom: total > 1 ? '13%' : '15%',
           right: '5%',
           zIndex: 10,
           background: 'rgba(0,0,0,0.5)',
           border: '1px solid rgba(255,255,255,0.25)',
           borderRadius: '50%',
-          width: '48px',
-          height: '48px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          width: '48px', height: '48px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer',
           color: 'white',
           backdropFilter: 'blur(8px)',
-          transition: 'all 0.25s ease',
+          opacity: showMute ? 1 : 0,
+          transition: 'opacity 0.6s ease, background 0.2s ease',
+          pointerEvents: showMute ? 'auto' : 'none',
         }}
         onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.2)')}
         onMouseLeave={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.5)')}
-        aria-label={isMuted ? 'Unmute trailer' : 'Mute trailer'}
       >
         {isMuted ? (
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-            <line x1="23" y1="9" x2="17" y2="15" />
-            <line x1="17" y1="9" x2="23" y2="15" />
+            <line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" />
           </svg>
         ) : (
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -70,36 +160,124 @@ export default function HomeHero({ trailerVideoId, title, synopsis, rating, genr
         )}
       </button>
 
-      <div className="home-hero-content" style={{ zIndex: 2, position: 'relative' }}>
+      {/* ── Carousel Prev / Next arrows ── only if multiple films */}
+      {total > 1 && (
+        <>
+          <button
+            onClick={goPrev}
+            aria-label="Film sebelumnya"
+            style={{
+              position: 'absolute', left: '1.5rem', top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 10,
+              background: 'rgba(0,0,0,0.45)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              borderRadius: '50%',
+              width: '48px', height: '48px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', color: 'white',
+              backdropFilter: 'blur(8px)',
+              fontSize: '1.4rem',
+              opacity: showMute ? 1 : 0.25,
+              transition: 'opacity 0.4s ease, background 0.2s ease',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(229,9,20,0.5)'; e.currentTarget.style.opacity = '1'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.45)'; e.currentTarget.style.opacity = showMute ? '1' : '0.25'; }}
+          >
+            ‹
+          </button>
+          <button
+            onClick={goNext}
+            aria-label="Film berikutnya"
+            style={{
+              position: 'absolute', right: '5.5rem', top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 10,
+              background: 'rgba(0,0,0,0.45)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              borderRadius: '50%',
+              width: '48px', height: '48px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', color: 'white',
+              backdropFilter: 'blur(8px)',
+              fontSize: '1.4rem',
+              opacity: showMute ? 1 : 0.25,
+              transition: 'opacity 0.4s ease, background 0.2s ease',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(229,9,20,0.5)'; e.currentTarget.style.opacity = '1'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.45)'; e.currentTarget.style.opacity = showMute ? '1' : '0.25'; }}
+          >
+            ›
+          </button>
+        </>
+      )}
+
+      {/* ── Hero content ── */}
+      <div
+        className="home-hero-content"
+        style={{
+          zIndex: 2, position: 'relative',
+          opacity: fading ? 0 : 1,
+          transform: fading ? 'translateY(10px)' : 'translateY(0)',
+          transition: 'opacity 0.28s ease, transform 0.28s ease',
+        }}
+      >
         {/* Badges */}
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-          <span className="badge badge-gold">⭐ {rating} / 10</span>
-          <span className="badge badge-accent">{genre}</span>
+          {film.rating && <span className="badge badge-gold">⭐ {film.rating} / 10</span>}
+          {film.genre && <span className="badge badge-accent">{film.genre.split(',')[0].trim()}</span>}
           <span className="badge badge-muted">HD</span>
         </div>
 
         <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 900, lineHeight: 1.1, marginBottom: '1rem', color: '#fff', letterSpacing: '-0.02em' }}>
-          {title}
+          {film.title}
         </h1>
 
         <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, fontSize: '0.95rem', marginBottom: '2rem', maxWidth: '520px' }}>
-          {synopsis}
+          {film.synopsis ? (film.synopsis.length > 180 ? film.synopsis.slice(0, 180) + '…' : film.synopsis) : ''}
         </p>
 
+        {/* CTA Buttons */}
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          {movieId ? (
-            <Link href={`/film/${movieId}`} className="btn-primary" style={{ fontSize: '0.95rem', padding: '0.75rem 1.75rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-              🎬 Pilih Sesi Tayang
-            </Link>
-          ) : (
-            <button className="btn-primary" style={{ fontSize: '0.95rem', padding: '0.75rem 1.75rem' }}>
-              🎬 Pilih Sesi Tayang
-            </button>
-          )}
-          <button className="btn-outline" style={{ padding: '0.75rem 1.75rem', fontSize: '0.95rem' }}>
-            ▶ Lihat Trailer
-          </button>
+          <Link
+            href={`/film/${film.id}`}
+            className="btn-primary"
+            style={{ fontSize: '0.95rem', padding: '0.75rem 1.75rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+          >
+            🎬 Pilih Sesi Tayang
+          </Link>
+          <Link
+            href={`/film/${film.id}`}
+            className="btn-outline"
+            style={{ padding: '0.75rem 1.75rem', fontSize: '0.95rem', textDecoration: 'none' }}
+          >
+            ▶ Detail Film
+          </Link>
         </div>
+
+        {/* ── Dot indicators ── */}
+        {total > 1 && (
+          <div style={{ display: 'flex', gap: '8px', marginTop: '2rem', alignItems: 'center' }}>
+            {films.map((f, i) => (
+              <button
+                key={f.id}
+                onClick={() => goTo(i)}
+                aria-label={`Slide ${i + 1}`}
+                style={{
+                  width: i === index ? '28px' : '8px',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: i === index ? '#e50914' : 'rgba(255,255,255,0.3)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+                  boxShadow: i === index ? '0 0 10px rgba(229,9,20,0.6)' : 'none',
+                }}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

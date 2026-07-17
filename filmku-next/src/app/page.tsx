@@ -70,25 +70,27 @@ export default async function Home() {
     }))
     .filter(s => s.movies.length > 0);
 
-  // Hero: films tagged "Sorotan Layar Utama" that have a trailer
-  const heroMovies = allMovies.filter(
-    m =>
-      m.sections?.split(',').map(s => s.trim()).includes('Sorotan Layar Utama') &&
-      m.trailerUrl
-  );
-  const heroFilm = heroMovies[0] ?? null;
+  // Hero films: all tagged "Sorotan Layar Utama" with a valid trailer
+  const heroMovies = allMovies
+    .filter(
+      m =>
+        m.sections?.split(',').map(s => s.trim()).includes('Sorotan Layar Utama') &&
+        m.trailerUrl
+    )
+    .map(m => ({
+      id: m.id,
+      title: m.title,
+      synopsis: m.synopsis,
+      rating: m.rating,
+      genre: m.genre,
+      trailerVideoId: extractYouTubeId(m.trailerUrl),
+    }))
+    .filter(m => m.trailerVideoId !== '');
 
   return (
     <div>
-      {/* ── HERO BANNER ── */}
-      <HomeHero
-        trailerVideoId={extractYouTubeId(heroFilm?.trailerUrl)}
-        title={heroFilm?.title ?? 'Selamat Datang di FILMKU'}
-        synopsis={heroFilm?.synopsis ?? 'Platform bioskop premium terbaik di Indonesia. Temukan film favoritmu dan pesan tiket dengan mudah.'}
-        rating={heroFilm?.rating != null ? String(heroFilm.rating) : ''}
-        genre={heroFilm?.genre?.split(',')[0]?.trim() ?? ''}
-        movieId={heroFilm?.id}
-      />
+      {/* ── HERO BANNER (Carousel) ── */}
+      <HomeHero films={heroMovies} />
 
       {/* ── MOVIE SECTIONS ── */}
       <div style={{ paddingTop: '2.5rem', paddingBottom: '1rem' }}>
