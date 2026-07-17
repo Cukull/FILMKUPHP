@@ -96,7 +96,7 @@ export default function ShowtimeSelector({
 
   return (
     <>
-      <div id="jadwal" style={{ width: "380px", flexShrink: 0 }}>
+      <div id="jadwal" style={{ width: '100%', maxWidth: '420px', flexShrink: 0 }}>
         <div className="glass" style={{ 
           padding: "1.5rem", 
           borderRadius: "1rem",
@@ -109,7 +109,7 @@ export default function ShowtimeSelector({
             <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#fff" }}>Pilih Tanggal Tayang</h3>
           </div>
           
-          <div style={{ display: "flex", gap: "0.5rem", overflowX: "auto", paddingBottom: "0.5rem" }} className="hide-scrollbar">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.4rem' }}>
             {days.map((day) => {
               const isActive = day.dateStr === selectedDateStr;
               return (
@@ -123,13 +123,13 @@ export default function ShowtimeSelector({
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    padding: '0.75rem 1.25rem',
+                    padding: '0.6rem 0.25rem',
                     borderRadius: '0.75rem',
-                    background: isActive ? 'rgba(229, 9, 20, 0.1)' : 'rgba(255,255,255,0.03)',
-                    border: `1px solid ${isActive ? 'rgba(229, 9, 20, 0.8)' : 'rgba(255,255,255,0.1)'}`,
-                    boxShadow: isActive ? '0 0 15px rgba(229, 9, 20, 0.3)' : 'none',
+                    background: isActive ? 'rgba(229, 9, 20, 0.12)' : 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${isActive ? 'rgba(229, 9, 20, 0.8)' : 'rgba(255,255,255,0.08)'}`,
+                    boxShadow: isActive ? '0 0 12px rgba(229, 9, 20, 0.25)' : 'none',
                     cursor: 'pointer',
-                    minWidth: '80px',
+                    width: '100%',
                     transition: 'all 0.2s',
                   }}
                 >
