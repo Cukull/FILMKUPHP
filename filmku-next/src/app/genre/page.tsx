@@ -1,77 +1,140 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 
+export const revalidate = 30;
+
+// All possible genres — same list as FilmForm checkboxes
+const ALL_GENRES = [
+  'Action', 'Adventure', 'Animation', 'Comedy', 'Crime',
+  'Documentary', 'Drama', 'Family', 'Fantasy', 'Horror',
+  'Mystery', 'Romance', 'Science Fiction', 'Thriller', 'War', 'Western',
+];
+
+const GENRE_ICONS: Record<string, string> = {
+  'Action': '💥',
+  'Adventure': '🗺️',
+  'Animation': '🎨',
+  'Comedy': '😂',
+  'Crime': '🔍',
+  'Documentary': '📽️',
+  'Drama': '🎭',
+  'Family': '👨‍👩‍👧',
+  'Fantasy': '🧙',
+  'Horror': '👻',
+  'Mystery': '🕵️',
+  'Romance': '❤️',
+  'Science Fiction': '🚀',
+  'Thriller': '😱',
+  'War': '⚔️',
+  'Western': '🤠',
+};
+
 export default async function GenrePage() {
-  const categories = await prisma.category.findMany({
-    include: {
-      movies: {
-        orderBy: { title: 'asc' }
-      }
-    }
+  const allMovies = await prisma.movie.findMany({
+    orderBy: { title: 'asc' },
   });
 
+  // Group movies by genre string field (each movie can have multiple genres)
+  const genres = ALL_GENRES
+    .map(name => ({
+      name,
+      icon: GENRE_ICONS[name] ?? '🎬',
+      movies: allMovies.filter(m =>
+        m.genre
+          ?.split(',')
+          .map(g => g.trim())
+          .includes(name)
+      ),
+    }))
+    .filter(g => g.movies.length > 0);
+
   return (
-    <div className="page-transition" style={{ padding: "4rem 4rem 6rem", minHeight: "100vh" }}>
-      <div style={{ marginBottom: "3rem", maxWidth: "600px" }}>
-        <h1 style={{ fontSize: "2.5rem", fontWeight: 800, marginBottom: "0.75rem", color: "var(--text-primary)" }}>
+    <div className="page-transition" style={{ padding: '4rem 4rem 6rem', minHeight: '100vh' }}>
+      {/* Page Header */}
+      <div style={{ marginBottom: '3rem', maxWidth: '650px' }}>
+        <h1 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.75rem', color: 'var(--text-primary)' }}>
           Eksplorasi Berdasarkan Genre
         </h1>
-        <p style={{ color: "var(--text-secondary)", fontSize: "1.1rem", lineHeight: 1.6 }}>
-          Temukan film favorit Anda dari berbagai kategori yang tersedia.
+        <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: 1.6 }}>
+          Temukan film favorit Anda dari berbagai genre yang tersedia.
         </p>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "3rem" }}>
-        {categories.map((category) => (
-          category.movies.length > 0 && (
-            <div key={category.id} className="movie-lane">
-              <div className="movie-lane-header" style={{ marginBottom: "1rem" }}>
-                <h3 className="movie-lane-title" style={{ fontSize: "1.5rem" }}>{category.name}</h3>
-                <Link
-                  href={`/kategori/${category.id}`}
-                  style={{
-                    fontSize: "0.85rem",
-                    color: "var(--accent)",
-                    textDecoration: "none",
+      {/* Genre Sections */}
+      {genres.length === 0 ? (
+        <div style={{
+          padding: '5rem 2rem',
+          textAlign: 'center',
+          color: 'rgba(255,255,255,0.35)',
+          border: '1px dashed rgba(255,255,255,0.1)',
+          borderRadius: '1rem',
+        }}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎬</div>
+          <p style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+            Belum ada film dengan genre yang ditentukan
+          </p>
+          <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.2)' }}>
+            Buka Admin Panel → Edit Film → pilih Genre untuk film tersebut.
+          </p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+          {genres.map(genre => (
+            <div key={genre.name} className="movie-lane">
+              {/* Genre Header */}
+              <div className="movie-lane-header" style={{ marginBottom: '1rem' }}>
+                <h3 className="movie-lane-title" style={{ fontSize: '1.4rem' }}>
+                  {genre.icon} {genre.name}
+                  <span style={{
+                    marginLeft: '0.75rem',
+                    fontSize: '0.75rem',
                     fontWeight: 600,
-                    letterSpacing: "0.03em",
-                  }}
-                >
-                  Lihat Semua →
-                </Link>
+                    background: 'rgba(229,9,20,0.15)',
+                    color: '#e50914',
+                    padding: '0.2rem 0.6rem',
+                    borderRadius: '20px',
+                    border: '1px solid rgba(229,9,20,0.3)',
+                    verticalAlign: 'middle',
+                  }}>
+                    {genre.movies.length} film
+                  </span>
+                </h3>
               </div>
 
-              <div className="movie-lane-scroll" style={{ paddingBottom: "1rem" }}>
-                {category.movies.map((movie) => (
+              {/* Movie Cards */}
+              <div className="movie-lane-scroll" style={{ paddingBottom: '1rem' }}>
+                {genre.movies.map(movie => (
                   <Link
                     href={`/film/${movie.id}`}
                     key={movie.id}
-                    style={{ textDecoration: "none", flexShrink: 0 }}
+                    style={{ textDecoration: 'none', flexShrink: 0 }}
                   >
                     <div className="movie-lane-card">
-                      {movie.status === "NOW_PLAYING" && (
+                      {movie.status === 'NOW_PLAYING' && (
                         <span className="movie-status-badge badge-now-playing">Tayang</span>
                       )}
-                      {movie.status === "UPCOMING" && (
+                      {movie.status === 'UPCOMING' && (
                         <span className="movie-status-badge badge-upcoming">Segera</span>
                       )}
                       <img
-                        src={movie.posterUrl || "https://via.placeholder.com/200x300?text=No+Poster"}
+                        src={movie.posterUrl || 'https://via.placeholder.com/160x240?text=No+Poster'}
                         alt={movie.title}
                         loading="lazy"
                       />
                       <div className="card-info">
                         <h4>{movie.title}</h4>
-                        <p>{movie.rating ? `⭐ ${movie.rating}` : category.name}</p>
+                        <p>
+                          {movie.rating ? `⭐ ${movie.rating}` : genre.name}
+                        </p>
                       </div>
                     </div>
                   </Link>
                 ))}
               </div>
             </div>
-          )
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

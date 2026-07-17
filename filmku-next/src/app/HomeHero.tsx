@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 type Props = {
   trailerVideoId: string;
@@ -8,9 +9,10 @@ type Props = {
   synopsis: string;
   rating: string;
   genre: string;
+  movieId?: string;
 };
 
-export default function HomeHero({ trailerVideoId, title, synopsis, rating, genre }: Props) {
+export default function HomeHero({ trailerVideoId, title, synopsis, rating, genre, movieId }: Props) {
   const [isMuted, setIsMuted] = useState(true);
 
   const embedUrl = `https://www.youtube.com/embed/${trailerVideoId}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&showinfo=0&rel=0&loop=1&playlist=${trailerVideoId}&modestbranding=1`;
@@ -85,9 +87,15 @@ export default function HomeHero({ trailerVideoId, title, synopsis, rating, genr
         </p>
 
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <button className="btn-primary" style={{ fontSize: '0.95rem', padding: '0.75rem 1.75rem' }}>
-            🎬 Pilih Sesi Tayang
-          </button>
+          {movieId ? (
+            <Link href={`/film/${movieId}`} className="btn-primary" style={{ fontSize: '0.95rem', padding: '0.75rem 1.75rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+              🎬 Pilih Sesi Tayang
+            </Link>
+          ) : (
+            <button className="btn-primary" style={{ fontSize: '0.95rem', padding: '0.75rem 1.75rem' }}>
+              🎬 Pilih Sesi Tayang
+            </button>
+          )}
           <button className="btn-outline" style={{ padding: '0.75rem 1.75rem', fontSize: '0.95rem' }}>
             ▶ Lihat Trailer
           </button>
