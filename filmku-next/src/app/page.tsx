@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import FAQSection from "./FAQSection";
 import HomeHero from "./HomeHero";
+import MovieLaneCard from "@/components/MovieLaneCard";
 
 export const revalidate = 30;
 
@@ -121,22 +122,16 @@ export default async function Home() {
 
               <div className="movie-lane-scroll">
                 {section.movies.map(movie => (
-                  <Link href={`/film/${movie.id}`} key={movie.id} style={{ textDecoration: 'none' }}>
-                    <div className="movie-lane-card">
-                      <span className={`movie-status-badge ${movie.status === 'NOW_PLAYING' ? 'badge-now-playing' : 'badge-upcoming'}`}>
-                        {movie.status === 'NOW_PLAYING' ? 'Tayang' : 'Segera'}
-                      </span>
-                      <img
-                        src={movie.posterUrl || 'https://via.placeholder.com/160x240?text=No+Poster'}
-                        alt={movie.title}
-                        loading="lazy"
-                      />
-                      <div className="card-info">
-                        <h4>{movie.title}</h4>
-                        <p>{movie.rating ? `⭐ ${movie.rating}` : (movie.genre?.split(',')[0]?.trim() ?? '')}</p>
-                      </div>
-                    </div>
-                  </Link>
+                  <MovieLaneCard
+                    key={movie.id}
+                    id={movie.id}
+                    title={movie.title}
+                    posterUrl={movie.posterUrl}
+                    rating={movie.rating}
+                    genre={movie.genre}
+                    synopsis={movie.synopsis}
+                    status={movie.status}
+                  />
                 ))}
               </div>
             </div>

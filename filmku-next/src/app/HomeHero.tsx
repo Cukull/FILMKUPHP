@@ -20,14 +20,18 @@ const AUTOPLAY_DURATION = 12000; // 12s per slide
 const MUTE_FADE_DELAY   = 1500;  // 1.5s inactivity → fade speaker icon
 
 export default function HomeHero({ films }: Props) {
-  const [index, setIndex]       = useState(0);
-  const [isMuted, setIsMuted]   = useState(true);
-  const [showMute, setShowMute] = useState(false); // speaker visibility
-  const [fading, setFading]     = useState(false); // crossfade between slides
+  const [index, setIndex]         = useState(0);
+  const [isMuted, setIsMuted]     = useState(true);
+  const [showMute, setShowMute]   = useState(false); // speaker visibility
+  const [fading, setFading]       = useState(false); // crossfade between slides
+  const [showPrev, setShowPrev]   = useState(false); // left hover-zone active
+  const [showNext, setShowNext]   = useState(false); // right hover-zone active
 
   const muteTimer    = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoTimer    = useRef<ReturnType<typeof setTimeout> | null>(null);
   const heroRef      = useRef<HTMLElement | null>(null);
+  // ref ke iframe YouTube — untuk postMessage mute/unmute tanpa reload
+  const iframeRef    = useRef<HTMLIFrameElement | null>(null);
 
   const total = films.length;
   const film  = films[index] ?? null;
@@ -58,6 +62,14 @@ export default function HomeHero({ films }: Props) {
     muteTimer.current = setTimeout(() => setShowMute(false), MUTE_FADE_DELAY);
   }, []);
 
+  /* ── YouTube postMessage helper — toggle mute tanpa reload iframe ── */
+  const postYT = useCallback((cmd: 'mute' | 'unMute') => {
+    iframeRef.current?.contentWindow?.postMessage(
+      JSON.stringify({ event: 'command', func: cmd, args: [] }),
+      '*'
+    );
+  }, []);
+
   /* ── Manual navigation ── */
   const goTo = (i: number) => {
     if (i === index) return;
@@ -83,7 +95,9 @@ export default function HomeHero({ films }: Props) {
     );
   }
 
-  const embedUrl = `https://www.youtube.com/embed/${film.trailerVideoId}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&showinfo=0&rel=0&loop=1&playlist=${film.trailerVideoId}&modestbranding=1&enablejsapi=0`;
+  // ⚠️  isMuted TIDAK masuk ke URL — URL statis per slide agar iframe tidak reload.
+  //     Mute awal = 1 (muted). Toggle dilakukan via postMessage ke YouTube IFrame API.
+  const embedUrl = `https://www.youtube.com/embed/${film.trailerVideoId}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=${film.trailerVideoId}&modestbranding=1&enablejsapi=1`;
 
   return (
     <section
@@ -113,11 +127,21 @@ export default function HomeHero({ films }: Props) {
         transition: 'opacity 0.28s ease',
       }}>
         <iframe
+          ref={iframeRef}
           key={`${film.id}-${index}`}
           src={embedUrl}
           style={{ width: '100%', height: '100%', border: 'none', transform: 'scale(1.2)' }}
           allow="autoplay; encrypted-media"
           title={film.title}
+          // Saat iframe baru load (slide berganti), sync state mute ke iframe
+          onLoad={() => {
+            // Iframe selalu mulai muted=1; kalau user sudah unmute sebelumnya,
+            // kirim perintah unMute setelah iframe siap.
+            if (!isMuted) {
+              // Beri jeda singkat agar YouTube player API benar-benar ready
+              setTimeout(() => postYT('unMute'), 800);
+            }
+          }}
         />
       </div>
 
@@ -129,7 +153,15 @@ export default function HomeHero({ films }: Props) {
 
       {/* ── Mute/Unmute button ── fades out on inactivity */}
       <button
-        onClick={() => setIsMuted(m => !m)}
+        onClick={() => {
+          // Toggle icon state (hanya untuk SVG icon — TIDAK mengubah src iframe)
+          setIsMuted(prev => {
+            const next = !prev;
+            // Kirim perintah ke YouTube IFrame API via postMessage
+            postYT(next ? 'mute' : 'unMute');
+            return next;
+          });
+        }}
         aria-label={isMuted ? 'Unmute trailer' : 'Mute trailer'}
         style={{
           position: 'absolute',
@@ -168,52 +200,99 @@ export default function HomeHero({ films }: Props) {
       {/* ── Carousel Prev / Next arrows ── only if multiple films */}
       {total > 1 && (
         <>
-          <button
-            onClick={goPrev}
-            aria-label="Film sebelumnya"
+          {/* ── Left hover-zone + Prev button ── */}
+          <div
+            onMouseEnter={() => setShowPrev(true)}
+            onMouseLeave={() => setShowPrev(false)}
             style={{
-              position: 'absolute', left: '1.5rem', top: '50%',
-              transform: 'translateY(-50%)',
-              zIndex: 10,
-              background: 'rgba(0,0,0,0.45)',
-              border: '1px solid rgba(255,255,255,0.15)',
-              borderRadius: '50%',
-              width: '48px', height: '48px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', color: 'white',
-              backdropFilter: 'blur(8px)',
-              fontSize: '1.4rem',
-              opacity: showMute ? 1 : 0.25,
-              transition: 'opacity 0.4s ease, background 0.2s ease',
+              position: 'absolute',
+              inset: '0',
+              right: 'auto',
+              width: '17%',
+              zIndex: 9,
+              // no background — fully invisible trigger zone
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(229,9,20,0.5)'; e.currentTarget.style.opacity = '1'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.45)'; e.currentTarget.style.opacity = showMute ? '1' : '0.25'; }}
           >
-            ‹
-          </button>
-          <button
-            onClick={goNext}
-            aria-label="Film berikutnya"
+            <button
+              onClick={goPrev}
+              aria-label="Film sebelumnya"
+              className="hero-carousel-arrow"
+              style={{
+                position: 'absolute',
+                left: '1.25rem',
+                top: '50%',
+                transform: `translateY(-50%) translateX(${showPrev ? '0px' : '-14px'})`,
+                zIndex: 10,
+                background: 'rgba(0,0,0,0.50)',
+                border: '1px solid rgba(255,255,255,0.18)',
+                borderRadius: '50%',
+                width: '48px', height: '48px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', color: 'white',
+                backdropFilter: 'blur(8px)',
+                fontSize: '1.4rem',
+                opacity: showPrev ? 1 : 0,
+                pointerEvents: showPrev ? 'auto' : 'none',
+                transition: 'opacity 0.25s ease, transform 0.25s ease, background 0.2s ease',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(229,9,20,0.55)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.50)'; }}
+            >
+              ‹
+            </button>
+          </div>
+
+          {/* ── Right hover-zone + Next button ── */}
+          <div
+            onMouseEnter={() => setShowNext(true)}
+            onMouseLeave={() => setShowNext(false)}
             style={{
-              position: 'absolute', right: '5.5rem', top: '50%',
-              transform: 'translateY(-50%)',
-              zIndex: 10,
-              background: 'rgba(0,0,0,0.45)',
-              border: '1px solid rgba(255,255,255,0.15)',
-              borderRadius: '50%',
-              width: '48px', height: '48px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', color: 'white',
-              backdropFilter: 'blur(8px)',
-              fontSize: '1.4rem',
-              opacity: showMute ? 1 : 0.25,
-              transition: 'opacity 0.4s ease, background 0.2s ease',
+              position: 'absolute',
+              inset: '0',
+              left: 'auto',
+              width: '17%',
+              zIndex: 9,
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(229,9,20,0.5)'; e.currentTarget.style.opacity = '1'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.45)'; e.currentTarget.style.opacity = showMute ? '1' : '0.25'; }}
           >
-            ›
-          </button>
+            <button
+              onClick={goNext}
+              aria-label="Film berikutnya"
+              className="hero-carousel-arrow"
+              style={{
+                position: 'absolute',
+                right: '1.25rem',
+                top: '50%',
+                transform: `translateY(-50%) translateX(${showNext ? '0px' : '14px'})`,
+                zIndex: 10,
+                background: 'rgba(0,0,0,0.50)',
+                border: '1px solid rgba(255,255,255,0.18)',
+                borderRadius: '50%',
+                width: '48px', height: '48px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', color: 'white',
+                backdropFilter: 'blur(8px)',
+                fontSize: '1.4rem',
+                opacity: showNext ? 1 : 0,
+                pointerEvents: showNext ? 'auto' : 'none',
+                transition: 'opacity 0.25s ease, transform 0.25s ease, background 0.2s ease',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(229,9,20,0.55)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.50)'; }}
+            >
+              ›
+            </button>
+          </div>
+
+          {/* ── Mobile/touch: always-visible arrows via CSS ── */}
+          <style>{`
+            @media (hover: none) {
+              .hero-carousel-arrow {
+                opacity: 1 !important;
+                transform: translateY(-50%) translateX(0px) !important;
+                pointer-events: auto !important;
+              }
+            }
+          `}</style>
         </>
       )}
 

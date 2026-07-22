@@ -10,6 +10,7 @@ import PageTransition from "./PageTransition";
 import SplashScreen from "./SplashScreen";
 import NavbarScrollEffect from "./NavbarScrollEffect";
 import PageLoadingOverlay from "./PageLoadingOverlay";
+import { NavigationProvider } from "./NavigationContext";
 
 export const metadata: Metadata = {
   title: "FILMKU | Platform Bioskop Premium",
@@ -37,6 +38,8 @@ export default async function RootLayout({
         />
       </head>
       <body>
+        {/* NavigationProvider: detects forward/back direction for page transitions */}
+        <NavigationProvider>
         {/* Premium Splash Screen — first visit only */}
         <SplashScreen />
 
@@ -122,6 +125,7 @@ export default async function RootLayout({
 
           </div>
         </SmoothScroll>
+        </NavigationProvider>
       </body>
     </html>
   );

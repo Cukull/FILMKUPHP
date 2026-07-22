@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { getMoviesByIds } from '@/actions/movies';
+import MovieGridCard from '@/components/MovieGridCard';
 
 export default function WishlistClient() {
   const [movies, setMovies] = useState<any[]>([]);
@@ -55,17 +56,18 @@ export default function WishlistClient() {
       ) : movies.length > 0 ? (
         <div className="movie-grid" style={{ padding: 0 }}>
           {movies.map((movie) => (
-            <Link href={`/film/${movie.id}`} key={movie.id} style={{ textDecoration: 'none' }}>
-              <div className="movie-card glass">
-                <img 
-                  src={movie.posterUrl || "https://via.placeholder.com/500x750?text=No+Poster"} 
-                  alt={movie.title} 
-                  className="movie-poster"
-                />
-                <button 
+            <MovieGridCard
+              key={movie.id}
+              id={movie.id}
+              title={movie.title}
+              posterUrl={movie.posterUrl}
+              rating={movie.rating}
+              synopsis={movie.synopsis}
+              status={movie.status}
+              actions={
+                <button
                   onClick={(e) => removeFromWishlist(movie.id, e)}
                   style={{
-                    position: 'absolute', top: '10px', right: '10px', zIndex: 10,
                     background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%',
                     width: '32px', height: '32px', display: 'flex', alignItems: 'center',
                     justifyContent: 'center', color: 'var(--primary)', cursor: 'pointer',
@@ -75,14 +77,8 @@ export default function WishlistClient() {
                 >
                   ✕
                 </button>
-                <div className="movie-overlay">
-                  <h4 style={{ fontWeight: 600, fontSize: '1.1rem', margin: '0 0 0.5rem 0' }}>{movie.title}</h4>
-                  {movie.rating && (
-                    <div style={{ color: 'var(--accent)', fontWeight: 'bold' }}>⭐ {movie.rating}/10</div>
-                  )}
-                </div>
-              </div>
-            </Link>
+              }
+            />
           ))}
         </div>
       ) : (
@@ -90,9 +86,7 @@ export default function WishlistClient() {
           <span style={{ fontSize: '2rem', display: 'block', marginBottom: '1rem' }}>📭</span>
           <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem' }}>Wishlist Anda Kosong</h3>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>Anda belum menambahkan film apapun ke wishlist.</p>
-          <Link href="/">
-            <button className="btn-primary">Eksplor Film</button>
-          </Link>
+          <Link href="/" className="btn-primary" style={{ display: 'inline-block', textDecoration: 'none' }}>Eksplor Film</Link>
         </div>
       )}
     </div>

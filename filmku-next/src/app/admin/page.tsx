@@ -15,7 +15,7 @@ export default async function AdminDashboard() {
   if (user?.role !== 'ADMIN') {
     return (
       <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-        <h2>Akses Ditolak</h2>
+        <h3>Akses Ditolak</h3>
         <p>Anda bukan Administrator.</p>
       </div>
     );

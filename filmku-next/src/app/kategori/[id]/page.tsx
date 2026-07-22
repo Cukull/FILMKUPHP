@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import Link from "next/link";
+import MovieGridCard from "@/components/MovieGridCard";
 
 export default async function CategoryDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -25,21 +25,15 @@ export default async function CategoryDetail({ params }: { params: Promise<{ id:
       {category.movies.length > 0 ? (
         <div className="movie-grid" style={{ padding: 0 }}>
           {category.movies.map((movie) => (
-            <Link href={`/film/${movie.id}`} key={movie.id} style={{ textDecoration: 'none' }}>
-              <div className="movie-card glass">
-                <img 
-                  src={movie.posterUrl || "https://via.placeholder.com/500x750?text=No+Poster"} 
-                  alt={movie.title} 
-                  className="movie-poster"
-                />
-                <div className="movie-overlay">
-                  <h4 style={{ fontWeight: 600, fontSize: '1.1rem', margin: '0 0 0.5rem 0' }}>{movie.title}</h4>
-                  {movie.rating && (
-                    <div style={{ color: 'var(--accent)', fontWeight: 'bold' }}>⭐ {movie.rating}/10</div>
-                  )}
-                </div>
-              </div>
-            </Link>
+            <MovieGridCard
+              key={movie.id}
+              id={movie.id}
+              title={movie.title}
+              posterUrl={movie.posterUrl}
+              rating={movie.rating}
+              synopsis={movie.synopsis}
+              status={movie.status}
+            />
           ))}
         </div>
       ) : (

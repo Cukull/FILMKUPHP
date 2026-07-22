@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import Lenis from 'lenis';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -8,6 +8,9 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
 
 export default function SmoothScroll({ children }: { children: React.ReactNode }) {
+  // Stable ref so the page-transition-complete handler can call scrollTo(0)
+  const lenisRef = useRef<InstanceType<typeof Lenis> | null>(null);
+
   useEffect(() => {
     // ── Lenis Smooth Scroll ──
     const lenis = new Lenis({
@@ -19,6 +22,7 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
       wheelMultiplier: 1,
       touchMultiplier: 2,
     });
+    lenisRef.current = lenis;
 
     // Connect Lenis to GSAP ScrollTrigger
     lenis.on('scroll', ScrollTrigger.update);
@@ -206,7 +210,19 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
       );
     }
 
+    /* ── Sync with PageTransition after every navigation ── */
+    // PageTransition fires this event when the enter animation completes.
+    // We snap Lenis to the top of the new page and refresh ScrollTrigger
+    // so scroll-animated elements re-calculate their positions correctly.
+    const onTransitionDone = () => {
+      lenisRef.current?.scrollTo(0, { immediate: true });
+      // Short delay lets the new page DOM fully paint before measuring
+      setTimeout(() => ScrollTrigger.refresh(), 50);
+    };
+    window.addEventListener('page-transition-complete', onTransitionDone);
+
     return () => {
+      window.removeEventListener('page-transition-complete', onTransitionDone);
       lenis.destroy();
       ScrollTrigger.getAll().forEach((t) => t.kill());
     };

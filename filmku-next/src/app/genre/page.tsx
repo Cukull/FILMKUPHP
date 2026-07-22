@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
+import MovieLaneCard from "@/components/MovieLaneCard";
 
 export const revalidate = 30;
 
@@ -101,34 +101,18 @@ export default async function GenrePage() {
                 </h3>
               </div>
 
-              {/* Movie Cards */}
               <div className="movie-lane-scroll" style={{ paddingBottom: '1rem' }}>
                 {genre.movies.map(movie => (
-                  <Link
-                    href={`/film/${movie.id}`}
+                  <MovieLaneCard
                     key={movie.id}
-                    style={{ textDecoration: 'none', flexShrink: 0 }}
-                  >
-                    <div className="movie-lane-card">
-                      {movie.status === 'NOW_PLAYING' && (
-                        <span className="movie-status-badge badge-now-playing">Tayang</span>
-                      )}
-                      {movie.status === 'UPCOMING' && (
-                        <span className="movie-status-badge badge-upcoming">Segera</span>
-                      )}
-                      <img
-                        src={movie.posterUrl || 'https://via.placeholder.com/160x240?text=No+Poster'}
-                        alt={movie.title}
-                        loading="lazy"
-                      />
-                      <div className="card-info">
-                        <h4>{movie.title}</h4>
-                        <p>
-                          {movie.rating ? `⭐ ${movie.rating}` : genre.name}
-                        </p>
-                      </div>
-                    </div>
-                  </Link>
+                    id={movie.id}
+                    title={movie.title}
+                    posterUrl={movie.posterUrl}
+                    rating={movie.rating}
+                    genre={genre.name}
+                    synopsis={movie.synopsis}
+                    status={movie.status}
+                  />
                 ))}
               </div>
             </div>
