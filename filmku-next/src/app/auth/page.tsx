@@ -24,11 +24,11 @@ const DotField = dynamic(() => import('@/components/DotField'), { ssr: false });
 export default function AuthPage() {
   const [isRegister, setIsRegister] = useState(false);
 
-  const [loginError,   setLoginError]   = useState('');
-  const [regError,     setRegError]     = useState('');
-  const [regSuccess,   setRegSuccess]   = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [regError, setRegError] = useState('');
+  const [regSuccess, setRegSuccess] = useState('');
   const [loadingLogin, setLoadingLogin] = useState(false);
-  const [loadingReg,   setLoadingReg]   = useState(false);
+  const [loadingReg, setLoadingReg] = useState(false);
 
   async function handleLogin(formData: FormData) {
     setLoadingLogin(true); setLoginError('');
@@ -92,29 +92,29 @@ export default function AuthPage() {
   /* ── Inline SVG icons ────────────────────────────────────── */
   const EmailSVG = () => (
     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>
+      <rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-10 6L2 7" />
     </svg>
   );
   const LockSVG = () => (
     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
     </svg>
   );
   const UserSVG = () => (
     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
     </svg>
   );
   const KeySVG = () => (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/>
+      <circle cx="7.5" cy="15.5" r="5.5" /><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3" />
     </svg>
   );
 
   /* ── Film grid icon (persis seperti referensi PHP) ────────── */
   const FilmGridIcon = () => (
     <svg width="68" height="68" viewBox="0 0 68 68" fill="none">
-      {[0,1,2].map(row => [0,1,2].map(col => (
+      {[0, 1, 2].map(row => [0, 1, 2].map(col => (
         <rect
           key={`${row}-${col}`}
           x={3 + col * 22} y={3 + row * 22}
@@ -267,7 +267,7 @@ export default function AuthPage() {
                 <input type="email" name="email" required placeholder="didosyukur123@gmail.com"
                   style={inputStyle}
                   onFocus={e => (e.target.style.borderColor = 'rgba(229,9,20,0.55)')}
-                  onBlur={e  => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')}
+                  onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')}
                 />
               </div>
               <div>
@@ -275,13 +275,13 @@ export default function AuthPage() {
                 <input type="password" name="password" required placeholder="••••••••••"
                   style={inputStyle}
                   onFocus={e => (e.target.style.borderColor = 'rgba(229,9,20,0.55)')}
-                  onBlur={e  => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')}
+                  onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')}
                 />
               </div>
               <button type="submit" disabled={loadingLogin}
                 style={{ ...redBtnStyle, marginTop: '0.2rem', opacity: loadingLogin ? 0.6 : 1, cursor: loadingLogin ? 'not-allowed' : 'pointer' }}
                 onMouseOver={e => { if (!loadingLogin) e.currentTarget.style.background = '#c0000e'; }}
-                onMouseOut={e  => { if (!loadingLogin) e.currentTarget.style.background = '#e50914'; }}
+                onMouseOut={e => { if (!loadingLogin) e.currentTarget.style.background = '#e50914'; }}
               >
                 {loadingLogin ? 'Memproses…' : 'Masuk'}
               </button>
@@ -289,19 +289,9 @@ export default function AuthPage() {
 
             {/* Demo credentials */}
             <div style={{
-              marginTop: '1.25rem', width: '100%', padding: '0.8rem 0.9rem',
-              borderRadius: '8px', border: '1px solid rgba(255,255,255,0.07)',
-              background: 'rgba(255,255,255,0.03)',
+
             }}>
-              <p style={{ margin: '0 0 0.35rem', fontSize: '0.74rem', color: 'rgba(255,255,255,0.55)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <KeySVG /> <strong>Akun Demo:</strong>
-              </p>
-              <p style={{ margin: '0.15rem 0', fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)' }}>
-                Admin: <span style={{ color: '#e88' }}>angra@admin.com</span> / admin123
-              </p>
-              <p style={{ margin: '0.15rem 0', fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)' }}>
-                User: <span style={{ color: '#e88' }}>syukur@gmail.com</span> / syukur123
-              </p>
+
             </div>
           </div>
 
@@ -324,7 +314,7 @@ export default function AuthPage() {
                 onClick={() => setIsRegister(true)}
                 style={outlineBtnStyle}
                 onMouseOver={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#b00010'; }}
-                onMouseOut={e  => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#fff'; }}
+                onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#fff'; }}
               >
                 Daftar Sekarang
               </button>
@@ -341,8 +331,8 @@ export default function AuthPage() {
               {/* Play-button icon */}
               <div style={{ marginBottom: '1.5rem' }}>
                 <svg width="68" height="68" viewBox="0 0 68 68" fill="none">
-                  <circle cx="34" cy="34" r="30" stroke="rgba(255,255,255,0.85)" strokeWidth="2.5"/>
-                  <path d="M27 22l22 12-22 12V22z" fill="rgba(255,255,255,0.9)"/>
+                  <circle cx="34" cy="34" r="30" stroke="rgba(255,255,255,0.85)" strokeWidth="2.5" />
+                  <path d="M27 22l22 12-22 12V22z" fill="rgba(255,255,255,0.9)" />
                 </svg>
               </div>
               <h2 style={{ fontSize: '1.7rem', fontWeight: 900, color: '#fff', margin: '0 0 0.85rem', lineHeight: 1.2, letterSpacing: '-0.01em' }}>
@@ -355,7 +345,7 @@ export default function AuthPage() {
                 onClick={() => setIsRegister(false)}
                 style={outlineBtnStyle}
                 onMouseOver={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#b00010'; }}
-                onMouseOut={e  => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#fff'; }}
+                onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#fff'; }}
               >
                 Masuk Sekarang
               </button>
@@ -414,7 +404,7 @@ export default function AuthPage() {
                 <input type="text" name="name" required placeholder="John Doe"
                   style={inputStyle}
                   onFocus={e => (e.target.style.borderColor = 'rgba(229,9,20,0.55)')}
-                  onBlur={e  => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')}
+                  onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')}
                 />
               </div>
               <div>
@@ -422,7 +412,7 @@ export default function AuthPage() {
                 <input type="email" name="email" required placeholder="kamu@email.com"
                   style={inputStyle}
                   onFocus={e => (e.target.style.borderColor = 'rgba(229,9,20,0.55)')}
-                  onBlur={e  => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')}
+                  onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')}
                 />
               </div>
               <div>
@@ -430,13 +420,13 @@ export default function AuthPage() {
                 <input type="password" name="password" required placeholder="Min. 8 karakter"
                   style={inputStyle}
                   onFocus={e => (e.target.style.borderColor = 'rgba(229,9,20,0.55)')}
-                  onBlur={e  => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')}
+                  onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')}
                 />
               </div>
               <button type="submit" disabled={loadingReg}
                 style={{ ...redBtnStyle, marginTop: '0.15rem', opacity: loadingReg ? 0.6 : 1, cursor: loadingReg ? 'not-allowed' : 'pointer' }}
                 onMouseOver={e => { if (!loadingReg) e.currentTarget.style.background = '#c0000e'; }}
-                onMouseOut={e  => { if (!loadingReg) e.currentTarget.style.background = '#e50914'; }}
+                onMouseOut={e => { if (!loadingReg) e.currentTarget.style.background = '#e50914'; }}
               >
                 {loadingReg ? 'Memproses…' : 'Buat Akun'}
               </button>

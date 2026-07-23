@@ -126,7 +126,7 @@ export default function RatingBadges({
     : mcScore >= 40 ? '#c7ae00'   // kuning
     : '#e30000';                   // merah
 
-  const hasAnyRating = !!rating || !!rtLabel || !!mcScore;
+  const hasAnyRating = !!rating || !!rtLabel || (!!mcScore && mcScore >= 0 && mcScore <= 100);
   const hasDuration  = !!durationMin;
 
   // ── Shared badge style ──────────────────────────────────────────────────
@@ -185,7 +185,7 @@ export default function RatingBadges({
       )}
 
       {/* ── Ⓜ Metacritic ── */}
-      {!compact && mcScore !== null && metacritic && (
+      {!compact && mcScore !== null && mcScore >= 0 && mcScore <= 100 && metacritic && (
         <>
           <Sep />
           <span

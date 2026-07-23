@@ -350,7 +350,7 @@ export default function HomeHero({ films }: Props) {
       >
         {/* ── Judul film ── */}
         <h1 style={{
-          fontSize: 'clamp(1.6rem, 3.5vw, 2.6rem)', // lebih proporsional, tidak dominan berlebihan
+          fontSize: 'clamp(2rem, 4vw, 3rem)',      // lebih besar, proporsional
           fontWeight: 800,
           lineHeight: 1.15,
           marginBottom: '0.6rem',
@@ -372,7 +372,7 @@ export default function HomeHero({ films }: Props) {
         }}>
           {/* ⭐ IMDb Rating */}
           {film.rating && (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.82rem', fontWeight: 700, color: '#f5c518' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.9rem', fontWeight: 700, color: '#f5c518' }}>
               ⭐ {film.rating}
             </span>
           )}
@@ -381,7 +381,7 @@ export default function HomeHero({ films }: Props) {
           {film.rating && <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.7rem' }}>●</span>}
 
           {/* Durasi — ambil dari synopsis placeholder, atau tampil "HD" */}
-          <span style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.65)', fontWeight: 500 }}>
+          <span style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.65)', fontWeight: 500 }}>
             HD
           </span>
 
@@ -389,7 +389,7 @@ export default function HomeHero({ films }: Props) {
 
           {/* Badge rating usia — pill kecil dengan border */}
           <span style={{
-            fontSize: '0.72rem',
+            fontSize: '0.8rem',
             fontWeight: 700,
             padding: '0.1rem 0.45rem',
             borderRadius: '0.3rem',
@@ -405,7 +405,7 @@ export default function HomeHero({ films }: Props) {
           {film.genre && (
             <>
               <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.7rem' }}>●</span>
-              <span style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.65)', fontWeight: 500 }}>
+              <span style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.65)', fontWeight: 500 }}>
                 {film.genre.split(',')[0].trim()}
               </span>
             </>

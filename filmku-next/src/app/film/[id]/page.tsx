@@ -162,7 +162,7 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
   return (
     <div className="page-transition">
       {/* ── HERO BACKDROP ── */}
-      <section className="hero-backdrop" style={{ minHeight: "85vh", position: "relative", overflow: "hidden" }}>
+      <section className="hero-backdrop" style={{ minHeight: "85vh", position: "relative", overflow: "hidden", marginTop: "-72px" }}>
         {videoId ? (
           <HeroTrailer videoId={videoId} title={movie.title} />
         ) : (
