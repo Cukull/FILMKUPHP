@@ -40,6 +40,7 @@ export async function GET(request: Request) {
       const tmdbCreditsData = await tmdbCreditsRes.json();
 
       cast = (tmdbCreditsData.cast || []).slice(0, 10).map((c: any) => ({
+        tmdbId: c.id,                          // ← TMDB person ID for profile links
         name: c.name,
         role: c.character,
         imageUrl: c.profile_path ? `https://image.tmdb.org/t/p/w200${c.profile_path}` : '',
@@ -49,6 +50,7 @@ export async function GET(request: Request) {
         .filter((c: any) => c.job === 'Director' || c.job === 'Producer' || c.department === 'Directing')
         .slice(0, 5)
         .map((c: any) => ({
+          tmdbId: c.id,                        // ← TMDB person ID for profile links
           name: c.name,
           role: c.job,
           imageUrl: c.profile_path ? `https://image.tmdb.org/t/p/w200${c.profile_path}` : '',

@@ -196,23 +196,76 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
       {/* ── AKTOR & KRU (full width below hero) ── */}
       {allCastAndCrew.length > 0 && (
         <section style={{ padding: "2rem 4rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-          <h2 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "1.25rem", color: "var(--text-primary)" }}>
+          <h2 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "0.25rem", color: "var(--text-primary)" }}>
             Aktor & Kru
           </h2>
+          <p style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.35)", marginBottom: "1.25rem" }}>
+            Klik foto untuk melihat profil lengkap di TMDB
+          </p>
           <div className="cast-scroll">
-            {allCastAndCrew.map((person, i) => (
-              <div key={i} className="cast-item">
-                {person.imageUrl ? (
-                  <img src={person.imageUrl} alt={person.name} className="cast-avatar" style={{ objectFit: "cover" }} />
-                ) : (
-                  <div className="cast-avatar" style={{ fontSize: "1.8rem", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    {person.role?.toLowerCase().includes("director") || person.role?.toLowerCase().includes("sutradara") ? "🎬" : "👤"}
+            {allCastAndCrew.map((person, i) => {
+              // Build TMDB profile URL if we have a person ID
+              const tmdbUrl = person.tmdbId
+                ? `https://www.themoviedb.org/person/${person.tmdbId}`
+                : null;
+
+              // Inner card content (avatar + name + role)
+              const cardContent = (
+                <>
+                  {/* Avatar — with hover ring effect via CSS class */}
+                  <div className={tmdbUrl ? 'cast-avatar-wrap cast-avatar-wrap--link' : 'cast-avatar-wrap'}>
+                    {person.imageUrl ? (
+                      <img
+                        src={person.imageUrl}
+                        alt={person.name}
+                        className="cast-avatar"
+                        style={{ objectFit: "cover" }}
+                      />
+                    ) : (
+                      <div className="cast-avatar" style={{
+                        fontSize: "1.8rem",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}>
+                        {person.role?.toLowerCase().includes("director") || person.role?.toLowerCase().includes("sutradara") ? "🎬" : "👤"}
+                      </div>
+                    )}
+                    {/* Overlay hint when clickable */}
+                    {tmdbUrl && (
+                      <div className="cast-avatar-overlay">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                          stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                          <polyline points="15 3 21 3 21 9" />
+                          <line x1="10" y1="14" x2="21" y2="3" />
+                        </svg>
+                      </div>
+                    )}
                   </div>
-                )}
-                <span className="cast-name">{person.name}</span>
-                <span className="cast-role">{person.role}</span>
-              </div>
-            ))}
+                  <span className="cast-name">{person.name}</span>
+                  <span className="cast-role">{person.role}</span>
+                </>
+              );
+
+              // If TMDB ID exists → clickable anchor, else plain div
+              return tmdbUrl ? (
+                <a
+                  key={i}
+                  href={tmdbUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="cast-item cast-item--linked"
+                  title={`Lihat profil ${person.name} di TMDB`}
+                >
+                  {cardContent}
+                </a>
+              ) : (
+                <div key={i} className="cast-item">
+                  {cardContent}
+                </div>
+              );
+            })}
           </div>
         </section>
       )}
