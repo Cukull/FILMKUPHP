@@ -3,22 +3,23 @@
 import { useState } from 'react';
 import { loginAction, registerAction } from '@/actions/auth';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+
+const DotField = dynamic(() => import('@/components/DotField'), { ssr: false });
 
 /**
- * /auth — Split-panel auth page (referensi desain PHP)
+ * /auth — Card sliding panel di atas DotField fullscreen
  *
- * Teknik slider 4-panel (lebar total 200vw):
+ * DotField:  position: fixed, inset: 0, z-index: -1
+ *            → menutupi seluruh viewport termasuk di belakang
+ *              navbar yang transparan
  *
- *  ┌──────────────┬──────────────┬──────────────┬──────────────┐
- *  │  1. LOGIN    │  2. CTA REG  │  3. CTA LOG  │  4. REGISTER │
- *  │  (dark)      │  (red)       │  (red)       │  (dark)      │
- *  └──────────────┴──────────────┴──────────────┴──────────────┘
- *        ◄──── visible at translateX(0) ────►
- *                                    ◄──── visible at translateX(-50%) ────►
+ * Card:      position: relative, z-index: 1
+ *            → centered di layar, overflow: hidden
+ *            → berisi 4-panel slider (200% lebar card)
  *
- * isRegister=false → translateX(0)    → tampilkan panel 1+2
- * isRegister=true  → translateX(-50%) → tampilkan panel 3+4
- * Transisi: duration-700ms ease-in-out (smooth)
+ * Slider:    isRegister=false → translateX(0)    → panel 1+2 (login + red CTA)
+ *            isRegister=true  → translateX(-50%) → panel 3+4 (red CTA + register)
  */
 export default function AuthPage() {
   const [isRegister, setIsRegister] = useState(false);
@@ -49,427 +50,408 @@ export default function AuthPage() {
     setLoadingReg(false);
   }
 
-  /* ── Shared Styles ─────────────────────────────────────────── */
+  /* ── Shared input / label style ─────────────────────────── */
   const inputStyle: React.CSSProperties = {
     width: '100%',
-    padding: '0.9rem 1rem',
+    padding: '0.85rem 1rem',
     borderRadius: '8px',
-    border: '1.5px solid rgba(255,255,255,0.12)',
+    border: '1.5px solid rgba(255,255,255,0.1)',
     background: 'rgba(255,255,255,0.06)',
     color: '#fff',
-    fontSize: '0.95rem',
+    fontSize: '0.9rem',
     outline: 'none',
     boxSizing: 'border-box',
     transition: 'border-color 0.2s',
   };
-
   const labelStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.4rem',
-    marginBottom: '0.5rem',
-    fontSize: '0.7rem',
-    fontWeight: 700,
-    letterSpacing: '0.1em',
-    color: 'rgba(255,255,255,0.4)',
-    textTransform: 'uppercase',
+    display: 'flex', alignItems: 'center', gap: '0.4rem',
+    marginBottom: '0.45rem',
+    fontSize: '0.68rem', fontWeight: 700,
+    letterSpacing: '0.1em', textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.38)',
+  };
+  const redBtnStyle: React.CSSProperties = {
+    width: '100%', padding: '0.9rem',
+    background: '#e50914',
+    color: '#fff', border: 'none', borderRadius: '8px',
+    fontSize: '0.95rem', fontWeight: 700,
+    cursor: 'pointer', letterSpacing: '0.02em',
+    boxShadow: '0 4px 20px rgba(229,9,20,0.4)',
+    transition: 'background 0.18s',
+  };
+  const outlineBtnStyle: React.CSSProperties = {
+    padding: '0.8rem 2.25rem',
+    background: 'transparent',
+    border: '2px solid rgba(255,255,255,0.9)',
+    borderRadius: '50px',
+    color: '#fff', fontSize: '0.9rem', fontWeight: 700,
+    cursor: 'pointer', letterSpacing: '0.03em',
+    transition: 'all 0.18s',
   };
 
-  // ── Icon SVGs ───────────────────────────────────────────────
-  const EmailIcon = () => (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2" y="4" width="20" height="16" rx="2"/>
-      <path d="m22 7-10 6L2 7"/>
+  /* ── Inline SVG icons ────────────────────────────────────── */
+  const EmailSVG = () => (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>
     </svg>
   );
-  const LockIcon = () => (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  const LockSVG = () => (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
     </svg>
   );
-  const UserIcon = () => (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-      <circle cx="12" cy="7" r="4"/>
+  const UserSVG = () => (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
     </svg>
   );
-  const KeyIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="7.5" cy="15.5" r="5.5"/>
-      <path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/>
+  const KeySVG = () => (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/>
     </svg>
   );
 
-  // Film grid icon (same as PHP reference)
-  const FilmIcon = () => (
-    <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="4"  y="4"  width="18" height="18" rx="3" stroke="white" strokeWidth="2.5" fill="none"/>
-      <rect x="27" y="4"  width="18" height="18" rx="3" stroke="white" strokeWidth="2.5" fill="none"/>
-      <rect x="50" y="4"  width="18" height="18" rx="3" stroke="white" strokeWidth="2.5" fill="none"/>
-      <rect x="4"  y="27" width="18" height="18" rx="3" stroke="white" strokeWidth="2.5" fill="none"/>
-      <rect x="27" y="27" width="18" height="18" rx="3" stroke="rgba(255,255,255,0.3)" strokeWidth="2.5" fill="rgba(255,255,255,0.08)"/>
-      <rect x="50" y="27" width="18" height="18" rx="3" stroke="white" strokeWidth="2.5" fill="none"/>
-      <rect x="4"  y="50" width="18" height="18" rx="3" stroke="white" strokeWidth="2.5" fill="none"/>
-      <rect x="27" y="50" width="18" height="18" rx="3" stroke="white" strokeWidth="2.5" fill="none"/>
-      <rect x="50" y="50" width="18" height="18" rx="3" stroke="white" strokeWidth="2.5" fill="none"/>
+  /* ── Film grid icon (persis seperti referensi PHP) ────────── */
+  const FilmGridIcon = () => (
+    <svg width="68" height="68" viewBox="0 0 68 68" fill="none">
+      {[0,1,2].map(row => [0,1,2].map(col => (
+        <rect
+          key={`${row}-${col}`}
+          x={3 + col * 22} y={3 + row * 22}
+          width="17" height="17" rx="2.5"
+          stroke="rgba(255,255,255,0.9)" strokeWidth="2"
+          fill={row === 1 && col === 1 ? 'rgba(255,255,255,0.1)' : 'none'}
+        />
+      )))}
     </svg>
   );
 
-  /* ── Panel base styles ──────────────────────────────────────── */
-  const darkPanel: React.CSSProperties = {
-    width: '50vw',
-    minHeight: '100vh',
-    background: 'linear-gradient(160deg, #12121e 0%, #0d0d18 60%, #100b18 100%)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-    position: 'relative',
-    overflow: 'hidden',
+  /* ── Dark panel base (for login & register sides) ────────── */
+  const darkSide: React.CSSProperties = {
+    width: '25%',               /* 25% of 200% slider = 50% of card */
+    minHeight: '560px',
+    background: 'linear-gradient(155deg, #13131f 0%, #0e0e1a 100%)',
+    display: 'flex', flexDirection: 'column',
+    justifyContent: 'center', alignItems: 'flex-start',
+    padding: '2.75rem 2.5rem',
+    boxSizing: 'border-box',
+    flexShrink: 0, position: 'relative', overflow: 'hidden',
   };
 
-  const redPanel: React.CSSProperties = {
-    width: '50vw',
-    minHeight: '100vh',
-    background: 'linear-gradient(145deg, #8b0000 0%, #cc0000 35%, #e50914 65%, #ff2222 100%)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-    position: 'relative',
-    overflow: 'hidden',
+  /* ── Red panel base (for CTA sides) ─────────────────────── */
+  const redSide: React.CSSProperties = {
+    width: '25%',
+    minHeight: '560px',
+    background: 'linear-gradient(140deg, #8b0000 0%, #cc0000 40%, #e50914 75%, #ff2828 100%)',
+    display: 'flex', flexDirection: 'column',
+    justifyContent: 'center', alignItems: 'center',
+    textAlign: 'center', padding: '2.5rem 2rem',
+    boxSizing: 'border-box',
+    flexShrink: 0, position: 'relative', overflow: 'hidden',
   };
 
   return (
-    <div style={{ minHeight: '100vh', overflowX: 'hidden', background: '#0d0d18' }}>
+    /*
+      Page root — serves as positioning context for the card.
+      DotField is FIXED so it sits outside this flow and covers
+      the full viewport including behind the transparent navbar.
+    */
+    <div style={{
+      minHeight: 'calc(100vh - 72px)',   /* account for navbar height */
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '2rem 1rem',
+      position: 'relative',
+    }}>
 
-      {/* ═══════════════════════════════════════════════════
-           4-PANEL SLIDER — lebar total 200vw
-           translateX(0)    → panel 1+2 terlihat
-           translateX(-50%) → panel 3+4 terlihat
-      ════════════════════════════════════════════════════ */}
+      {/* ══ DotField — fixed, full viewport, behind navbar ══ */}
+      <div style={{ position: 'fixed', inset: 0, zIndex: -1 }}>
+        <DotField
+          dotRadius={1.5}
+          dotSpacing={14}
+          bulgeStrength={52}
+          glowRadius={150}
+          sparkle
+          waveAmplitude={1}
+          cursorRadius={450}
+          cursorForce={0.1}
+          bulgeOnly
+          gradientFrom="rgba(229,9,20,0.55)"
+          gradientTo="rgba(255,200,200,0.2)"
+          glowColor="#ffe4e4"
+          style={{ pointerEvents: 'auto' }}
+        />
+      </div>
+
+      {/* Subtle radial vignette over DotField */}
       <div style={{
-        display: 'flex',
-        width: '200vw',
-        minHeight: '100vh',
-        transform: isRegister ? 'translateX(-50%)' : 'translateX(0)',
-        transition: 'transform 700ms cubic-bezier(0.77,0,0.18,1)',
+        position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
+        background: 'radial-gradient(ellipse at 40% 50%, transparent 20%, rgba(7,7,15,0.72) 90%)',
+      }} />
+
+      {/* ══ AUTH CARD ══════════════════════════════════════════
+          overflow: hidden → clips the 200%-wide inner slider
+          so only the visible 50% is shown at a time
+      ════════════════════════════════════════════════════════ */}
+      <div style={{
+        position: 'relative', zIndex: 1,
+        width: '100%', maxWidth: '860px',
+        borderRadius: '18px',
+        overflow: 'hidden',
+        border: '1px solid rgba(229,9,20,0.18)',
+        boxShadow: [
+          '0 32px 80px rgba(0,0,0,0.65)',
+          '0 0 0 1px rgba(255,255,255,0.04)',
+          '0 0 60px rgba(229,9,20,0.08)',
+        ].join(', '),
       }}>
 
-        {/* ═══════════ PANEL 1 — LOGIN FORM (dark) ═══════════ */}
-        <div style={darkPanel}>
-          {/* Subtle noise grain */}
-          <div style={{
-            position: 'absolute', inset: 0, opacity: 0.025, pointerEvents: 'none',
-            backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
-          }} />
-          {/* Red glow top-right corner */}
-          <div style={{
-            position: 'absolute', top: '-120px', right: '-80px',
-            width: '400px', height: '400px', borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(229,9,20,0.12) 0%, transparent 70%)',
-            pointerEvents: 'none',
-          }} />
+        {/*
+          ── 4-PANEL SLIDER (width = 200% of card) ──
+          panel-1 (25%) | panel-2 (25%) | panel-3 (25%) | panel-4 (25%)
+          [dark:login]   [red:daftar]    [red:masuk]     [dark:register]
 
-          <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '400px', padding: '3rem 3rem' }}>
+          translateX(0)    → shows panel-1 + panel-2
+          translateX(-50%) → shows panel-3 + panel-4
+        */}
+        <div style={{
+          display: 'flex',
+          width: '200%',
+          transform: isRegister ? 'translateX(-50%)' : 'translateX(0)',
+          transition: 'transform 680ms cubic-bezier(0.77, 0, 0.18, 1)',
+        }}>
 
-            {/* ── FILMKU Logo ── */}
-            <div style={{ marginBottom: '2.5rem' }}>
-              <Link href="/" style={{ textDecoration: 'none' }}>
-                <span style={{
-                  fontSize: '1.1rem', fontWeight: 900, letterSpacing: '0.15em',
-                  color: '#e50914', textTransform: 'uppercase',
-                  textShadow: '0 0 16px rgba(229,9,20,0.5)',
-                  fontFamily: 'var(--font-display, Inter, sans-serif)',
-                }}>
-                  FILMKU
-                </span>
-              </Link>
-              <h1 style={{
-                fontSize: '2rem', fontWeight: 900, color: '#fff',
-                margin: '0.75rem 0 0.4rem', letterSpacing: '-0.02em', lineHeight: 1.2,
-              }}>
-                Selamat Datang
-              </h1>
-              <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', margin: 0 }}>
-                Masuk untuk melanjutkan pengalaman bioskop Anda
-              </p>
-            </div>
+          {/* ════════ PANEL 1 — LOGIN FORM (dark left) ════════ */}
+          <div style={darkSide}>
+            {/* Corner ambient glow */}
+            <div style={{
+              position: 'absolute', top: '-60px', right: '-60px',
+              width: '220px', height: '220px', borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(229,9,20,0.14) 0%, transparent 70%)',
+              pointerEvents: 'none',
+            }} />
 
-            {/* ── Error banner ── */}
+            {/* FILMKU logo */}
+            <Link href="/" style={{ textDecoration: 'none', marginBottom: '1.75rem', display: 'block' }}>
+              <span style={{
+                fontSize: '1.05rem', fontWeight: 900, letterSpacing: '0.16em',
+                color: '#e50914', textTransform: 'uppercase',
+                textShadow: '0 0 18px rgba(229,9,20,0.55)',
+              }}>FILMKU</span>
+            </Link>
+
+            <h1 style={{
+              fontSize: '1.9rem', fontWeight: 900, color: '#fff',
+              margin: '0 0 0.4rem', lineHeight: 1.15, letterSpacing: '-0.02em',
+            }}>
+              Selamat Datang
+            </h1>
+            <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.38)', margin: '0 0 1.75rem' }}>
+              Masuk untuk melanjutkan pengalaman bioskop Anda
+            </p>
+
+            {/* Error */}
             {loginError && (
               <div style={{
                 background: 'rgba(229,9,20,0.1)', border: '1px solid rgba(229,9,20,0.3)',
-                color: '#ff8080', padding: '0.7rem 1rem', borderRadius: '8px',
-                fontSize: '0.82rem', marginBottom: '1.25rem', display: 'flex', gap: '0.5rem', alignItems: 'center',
-              }}>
-                ⚠️ {loginError}
-              </div>
+                color: '#ff8888', padding: '0.65rem 0.9rem', borderRadius: '7px',
+                fontSize: '0.8rem', marginBottom: '1rem',
+                display: 'flex', gap: '0.4rem', alignItems: 'center', width: '100%',
+              }}>⚠️ {loginError}</div>
             )}
 
-            {/* ── Form ── */}
-            <form action={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
-
+            {/* Form */}
+            <form action={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
               <div>
-                <label style={labelStyle}><EmailIcon /> Email</label>
-                <input
-                  type="email" name="email" required
-                  placeholder="didosyukur123@gmail.com"
+                <label style={labelStyle}><EmailSVG /> Email</label>
+                <input type="email" name="email" required placeholder="didosyukur123@gmail.com"
                   style={inputStyle}
-                  onFocus={e => (e.target.style.borderColor = 'rgba(229,9,20,0.6)')}
-                  onBlur={e  => (e.target.style.borderColor = 'rgba(255,255,255,0.12)')}
+                  onFocus={e => (e.target.style.borderColor = 'rgba(229,9,20,0.55)')}
+                  onBlur={e  => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')}
                 />
               </div>
-
               <div>
-                <label style={labelStyle}><LockIcon /> Password</label>
-                <input
-                  type="password" name="password" required
-                  placeholder="••••••••••"
+                <label style={labelStyle}><LockSVG /> Password</label>
+                <input type="password" name="password" required placeholder="••••••••••"
                   style={inputStyle}
-                  onFocus={e => (e.target.style.borderColor = 'rgba(229,9,20,0.6)')}
-                  onBlur={e  => (e.target.style.borderColor = 'rgba(255,255,255,0.12)')}
+                  onFocus={e => (e.target.style.borderColor = 'rgba(229,9,20,0.55)')}
+                  onBlur={e  => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')}
                 />
               </div>
-
-              <button
-                type="submit" disabled={loadingLogin}
-                style={{
-                  width: '100%', padding: '0.95rem',
-                  background: loadingLogin ? 'rgba(229,9,20,0.5)' : '#e50914',
-                  color: '#fff', border: 'none', borderRadius: '8px',
-                  fontSize: '1rem', fontWeight: 700, cursor: loadingLogin ? 'not-allowed' : 'pointer',
-                  letterSpacing: '0.02em', marginTop: '0.25rem',
-                  transition: 'all 0.2s',
-                  boxShadow: '0 4px 24px rgba(229,9,20,0.35)',
-                }}
-                onMouseOver={e => { if (!loadingLogin) (e.currentTarget.style.background = '#c0000e'); }}
-                onMouseOut={e  => { if (!loadingLogin) (e.currentTarget.style.background = '#e50914'); }}
+              <button type="submit" disabled={loadingLogin}
+                style={{ ...redBtnStyle, marginTop: '0.2rem', opacity: loadingLogin ? 0.6 : 1, cursor: loadingLogin ? 'not-allowed' : 'pointer' }}
+                onMouseOver={e => { if (!loadingLogin) e.currentTarget.style.background = '#c0000e'; }}
+                onMouseOut={e  => { if (!loadingLogin) e.currentTarget.style.background = '#e50914'; }}
               >
                 {loadingLogin ? 'Memproses…' : 'Masuk'}
               </button>
             </form>
 
-            {/* ── Demo Akun ── */}
+            {/* Demo credentials */}
             <div style={{
-              marginTop: '1.5rem', padding: '0.9rem 1rem', borderRadius: '8px',
-              border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)',
+              marginTop: '1.25rem', width: '100%', padding: '0.8rem 0.9rem',
+              borderRadius: '8px', border: '1px solid rgba(255,255,255,0.07)',
+              background: 'rgba(255,255,255,0.03)',
             }}>
-              <p style={{ margin: '0 0 0.4rem', fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <KeyIcon /> <strong style={{ color: 'rgba(255,255,255,0.7)' }}>Akun Demo:</strong>
+              <p style={{ margin: '0 0 0.35rem', fontSize: '0.74rem', color: 'rgba(255,255,255,0.55)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <KeySVG /> <strong>Akun Demo:</strong>
               </p>
-              <p style={{ margin: '0.2rem 0', fontSize: '0.76rem', color: 'rgba(255,255,255,0.4)' }}>
-                Admin: <span style={{ color: '#e85d75' }}>angra@admin.com</span> / admin123
+              <p style={{ margin: '0.15rem 0', fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)' }}>
+                Admin: <span style={{ color: '#e88' }}>angra@admin.com</span> / admin123
               </p>
-              <p style={{ margin: '0.2rem 0', fontSize: '0.76rem', color: 'rgba(255,255,255,0.4)' }}>
-                User: <span style={{ color: '#e85d75' }}>syukur@gmail.com</span> / syukur123
+              <p style={{ margin: '0.15rem 0', fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)' }}>
+                User: <span style={{ color: '#e88' }}>syukur@gmail.com</span> / syukur123
               </p>
             </div>
           </div>
-        </div>
 
-        {/* ═══════════ PANEL 2 — CTA DAFTAR (red) ═══════════ */}
-        <div style={redPanel}>
-          {/* Decorative ambient */}
-          <div style={{ position: 'absolute', top: '10%', right: '10%', width: '300px', height: '300px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', bottom: '10%', left: '5%', width: '180px', height: '180px', borderRadius: '50%', background: 'rgba(0,0,0,0.1)', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, transparent 40%, rgba(0,0,0,0.2) 100%)', pointerEvents: 'none' }} />
+          {/* ════════ PANEL 2 — CTA DAFTAR (red right) ════════ */}
+          <div style={redSide}>
+            {/* Decorative circles */}
+            <div style={{ position: 'absolute', top: '-40px', right: '-40px', width: '200px', height: '200px', borderRadius: '50%', background: 'rgba(255,255,255,0.06)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', bottom: '-30px', left: '-30px', width: '140px', height: '140px', borderRadius: '50%', background: 'rgba(0,0,0,0.12)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, transparent 50%, rgba(0,0,0,0.15) 100%)', pointerEvents: 'none' }} />
 
-          <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: '340px', padding: '2rem' }}>
-            <div style={{ marginBottom: '2rem' }}>
-              <FilmIcon />
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0' }}>
+              <div style={{ marginBottom: '1.5rem' }}><FilmGridIcon /></div>
+              <h2 style={{ fontSize: '1.7rem', fontWeight: 900, color: '#fff', margin: '0 0 0.85rem', lineHeight: 1.2, letterSpacing: '-0.01em' }}>
+                Belum punya akun?
+              </h2>
+              <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.72)', lineHeight: 1.6, margin: '0 0 2rem', maxWidth: '220px' }}>
+                Bergabung dengan jutaan penonton<br />dan nikmati pengalaman bioskop premium
+              </p>
+              <button
+                onClick={() => setIsRegister(true)}
+                style={outlineBtnStyle}
+                onMouseOver={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#b00010'; }}
+                onMouseOut={e  => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#fff'; }}
+              >
+                Daftar Sekarang
+              </button>
             </div>
-            <h2 style={{
-              fontSize: '2rem', fontWeight: 900, color: '#fff',
-              margin: '0 0 1rem', lineHeight: 1.2, letterSpacing: '-0.01em',
-            }}>
-              Belum punya akun?
-            </h2>
-            <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, margin: '0 0 2.5rem' }}>
-              Bergabung dengan jutaan penonton<br/>dan nikmati pengalaman bioskop premium
-            </p>
-            <button
-              onClick={() => setIsRegister(true)}
-              style={{
-                padding: '0.85rem 2.5rem',
-                background: 'transparent',
-                color: '#fff',
-                border: '2px solid rgba(255,255,255,0.9)',
-                borderRadius: '50px',
-                fontSize: '0.95rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                letterSpacing: '0.03em',
-                transition: 'all 0.2s',
-              }}
-              onMouseOver={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#c0000e'; }}
-              onMouseOut={e  => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#fff'; }}
-            >
-              Daftar Sekarang
-            </button>
           </div>
-        </div>
 
-        {/* ═══════════ PANEL 3 — CTA MASUK (red) ═══════════ */}
-        <div style={redPanel}>
-          <div style={{ position: 'absolute', top: '10%', left: '10%', width: '300px', height: '300px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', bottom: '10%', right: '5%', width: '180px', height: '180px', borderRadius: '50%', background: 'rgba(0,0,0,0.1)', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, transparent 40%, rgba(0,0,0,0.2) 100%)', pointerEvents: 'none' }} />
+          {/* ════════ PANEL 3 — CTA MASUK (red left) ════════ */}
+          <div style={redSide}>
+            <div style={{ position: 'absolute', top: '-40px', left: '-40px', width: '200px', height: '200px', borderRadius: '50%', background: 'rgba(255,255,255,0.06)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', bottom: '-30px', right: '-30px', width: '140px', height: '140px', borderRadius: '50%', background: 'rgba(0,0,0,0.12)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, transparent 50%, rgba(0,0,0,0.15) 100%)', pointerEvents: 'none' }} />
 
-          <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: '340px', padding: '2rem' }}>
-            <div style={{ marginBottom: '2rem' }}>
-              {/* Different icon for this panel */}
-              <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
-                <path d="M36 8C20.536 8 8 20.536 8 36s12.536 28 28 28 28-12.536 28-28S51.464 8 36 8z" stroke="white" strokeWidth="2.5" fill="none"/>
-                <path d="M28 24l20 12-20 12V24z" fill="white"/>
-              </svg>
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0' }}>
+              {/* Play-button icon */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <svg width="68" height="68" viewBox="0 0 68 68" fill="none">
+                  <circle cx="34" cy="34" r="30" stroke="rgba(255,255,255,0.85)" strokeWidth="2.5"/>
+                  <path d="M27 22l22 12-22 12V22z" fill="rgba(255,255,255,0.9)"/>
+                </svg>
+              </div>
+              <h2 style={{ fontSize: '1.7rem', fontWeight: 900, color: '#fff', margin: '0 0 0.85rem', lineHeight: 1.2, letterSpacing: '-0.01em' }}>
+                Sudah punya akun?
+              </h2>
+              <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.72)', lineHeight: 1.6, margin: '0 0 2rem', maxWidth: '220px' }}>
+                Masuk dan lanjutkan pengalaman<br />sinema premium bersama FILMKU
+              </p>
+              <button
+                onClick={() => setIsRegister(false)}
+                style={outlineBtnStyle}
+                onMouseOver={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#b00010'; }}
+                onMouseOut={e  => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#fff'; }}
+              >
+                Masuk Sekarang
+              </button>
             </div>
-            <h2 style={{
-              fontSize: '2rem', fontWeight: 900, color: '#fff',
-              margin: '0 0 1rem', lineHeight: 1.2, letterSpacing: '-0.01em',
-            }}>
-              Sudah punya akun?
-            </h2>
-            <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, margin: '0 0 2.5rem' }}>
-              Masuk dan lanjutkan pengalaman<br/>sinema premium bersama FILMKU
-            </p>
-            <button
-              onClick={() => setIsRegister(false)}
-              style={{
-                padding: '0.85rem 2.5rem',
-                background: 'transparent',
-                color: '#fff',
-                border: '2px solid rgba(255,255,255,0.9)',
-                borderRadius: '50px',
-                fontSize: '0.95rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                letterSpacing: '0.03em',
-                transition: 'all 0.2s',
-              }}
-              onMouseOver={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#c0000e'; }}
-              onMouseOut={e  => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#fff'; }}
-            >
-              Masuk Sekarang
-            </button>
           </div>
-        </div>
 
-        {/* ═══════════ PANEL 4 — REGISTER FORM (dark) ═══════════ */}
-        <div style={darkPanel}>
-          <div style={{
-            position: 'absolute', top: '-120px', left: '-80px',
-            width: '400px', height: '400px', borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(229,9,20,0.12) 0%, transparent 70%)',
-            pointerEvents: 'none',
-          }} />
+          {/* ════════ PANEL 4 — REGISTER FORM (dark right) ════════ */}
+          <div style={darkSide}>
+            <div style={{
+              position: 'absolute', top: '-60px', left: '-60px',
+              width: '220px', height: '220px', borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(229,9,20,0.14) 0%, transparent 70%)',
+              pointerEvents: 'none',
+            }} />
 
-          <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '400px', padding: '2.5rem 3rem' }}>
-
-            {/* ── FILMKU Logo ── */}
-            <div style={{ marginBottom: '2rem' }}>
+            {/* FILMKU logo */}
+            <div style={{ marginBottom: '1.5rem' }}>
               <span style={{
-                fontSize: '1.1rem', fontWeight: 900, letterSpacing: '0.15em',
+                fontSize: '1.05rem', fontWeight: 900, letterSpacing: '0.16em',
                 color: '#e50914', textTransform: 'uppercase',
-                textShadow: '0 0 16px rgba(229,9,20,0.5)',
-              }}>
-                FILMKU
-              </span>
-              <h1 style={{
-                fontSize: '1.8rem', fontWeight: 900, color: '#fff',
-                margin: '0.65rem 0 0.35rem', letterSpacing: '-0.02em', lineHeight: 1.2,
-              }}>
-                Buat Akun Baru
-              </h1>
-              <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', margin: 0 }}>
-                Gratis selamanya, batalkan kapan saja
-              </p>
+                textShadow: '0 0 18px rgba(229,9,20,0.55)',
+              }}>FILMKU</span>
             </div>
 
-            {/* ── Banners ── */}
+            <h1 style={{
+              fontSize: '1.7rem', fontWeight: 900, color: '#fff',
+              margin: '0 0 0.35rem', lineHeight: 1.15, letterSpacing: '-0.02em',
+            }}>
+              Buat Akun Baru
+            </h1>
+            <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.38)', margin: '0 0 1.5rem' }}>
+              Gratis selamanya, batalkan kapan saja
+            </p>
+
+            {/* Banners */}
             {regError && (
               <div style={{
                 background: 'rgba(229,9,20,0.1)', border: '1px solid rgba(229,9,20,0.3)',
-                color: '#ff8080', padding: '0.7rem 1rem', borderRadius: '8px',
-                fontSize: '0.82rem', marginBottom: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center',
+                color: '#ff8888', padding: '0.65rem 0.9rem', borderRadius: '7px',
+                fontSize: '0.8rem', marginBottom: '0.9rem',
+                display: 'flex', gap: '0.4rem', alignItems: 'center', width: '100%',
               }}>⚠️ {regError}</div>
             )}
             {regSuccess && (
               <div style={{
                 background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)',
-                color: '#6ee7b7', padding: '0.7rem 1rem', borderRadius: '8px',
-                fontSize: '0.82rem', marginBottom: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center',
+                color: '#6ee7b7', padding: '0.65rem 0.9rem', borderRadius: '7px',
+                fontSize: '0.8rem', marginBottom: '0.9rem',
+                display: 'flex', gap: '0.4rem', alignItems: 'center', width: '100%',
               }}>✅ {regSuccess}</div>
             )}
 
-            {/* ── Form ── */}
-            <form action={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-
+            <form action={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', width: '100%' }}>
               <div>
-                <label style={labelStyle}><UserIcon /> Nama Lengkap</label>
-                <input
-                  type="text" name="name" required
-                  placeholder="John Doe"
+                <label style={labelStyle}><UserSVG /> Nama Lengkap</label>
+                <input type="text" name="name" required placeholder="John Doe"
                   style={inputStyle}
-                  onFocus={e => (e.target.style.borderColor = 'rgba(229,9,20,0.6)')}
-                  onBlur={e  => (e.target.style.borderColor = 'rgba(255,255,255,0.12)')}
+                  onFocus={e => (e.target.style.borderColor = 'rgba(229,9,20,0.55)')}
+                  onBlur={e  => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')}
                 />
               </div>
-
               <div>
-                <label style={labelStyle}><EmailIcon /> Email</label>
-                <input
-                  type="email" name="email" required
-                  placeholder="kamu@email.com"
+                <label style={labelStyle}><EmailSVG /> Email</label>
+                <input type="email" name="email" required placeholder="kamu@email.com"
                   style={inputStyle}
-                  onFocus={e => (e.target.style.borderColor = 'rgba(229,9,20,0.6)')}
-                  onBlur={e  => (e.target.style.borderColor = 'rgba(255,255,255,0.12)')}
+                  onFocus={e => (e.target.style.borderColor = 'rgba(229,9,20,0.55)')}
+                  onBlur={e  => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')}
                 />
               </div>
-
               <div>
-                <label style={labelStyle}><LockIcon /> Password</label>
-                <input
-                  type="password" name="password" required
-                  placeholder="Min. 8 karakter"
+                <label style={labelStyle}><LockSVG /> Password</label>
+                <input type="password" name="password" required placeholder="Min. 8 karakter"
                   style={inputStyle}
-                  onFocus={e => (e.target.style.borderColor = 'rgba(229,9,20,0.6)')}
-                  onBlur={e  => (e.target.style.borderColor = 'rgba(255,255,255,0.12)')}
+                  onFocus={e => (e.target.style.borderColor = 'rgba(229,9,20,0.55)')}
+                  onBlur={e  => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')}
                 />
               </div>
-
-              <button
-                type="submit" disabled={loadingReg}
-                style={{
-                  width: '100%', padding: '0.95rem',
-                  background: loadingReg ? 'rgba(229,9,20,0.5)' : '#e50914',
-                  color: '#fff', border: 'none', borderRadius: '8px',
-                  fontSize: '1rem', fontWeight: 700, cursor: loadingReg ? 'not-allowed' : 'pointer',
-                  letterSpacing: '0.02em', marginTop: '0.25rem',
-                  transition: 'all 0.2s',
-                  boxShadow: '0 4px 24px rgba(229,9,20,0.35)',
-                }}
-                onMouseOver={e => { if (!loadingReg) (e.currentTarget.style.background = '#c0000e'); }}
-                onMouseOut={e  => { if (!loadingReg) (e.currentTarget.style.background = '#e50914'); }}
+              <button type="submit" disabled={loadingReg}
+                style={{ ...redBtnStyle, marginTop: '0.15rem', opacity: loadingReg ? 0.6 : 1, cursor: loadingReg ? 'not-allowed' : 'pointer' }}
+                onMouseOver={e => { if (!loadingReg) e.currentTarget.style.background = '#c0000e'; }}
+                onMouseOut={e  => { if (!loadingReg) e.currentTarget.style.background = '#e50914'; }}
               >
                 {loadingReg ? 'Memproses…' : 'Buat Akun'}
               </button>
             </form>
 
-            <p style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.82rem', color: 'rgba(255,255,255,0.3)' }}>
+            <p style={{ marginTop: '1.25rem', fontSize: '0.78rem', color: 'rgba(255,255,255,0.28)' }}>
               Sudah punya akun?{' '}
-              <button
-                onClick={() => setIsRegister(false)}
-                style={{ background: 'none', border: 'none', color: '#e50914', fontWeight: 700, cursor: 'pointer', fontSize: '0.82rem' }}
-              >
+              <button onClick={() => setIsRegister(false)}
+                style={{ background: 'none', border: 'none', color: '#e50914', fontWeight: 700, cursor: 'pointer', fontSize: '0.78rem', padding: 0 }}>
                 Masuk
               </button>
             </p>
           </div>
-        </div>
 
-      </div>{/* end 4-panel slider */}
+        </div>{/* end 4-panel slider */}
+      </div>{/* end card */}
     </div>
   );
 }
