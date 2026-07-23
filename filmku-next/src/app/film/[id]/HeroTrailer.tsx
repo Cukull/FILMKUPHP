@@ -1,11 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 export default function HeroTrailer({ videoId, title }: { videoId: string; title: string }) {
   const [isMuted, setIsMuted] = useState(true);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&showinfo=0&rel=0&loop=1&playlist=${videoId}&modestbranding=1`;
+  // Selalu mulai dengan mute=1, tapi tambahkan enablejsapi=1 agar bisa dikontrol via postMessage
+  const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=${videoId}&modestbranding=1&enablejsapi=1`;
+
+  const postYT = (action: string) => {
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(
+        JSON.stringify({ event: 'command', func: action, args: [] }),
+        '*'
+      );
+    }
+  };
 
   return (
     <>
@@ -22,21 +33,34 @@ export default function HeroTrailer({ videoId, title }: { videoId: string; title
         pointerEvents: 'none',
       }}>
         <iframe
+          ref={iframeRef}
           src={embedUrl}
           style={{ width: '100%', height: '100%', border: 'none', transform: 'scale(1.2)' }}
           allow="autoplay; encrypted-media"
           title={title}
+          onLoad={() => {
+            // Jika user sebelumnya sudah unmute, sinkronisasikan state ke iframe saat load
+            if (!isMuted) {
+              setTimeout(() => postYT('unMute'), 800);
+            }
+          }}
         />
       </div>
 
       {/* Mute / Unmute Button */}
       <button
-        onClick={() => setIsMuted(!isMuted)}
+        onClick={() => {
+          setIsMuted(prev => {
+            const next = !prev;
+            postYT(next ? 'mute' : 'unMute');
+            return next;
+          });
+        }}
         style={{
           position: 'absolute',
           bottom: '18%',
           right: '4%',
-          zIndex: 10,
+          zIndex: 25,
           background: 'rgba(0,0,0,0.55)',
           border: '1px solid rgba(255,255,255,0.25)',
           borderRadius: '50%',
@@ -49,6 +73,7 @@ export default function HeroTrailer({ videoId, title }: { videoId: string; title
           color: 'white',
           backdropFilter: 'blur(8px)',
           transition: 'all 0.25s ease',
+          pointerEvents: 'auto',
         }}
         onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.2)')}
         onMouseLeave={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.55)')}
