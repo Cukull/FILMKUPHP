@@ -132,20 +132,32 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
   // freshShowtimes sudah di-fetch setelah generate di atas
   const todayShowtimes = freshShowtimes;
 
-  // Parse Cast and Crew
-  let parsedCrew: any[] = [];
-  try {
-    if (movie.director) parsedCrew = JSON.parse(movie.director);
-  } catch {
-    if (movie.director) parsedCrew = [{ name: movie.director, role: "Sutradara", imageUrl: "" }];
+  // ─── Parse Cast & Crew ───────────────────────────────────────────
+  // Data di DB bisa dua bentuk:
+  //   A. JSON array (dari fetch-movie API) → [{tmdbId, name, role, imageUrl}, ...]
+  //   B. Plain string (dari input manual / OMDB fallback) → "Tom Hanks, Robin Wright"
+  //
+  // Untuk B: split by koma, buat entry per orang tanpa imageUrl.
+  // tmdbUrl: jika ada tmdbId → direct profile; jika tidak → TMDB search by name
+  //          sehingga SEMUA card selalu clickable.
+  function parsePeople(raw: string | null | undefined, defaultRole: string) {
+    if (!raw) return [];
+    try {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) return arr;
+    } catch { /* bukan JSON — lanjut ke split */ }
+    // Plain string: split by koma
+    return raw
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
+      .map(name => ({ name, role: defaultRole, imageUrl: '', tmdbId: null }));
   }
-  let parsedCast: any[] = [];
-  try {
-    if (movie.cast) parsedCast = JSON.parse(movie.cast);
-  } catch {
-    if (movie.cast) parsedCast = [{ name: movie.cast, role: "Pemeran", imageUrl: "" }];
-  }
+
+  const parsedCrew = parsePeople(movie.director, 'Sutradara / Kru');
+  const parsedCast = parsePeople(movie.cast, 'Pemeran');
   const allCastAndCrew = [...parsedCrew, ...parsedCast];
+
 
   return (
     <div className="page-transition">
@@ -211,10 +223,12 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
           </p>
           <div className="cast-scroll">
             {allCastAndCrew.map((person, i) => {
-              // Build TMDB profile URL if we have a person ID
+              // Build TMDB URL:
+              // • Ada tmdbId   → direct profile page
+              // • Tidak ada    → TMDB search by name (selalu berfungsi)
               const tmdbUrl = person.tmdbId
                 ? `https://www.themoviedb.org/person/${person.tmdbId}`
-                : null;
+                : `https://www.themoviedb.org/search/person?query=${encodeURIComponent(person.name)}`;
 
               // Inner card content (avatar + name + role)
               const cardContent = (
@@ -255,8 +269,9 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
                 </>
               );
 
-              // If TMDB ID exists → clickable anchor, else plain div
-              return tmdbUrl ? (
+              // tmdbUrl selalu ada (direct profile jika ada tmdbId, search by name jika tidak)
+              // → semua card selalu berupa <a> yang bisa diklik
+              return (
                 <a
                   key={i}
                   href={tmdbUrl}
@@ -267,11 +282,8 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
                 >
                   {cardContent}
                 </a>
-              ) : (
-                <div key={i} className="cast-item">
-                  {cardContent}
-                </div>
               );
+
             })}
           </div>
         </section>
