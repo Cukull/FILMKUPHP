@@ -27,66 +27,58 @@ const DUMMY_DAYS    = 7; // H+0 … H+6
 
 async function ensureDummyShowtimes(movieId: string): Promise<void> {
   try {
-    // ─ 1. Tentukan "tengah malam hari ini" (WIB = UTC+7) ───────────────
-    const nowUtc    = new Date();
-    const wibOffset = 7 * 60; // menit
-    const todayWib  = new Date(nowUtc.getTime() + wibOffset * 60_000);
-    const midnightWib = new Date(
-      todayWib.getUTCFullYear(),
-      todayWib.getUTCMonth(),
-      todayWib.getUTCDate(),
-      0, 0, 0, 0
-    );
-    const midnightUtc = new Date(midnightWib.getTime() - wibOffset * 60_000);
+    // ─ 1. Midnight WIB hari ini — pakai pure epoch arithmetic ───────────
+    // JANGAN new Date(y,m,d,0,0,0) — itu local TZ (UTC di Vercel) → salah 7 jam!
+    const WIB_MS     = 7 * 60 * 60 * 1000;   // 7h dalam ms
+    const DAY_MS     = 24 * 60 * 60 * 1000;
+    const nowEpoch   = Date.now();            // epoch UTC sekarang
+    const wibEpoch   = nowEpoch + WIB_MS;     // epoch "seakan UTC+7"
+    // bulatkan ke batas hari WIB → ini EPOCH untuk tengah malam WIB dalam UTC
+    const midnightMs = wibEpoch - (wibEpoch % DAY_MS);  // midnight WIB as UTC epoch
+    const midnightDate = new Date(midnightMs);
 
-    // ─ 2. Cleanup showtime expired ──────────────────────────────────
-    // WAJIB hapus Seat dulu sebelum Showtime (FK constraint)
+    // Log untuk verifikasi (hapus setelah testing OK)
+    console.log(`[showtime] now=${new Date(nowEpoch).toISOString()} midnight-WIB=${midnightDate.toISOString()}`);
+
+    // ─ 2. Cleanup expired (< midnight WIB hari ini) — hapus Seat dulu ───
     const expiredShowtimes = await prisma.showtime.findMany({
-      where: { movieId, startTime: { lt: midnightUtc } },
+      where: { movieId, startTime: { lt: midnightDate } },
       select: { id: true },
     });
     if (expiredShowtimes.length > 0) {
-      const expiredIds = expiredShowtimes.map(s => s.id);
-      await prisma.seat.deleteMany({ where: { showtimeId: { in: expiredIds } } });
-      await prisma.showtime.deleteMany({ where: { id: { in: expiredIds } } });
+      const ids = expiredShowtimes.map(s => s.id);
+      await prisma.seat.deleteMany({ where: { showtimeId: { in: ids } } });
+      await prisma.showtime.deleteMany({ where: { id: { in: ids } } });
+      console.log(`[showtime] deleted ${ids.length} expired`);
     }
 
-    // ─ 3. Build daftar semua startTime yang harus ada (28 slot) ─────────
+    // ─ 3. Build 28 target slots H+0 … H+6 ──────────────────────────────
     const targetSlots: { startTime: Date; studio: string; price: number }[] = [];
-    let studioIdx = 0;
-
+    let si = 0;
     for (let day = 0; day < DUMMY_DAYS; day++) {
       for (const slot of DUMMY_SLOTS) {
-        const slotWib = new Date(
-          todayWib.getUTCFullYear(),
-          todayWib.getUTCMonth(),
-          todayWib.getUTCDate() + day,
-          slot.hour,
-          slot.minute,
-          0, 0
-        );
-        const slotUtc = new Date(slotWib.getTime() - wibOffset * 60_000);
+        const ms = midnightMs + day * DAY_MS
+                 + slot.hour * 3_600_000 + slot.minute * 60_000;
         targetSlots.push({
-          startTime: slotUtc,
-          studio:    DUMMY_STUDIOS[studioIdx % DUMMY_STUDIOS.length],
+          startTime: new Date(ms),
+          studio:    DUMMY_STUDIOS[si % DUMMY_STUDIOS.length],
           price:     DUMMY_PRICE,
         });
-        studioIdx++;
+        si++;
       }
     }
+    console.log(`[showtime] slots[0]=${targetSlots[0].startTime.toISOString()} (=${DUMMY_SLOTS[0].hour}:00 WIB)`);
 
-    // ─ 4. Cek existing dalam range H+0 … H+7 ───────────────────────
-    const rangeEnd = new Date(midnightUtc.getTime() + DUMMY_DAYS * 24 * 3600_000);
+    // ─ 4. Cek existing H+0 … H+7 ────────────────────────────────────────
+    const rangeEnd = new Date(midnightMs + DUMMY_DAYS * DAY_MS);
     const existing = await prisma.showtime.findMany({
-      where: { movieId, startTime: { gte: midnightUtc, lt: rangeEnd } },
+      where: { movieId, startTime: { gte: midnightDate, lt: rangeEnd } },
       select: { startTime: true },
     });
     const existingSet = new Set(existing.map(st => st.startTime.toISOString()));
 
-    // ─ 5. Insert hanya slot yang belum ada ─────────────────────────
-    const toInsert = targetSlots.filter(
-      s => !existingSet.has(s.startTime.toISOString())
-    );
+    // ─ 5. Insert hanya yang belum ada ────────────────────────────────────
+    const toInsert = targetSlots.filter(s => !existingSet.has(s.startTime.toISOString()));
     if (toInsert.length > 0) {
       await prisma.showtime.createMany({
         data: toInsert.map(s => ({
@@ -97,12 +89,13 @@ async function ensureDummyShowtimes(movieId: string): Promise<void> {
         })),
         skipDuplicates: true,
       });
+      console.log(`[showtime] inserted ${toInsert.length} new slots`);
     }
   } catch (err) {
-    // Jangan crash halaman — dummy showtime bersifat best-effort
     console.error('[ensureDummyShowtimes] Error (non-fatal):', err);
   }
 }
+
 
 export default async function MovieDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

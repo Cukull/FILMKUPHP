@@ -4,6 +4,19 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Helper: tanggal WIB "YYYY-MM-DD" dari epoch ms ─────────────────────────────
+// Showtime disimpan sebagai UTC di DB (slot.hour:00 WIB = (slot.hour-7):00 UTC).
+// Agar tab "HARI INI" selalu cocok dengan row di DB, kita pakai offset +7h
+// di KEDUA sisi: days-tab generation DAN showtime filtering.
+const WIB_OFFSET_MS = 7 * 60 * 60 * 1000;
+function toWIBDateStr(epochMs: number): string {
+  const d = new Date(epochMs + WIB_OFFSET_MS);
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 type Showtime = {
   id: string;
   movieId: string;
@@ -31,26 +44,34 @@ export default function ShowtimeSelector({
     return () => clearInterval(interval);
   }, []);
 
-  // Generate 5 days (Hari Ini, Besok, etc)
+  // Generate 7 hari (Hari Ini … H+6) pakai WIB date string
   const days = useMemo(() => {
     const arr = [];
-    const dayNames = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
-    const monthNames = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
-    
-    for (let i = 0; i < 5; i++) {
-      const d = new Date();
-      d.setDate(d.getDate() + i);
-      d.setHours(0, 0, 0, 0); // normalize to midnight
-      
-      let label = dayNames[d.getDay()].toUpperCase();
-      if (i === 0) label = "HARI INI";
-      else if (i === 1) label = "BESOK";
+    const dayNames  = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+    const monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+
+    // Midnight WIB hari ini (dalam UTC epoch)
+    const nowMs       = Date.now();
+    const wibMs       = nowMs + WIB_OFFSET_MS;
+    const dayMs       = 24 * 60 * 60 * 1000;
+    const midnightWib = wibMs - (wibMs % dayMs); // midnight WIB, epoch "shifted"
+
+    for (let i = 0; i < 7; i++) {
+      // epoch ms di pertengahan hari WIB ke-i (untuk ambil nama hari & tanggal)
+      const shiftedMs = midnightWib + i * dayMs + 12 * 3600_000;
+      const d = new Date(shiftedMs); // pakai UTC methods karena epoch sudah di-shift
+
+      let label = dayNames[d.getUTCDay()].toUpperCase();
+      if (i === 0) label = 'HARI INI';
+      else if (i === 1) label = 'BESOK';
+
+      // dateStr = WIB calendar date, cocok dengan toWIBDateStr() di bawah
+      const dateStr = toWIBDateStr(midnightWib - WIB_OFFSET_MS + i * dayMs);
 
       arr.push({
-        dateObj: d,
-        dateStr: d.toISOString().split('T')[0],
-        num: d.getDate(),
-        month: monthNames[d.getMonth()],
+        dateStr,
+        num:   d.getUTCDate(),
+        month: monthNames[d.getUTCMonth()],
         label,
       });
     }
@@ -64,12 +85,11 @@ export default function ShowtimeSelector({
     }
   }, [days, selectedDateStr]);
 
-  // Filter showtimes by selected date
+  // Filter showtimes by selected date (pakai WIB date string untuk match)
   const filteredShowtimes = useMemo(() => {
     return showtimes.filter(st => {
-      const stDate = new Date(st.startTime);
-      const stDateStr = stDate.toISOString().split('T')[0];
-      return stDateStr === selectedDateStr;
+      const stMs = new Date(st.startTime).getTime();
+      return toWIBDateStr(stMs) === selectedDateStr;
     }).sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
   }, [showtimes, selectedDateStr]);
 
