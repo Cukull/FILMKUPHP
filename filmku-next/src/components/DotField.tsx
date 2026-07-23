@@ -76,7 +76,11 @@ const DotField = memo(({
       canvas!.style.width  = `${w}px`;
       canvas!.style.height = `${h}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      sizeRef.current = { w, h, offsetX: rect.left + window.scrollX, offsetY: rect.top + window.scrollY };
+
+      // Store VIEWPORT-relative offsets (rect.left/top already in viewport coords).
+      // Do NOT add window.scrollX/Y here — we now use e.clientX/Y in onMouseMove
+      // which is also viewport-relative, so they stay consistent on scroll.
+      sizeRef.current = { w, h, offsetX: rect.left, offsetY: rect.top };
       buildDots(w, h);
     }
 
@@ -104,10 +108,20 @@ const DotField = memo(({
       dotsRef.current = dots;
     }
 
+    // onMouseMove: use clientX/Y (viewport coords) so it stays correct
+    // regardless of scroll position, even for position:fixed elements.
     function onMouseMove(e: MouseEvent) {
       const s = sizeRef.current;
-      mouseRef.current.x = e.pageX - s.offsetX;
-      mouseRef.current.y = e.pageY - s.offsetY;
+      mouseRef.current.x = e.clientX - s.offsetX;
+      mouseRef.current.y = e.clientY - s.offsetY;
+    }
+
+    // onScroll: re-read element position in viewport so absolute-positioned
+    // canvases (that scroll with the page) stay accurate too.
+    function onScroll() {
+      const rect = canvas!.parentElement!.getBoundingClientRect();
+      sizeRef.current.offsetX = rect.left;
+      sizeRef.current.offsetY = rect.top;
     }
 
     function updateMouseSpeed() {
@@ -221,6 +235,7 @@ const DotField = memo(({
     doResize();
     window.addEventListener('resize', resize);
     window.addEventListener('mousemove', onMouseMove, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true });
     rafRef.current = requestAnimationFrame(tick);
 
     rebuildRef.current = () => {
@@ -234,6 +249,7 @@ const DotField = memo(({
       clearTimeout(resizeTimer);
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('scroll', onScroll);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

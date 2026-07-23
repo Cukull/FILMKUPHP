@@ -175,12 +175,13 @@ export default function AuthPage() {
           cursorRadius={450}
           cursorForce={0.1}
           bulgeOnly
-          gradientFrom="rgba(229,9,20,0.55)"
-          gradientTo="rgba(255,200,200,0.2)"
-          glowColor="#ffe4e4"
+          gradientFrom="#ff0000"
+          gradientTo="#ffeeee"
+          glowColor="#ffe6e6"
           style={{ pointerEvents: 'auto' }}
         />
       </div>
+
 
       {/* Subtle radial vignette over DotField */}
       <div style={{
