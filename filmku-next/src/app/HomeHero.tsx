@@ -145,10 +145,11 @@ export default function HomeHero({ films }: Props) {
         />
       </div>
 
-      {/* ── Gradient overlay ── */}
+      {/* ── Gradient overlay: gelap hanya di sekitar judul/deskripsi (kiri bawah) ── */}
       <div className="home-hero-overlay" style={{
         zIndex: 1, position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-        background: 'linear-gradient(to right, var(--bg-base) 0%, rgba(8,8,16,0.75) 40%, rgba(8,8,16,0.15) 100%), linear-gradient(to top, var(--bg-base) 0%, transparent 40%)',
+        background: 'radial-gradient(circle at 15% 85%, rgba(8,8,16,0.9) 0%, rgba(8,8,16,0.5) 30%, transparent 60%), linear-gradient(to top, rgba(8,8,16,0.7) 0%, transparent 15%)',
+        pointerEvents: 'none',
       }} />
 
       {/* ── Mute/Unmute button ── fades out on inactivity */}
@@ -167,7 +168,7 @@ export default function HomeHero({ films }: Props) {
           position: 'absolute',
           bottom: total > 1 ? '13%' : '15%',
           right: '5%',
-          zIndex: 10,
+          zIndex: 25, /* Di atas z-index: 10 dari hover-zone panah agar bisa diklik */
           background: 'rgba(0,0,0,0.5)',
           border: '1px solid rgba(255,255,255,0.25)',
           borderRadius: '50%',
@@ -198,17 +199,17 @@ export default function HomeHero({ films }: Props) {
       </button>
 
       {/* ── Vignette tepi kiri & kanan — selalu terlihat, pointer-events-none ── */}
-      {/* Dual purpose: (1) percantik tepi, (2) kontras supaya arrow putih terbaca */}
+      {/* Tipis saja (8%) untuk kontras arrow putih */}
       <div style={{
         position: 'absolute', inset: '0', left: 0,
-        width: '14%',
-        background: 'linear-gradient(to right, rgba(8,8,16,0.72) 0%, transparent 100%)',
+        width: '8%',
+        background: 'linear-gradient(to right, rgba(8,8,16,0.65) 0%, transparent 100%)',
         zIndex: 3, pointerEvents: 'none',
       }} />
       <div style={{
         position: 'absolute', inset: '0', right: 0, left: 'auto',
-        width: '14%',
-        background: 'linear-gradient(to left, rgba(8,8,16,0.72) 0%, transparent 100%)',
+        width: '8%',
+        background: 'linear-gradient(to left, rgba(8,8,16,0.65) 0%, transparent 100%)',
         zIndex: 3, pointerEvents: 'none',
       }} />
 
