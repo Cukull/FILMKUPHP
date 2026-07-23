@@ -3,9 +3,14 @@
 import { useState, useTransition } from 'react';
 import { createMovie, updateMovie } from '@/actions/admin';
 import { useRouter } from 'next/navigation';
+import DarkSelect, { type SelectOption } from '@/components/DarkSelect';
 
 const GENRES = ['Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 'Documentary', 'Drama', 'Family', 'Fantasy', 'Horror', 'Mystery', 'Romance', 'Science Fiction', 'Thriller', 'War', 'Western'];
 const SECTIONS = ['Sorotan Layar Utama', 'Pesona Asia & K-Drama', 'Rilisan Tersegar', 'Lagi Viral Nih', 'Tangga Teratas Box Office', 'Karya Anak Bangsa', 'Serem Banget', 'Yang Akan Datang', 'Perang'];
+const STATUS_OPTIONS: SelectOption[] = [
+  { value: 'NOW_PLAYING', label: '🎬 Sedang Tayang (Now Playing)' },
+  { value: 'UPCOMING',    label: '🔜 Akan Datang (Upcoming)' },
+];
 
 // Convert raw minutes → "Xh Ym"
 function formatDuration(mins?: number | null) {
@@ -516,17 +521,14 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
           />
         </div>
 
-        {/* ── Status Tayang ── */}
+        {/* ── Status Tayang — custom dark dropdown ── */}
         <div>
           <label style={labelStyle}>📡 Status Tayang</label>
-          <select
+          <DarkSelect
             value={formData.status}
-            onChange={e => setFormData({ ...formData, status: e.target.value })}
-            style={{ ...inputStyle, appearance: 'auto', cursor: 'pointer' }}
-          >
-            <option value="NOW_PLAYING">🎬 Sedang Tayang (Now Playing)</option>
-            <option value="UPCOMING">🔜 Akan Datang (Upcoming)</option>
-          </select>
+            onChange={v => setFormData({ ...formData, status: v })}
+            options={STATUS_OPTIONS}
+          />
         </div>
 
         {/* ── Sinopsis ── */}

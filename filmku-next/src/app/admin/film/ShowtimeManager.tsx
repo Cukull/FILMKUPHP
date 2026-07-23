@@ -2,6 +2,17 @@
 
 import { useState, useTransition } from 'react';
 import { createShowtime, deleteShowtime } from '@/actions/admin';
+import DarkDatePicker from '@/components/DarkDatePicker';
+import DarkTimePicker from '@/components/DarkTimePicker';
+import DarkSelect, { type SelectOption } from '@/components/DarkSelect';
+
+const STUDIO_OPTIONS: SelectOption[] = [
+  { value: 'Studio 1',  label: 'Studio 1' },
+  { value: 'Studio 2',  label: 'Studio 2' },
+  { value: 'Studio 3',  label: 'Studio 3' },
+  { value: 'Premiere',  label: '⭐ Premiere' },
+  { value: 'IMAX',      label: '🎬 IMAX' },
+];
 
 type Showtime = {
   id: string;
@@ -107,73 +118,44 @@ export default function ShowtimeManager({ movieId, showtimes }: { movieId: strin
         <div style={{
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
-          gap: TOKEN.gridGap,          // ← gap kolom & baris sama
-          marginBottom: TOKEN.gridGap, // ← jarak ke row berikutnya = sama dengan gap
+          gap: TOKEN.gridGap,
+          marginBottom: TOKEN.gridGap,
         }}>
           <div>
             <label style={labelStyle}>📅 Tanggal</label>
-            {/*
-              input[type=date] punya icon kalender bawaan browser.
-              Padding kanan dihapus supaya ikon tidak kepotong,
-              tapi padding kiri tetap agar teks tidak mepet kiri.
-            */}
-            <input
-              type="date"
+            {/* Custom dark date picker — output: "YYYY-MM-DD" */}
+            <DarkDatePicker
               value={date}
-              onChange={e => setDate(e.target.value)}
-              style={{
-                ...inputStyle,
-                // Padding kanan sedikit lebih besar supaya ikon kalender
-                // tidak menabrak teks — minimal 10px clearance
-                paddingRight: '0.75rem',
-                colorScheme: 'dark',   // ← membuat ikon kalender browser putih
-              }}
+              onChange={setDate}
+              placeholder="Pilih tanggal..."
             />
           </div>
           <div>
             <label style={labelStyle}>🕐 Jam Mulai</label>
-            {/*
-              input[type=time] punya ikon jam bawaan browser.
-              colorScheme: dark membuat ikon menyesuaikan tema gelap.
-            */}
-            <input
-              type="time"
+            {/* Custom dark time picker — output: "HH:MM" */}
+            <DarkTimePicker
               value={time}
-              onChange={e => setTime(e.target.value)}
-              style={{
-                ...inputStyle,
-                paddingRight: '0.75rem',
-                colorScheme: 'dark',
-              }}
+              onChange={setTime}
+              placeholder="Pilih jam..."
             />
           </div>
         </div>
 
         {/* Row 2: Studio + Harga + Tombol Tambah */}
-        {/*
-          Layout: Studio dan Harga berbagi ruang sama (1fr 1fr),
-          tombol "+ Tambah" di kolom ke-3 (auto width).
-          alignItems: end → tombol sejajar bawah dengan input.
-        */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: '1fr 1fr auto',
-          gap: TOKEN.gridGap,          // ← gap seragam dengan row di atas
+          gap: TOKEN.gridGap,
           alignItems: 'end',
         }}>
           <div>
             <label style={labelStyle}>🎬 Studio</label>
-            <select
+            {/* Custom dark select untuk studio */}
+            <DarkSelect
               value={studio}
-              onChange={e => setStudio(e.target.value)}
-              style={{ ...inputStyle, appearance: 'auto', cursor: 'pointer' }}
-            >
-              <option>Studio 1</option>
-              <option>Studio 2</option>
-              <option>Studio 3</option>
-              <option>Premiere</option>
-              <option>IMAX</option>
-            </select>
+              onChange={setStudio}
+              options={STUDIO_OPTIONS}
+            />
           </div>
 
           <div>
