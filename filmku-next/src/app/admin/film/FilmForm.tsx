@@ -51,6 +51,10 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
   const [isFetchingOMDB, setIsFetchingOMDB] = useState(false);
   const [omdbError, setOmdbError] = useState('');
   const [omdbSuccess, setOmdbSuccess] = useState(false);
+  // Field yang berhasil diisi oleh OMDB (untuk ditampilkan di success banner)
+  const [omdbFilledFields, setOmdbFilledFields] = useState<string[]>([]);
+  // Genre dari OMDB yang tidak ada di daftar checkbox (perlu dicek manual)
+  const [unmatchedGenres, setUnmatchedGenres] = useState<string[]>([]);
 
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
@@ -78,6 +82,8 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
     setIsFetchingOMDB(true);
     setOmdbError('');
     setOmdbSuccess(false);
+    setOmdbFilledFields([]);
+    setUnmatchedGenres([]);
     try {
       const res = await fetch(`/api/fetch-movie?title=${encodeURIComponent(formData.title)}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -87,26 +93,92 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
       if (!json.data) { setOmdbError('Tidak ada data dari API.'); return; }
 
       const d = json.data;
-      setFormData(prev => ({
-        ...prev,
-        synopsis: d.synopsis ? d.synopsis : prev.synopsis,
-        posterUrl: d.posterUrl ? d.posterUrl : prev.posterUrl,
-        rating: d.rating != null ? String(d.rating) : prev.rating,
-        durationMin: d.durationMin != null ? formatDuration(d.durationMin) : prev.durationMin,
-        rottenTomatoes: d.rottenTomatoes ? d.rottenTomatoes : prev.rottenTomatoes,
-        metacritic: d.metacritic ? d.metacritic : prev.metacritic,
-        director: d.director ? d.director : prev.director,
-        cast: d.cast ? d.cast : prev.cast,
-      }));
+      const filled: string[] = [];  // Track field mana yang berhasil diisi
 
-      if (d.genre) {
-        const fetchedGenres = d.genre.split(',').map((g: string) => g.trim());
-        const validGenres = fetchedGenres.filter((g: string) => GENRES.includes(g));
-        if (validGenres.length > 0) setSelectedGenres(validGenres);
+      // ── Helper: nilai dianggap valid jika ada dan bukan "N/A" ──
+      const valid = (v: any) => v != null && v !== '' && v !== 'N/A';
+
+      // ── 1. Sinopsis (Plot dari OMDB / overview dari TMDB) ──
+      const newSynopsis = valid(d.synopsis) ? d.synopsis : null;
+
+      // ── 2. Rating IMDb ──
+      // d.rating dari server sudah berupa number (parseFloat dari imdbRating)
+      const newRating = valid(d.rating) ? String(d.rating) : null;
+
+      // ── 3. Durasi ──
+      // Server mengembalikan durationMin sebagai angka (misal 148).
+      // formatDuration(148) → "2h 28m"  ← format yang dipakai form & DB.
+      // JANGAN overwrite jika API return null (runtime tidak ditemukan).
+      const newDuration = valid(d.durationMin) ? formatDuration(d.durationMin) : null;
+
+      // ── 4. Rotten Tomatoes (Value dari Ratings array, misal "79%") ──
+      const newRT = valid(d.rottenTomatoes) ? d.rottenTomatoes : null;
+
+      // ── 5. Metacritic (format: "74/100") ──
+      const newMC = valid(d.metacritic) ? d.metacritic : null;
+
+      // ── 6. Poster URL ──
+      const newPoster = valid(d.posterUrl) ? d.posterUrl : null;
+
+      // ── Terapkan ke formData — hanya jika ada nilai valid dari API ──
+      setFormData(prev => {
+        const next = { ...prev };
+        if (newSynopsis)  { next.synopsis      = newSynopsis;  filled.push('Sinopsis'); }
+        if (newRating)    { next.rating         = newRating;    filled.push('Rating IMDb'); }
+        if (newDuration)  { next.durationMin    = newDuration;  filled.push('Durasi'); }
+        if (newRT)        { next.rottenTomatoes = newRT;        filled.push('Rotten Tomatoes'); }
+        if (newMC)        { next.metacritic     = newMC;        filled.push('Metacritic'); }
+        if (newPoster)    { next.posterUrl      = newPoster;    filled.push('Poster URL'); }
+        // director & cast disimpan sebagai JSON string dari TMDB credits
+        if (valid(d.director)) { next.director = d.director; }
+        if (valid(d.cast))     { next.cast     = d.cast; }
+        return next;
+      });
+
+      // ── Genre: case-insensitive matching, track yang tidak cocok ──
+      if (valid(d.genre)) {
+        const rawGenres = d.genre.split(',').map((g: string) => g.trim());
+        const matched: string[] = [];
+        const unmatched: string[] = [];
+
+        rawGenres.forEach((apiGenre: string) => {
+          // Case-insensitive: "Sci-Fi" dari OMDB vs "Science Fiction" di checkbox
+          // Cari exact match dulu, lalu cari partial match
+          const exactMatch = GENRES.find(
+            g => g.toLowerCase() === apiGenre.toLowerCase()
+          );
+          const partialMatch = !exactMatch
+            ? GENRES.find(g =>
+                g.toLowerCase().includes(apiGenre.toLowerCase()) ||
+                apiGenre.toLowerCase().includes(g.toLowerCase())
+              )
+            : null;
+
+          const found = exactMatch || partialMatch;
+          if (found) {
+            matched.push(found);
+          } else {
+            unmatched.push(apiGenre);
+          }
+        });
+
+        if (matched.length > 0) {
+          // Gabungkan dengan genre yang sudah dipilih manual (union)
+          setSelectedGenres(prev => Array.from(new Set([...prev, ...matched])));
+          filled.push(`Genre (${matched.join(', ')})`);
+        }
+        if (unmatched.length > 0) {
+          setUnmatchedGenres(unmatched);
+        }
       }
 
+      setOmdbFilledFields(filled);
       setOmdbSuccess(true);
-      setTimeout(() => setOmdbSuccess(false), 5000);
+      setTimeout(() => {
+        setOmdbSuccess(false);
+        setOmdbFilledFields([]);
+        setUnmatchedGenres([]);
+      }, 10000); // auto-dismiss setelah 10 detik
     } catch (err: any) {
       setOmdbError('Gagal menghubungi API: ' + (err.message || 'unknown error'));
     } finally {
@@ -230,7 +302,7 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
             </button>
           </div>
 
-          {/* Feedback OMDB */}
+          {/* Feedback OMDB — error */}
           {omdbError && (
             <div style={{
               color: '#ef4444', fontSize: '0.82rem', marginTop: '0.6rem',
@@ -240,13 +312,38 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
               ⚠️ {omdbError}
             </div>
           )}
-          {omdbSuccess && (
+
+          {/* Feedback OMDB — success: daftar field yang berhasil diisi */}
+          {omdbSuccess && omdbFilledFields.length > 0 && (
             <div style={{
-              color: '#22c55e', fontSize: '0.85rem', marginTop: '0.6rem',
-              padding: '0.6rem 0.875rem', background: 'rgba(34,197,94,0.08)',
-              borderRadius: '0.4rem', border: '1px solid rgba(34,197,94,0.25)',
+              fontSize: '0.82rem', marginTop: '0.6rem',
+              padding: '0.75rem 0.875rem', background: 'rgba(34,197,94,0.07)',
+              borderRadius: '0.4rem', border: '1px solid rgba(34,197,94,0.22)',
             }}>
-              ✅ Data berhasil ditarik dari OMDB & TMDB dan telah diisi ke form!
+              <div style={{ color: '#22c55e', fontWeight: 700, marginBottom: '0.35rem' }}>
+                ✅ Berhasil mengisi {omdbFilledFields.length} field:
+              </div>
+              <ul style={{ margin: 0, paddingLeft: '1.25rem', color: 'rgba(34,197,94,0.85)', lineHeight: 1.7 }}>
+                {omdbFilledFields.map(f => (
+                  <li key={f}>{f}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Feedback OMDB — warning: genre tidak cocok */}
+          {unmatchedGenres.length > 0 && (
+            <div style={{
+              fontSize: '0.82rem', marginTop: '0.5rem',
+              padding: '0.75rem 0.875rem', background: 'rgba(234,179,8,0.07)',
+              borderRadius: '0.4rem', border: '1px solid rgba(234,179,8,0.25)',
+            }}>
+              <div style={{ color: '#facc15', fontWeight: 700, marginBottom: '0.35rem' }}>
+                ⚠️ Genre berikut dari OMDB tidak cocok dengan daftar checkbox:
+              </div>
+              <div style={{ color: 'rgba(250,204,21,0.85)' }}>
+                {unmatchedGenres.join(', ')} — centang manual jika diperlukan.
+              </div>
             </div>
           )}
         </div>
