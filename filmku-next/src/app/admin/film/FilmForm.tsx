@@ -29,6 +29,22 @@ function parseDurationToMinutes(str: string): number | undefined {
   return plain ? parseInt(plain[1]) : undefined;
 }
 
+// ─────────────────────────────────────────────
+//  Design tokens — semua spacing dari sini
+// ─────────────────────────────────────────────
+const TOKEN = {
+  // Padding dalam semua <input>, <select>, <textarea>
+  inputPadding: '0.8rem 1rem',
+  // Gap vertikal antar field-group dalam satu card
+  sectionGap: '1.5rem',
+  // Gap kolom & baris pada grid 2-kolom
+  gridGap: '1.25rem',
+  // Gap vertikal antar checkbox item
+  checkboxGap: '0.65rem',
+  // Jarak antara label dan input di bawahnya
+  labelGap: '0.45rem',
+};
+
 export default function FilmForm({ initialData }: { initialData?: any }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -67,17 +83,10 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
 
-      if (json.error) {
-        setOmdbError(json.error);
-        return;
-      }
-      if (!json.data) {
-        setOmdbError('Tidak ada data dari API.');
-        return;
-      }
+      if (json.error) { setOmdbError(json.error); return; }
+      if (!json.data) { setOmdbError('Tidak ada data dari API.'); return; }
 
       const d = json.data;
-      // Always replace field if API returned a value (including empty string → keep prev)
       setFormData(prev => ({
         ...prev,
         synopsis: d.synopsis ? d.synopsis : prev.synopsis,
@@ -90,7 +99,6 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
         cast: d.cast ? d.cast : prev.cast,
       }));
 
-      // Update genres from TMDB if returned
       if (d.genre) {
         const fetchedGenres = d.genre.split(',').map((g: string) => g.trim());
         const validGenres = fetchedGenres.filter((g: string) => GENRES.includes(g));
@@ -131,25 +139,44 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
     });
   };
 
+  // ─────────────────────────────────────────────
+  //  Shared styles — semua elemen form pakai ini
+  // ─────────────────────────────────────────────
   const inputStyle: React.CSSProperties = {
     width: '100%',
-    padding: '0.85rem 1rem',
+    padding: TOKEN.inputPadding,       // ← konsisten di semua input
     borderRadius: '0.625rem',
     background: 'rgba(255,255,255,0.04)',
     border: '1px solid rgba(255,255,255,0.1)',
     color: '#fff',
     fontSize: '0.9rem',
     outline: 'none',
-    transition: 'border-color 0.2s',
+    transition: 'border-color 0.2s, box-shadow 0.2s',
     boxSizing: 'border-box',
   };
+
   const labelStyle: React.CSSProperties = {
     display: 'block',
-    marginBottom: '0.5rem',
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: '0.82rem',
-    fontWeight: 600,
-    letterSpacing: '0.02em',
+    marginBottom: TOKEN.labelGap,      // ← konsisten label → input gap
+    color: 'rgba(255,255,255,0.55)',
+    fontSize: '0.78rem',
+    fontWeight: 700,
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase',
+  };
+
+  // Grid 2-kolom dengan gap seragam
+  const grid2: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: TOKEN.gridGap,                // ← gap-x dan gap-y sama
+  };
+
+  // Section divider tipis (memisahkan group field)
+  const divider: React.CSSProperties = {
+    borderTop: '1px solid rgba(255,255,255,0.06)',
+    marginTop: 0,
+    marginBottom: 0,
   };
 
   return (
@@ -161,15 +188,15 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
         border: '1px solid rgba(255,255,255,0.07)',
         display: 'flex',
         flexDirection: 'column',
-        gap: '1.75rem',
+        gap: TOKEN.sectionGap,         // ← gap antar semua field-group
         boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
         backdropFilter: 'blur(10px)',
       }}>
 
-        {/* Title + OMDB */}
+        {/* ── Judul Film + Tombol Tarik OMDB ── */}
         <div>
           <label style={labelStyle}>Judul Film</label>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'stretch' }}>
             <input
               type="text"
               value={formData.title}
@@ -185,7 +212,9 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
               style={{
                 padding: '0 1.5rem',
                 whiteSpace: 'nowrap',
-                background: isFetchingOMDB ? 'rgba(229,9,20,0.5)' : 'linear-gradient(135deg, #e50914, #c0000f)',
+                background: isFetchingOMDB
+                  ? 'rgba(229,9,20,0.5)'
+                  : 'linear-gradient(135deg, #e50914, #c0000f)',
                 border: 'none',
                 borderRadius: '0.625rem',
                 color: 'white',
@@ -194,27 +223,40 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
                 cursor: isFetchingOMDB ? 'not-allowed' : 'pointer',
                 boxShadow: '0 4px 15px rgba(229,9,20,0.4)',
                 transition: 'all 0.2s',
+                flexShrink: 0,
               }}
             >
               {isFetchingOMDB ? '⟳ Menarik...' : 'Tarik Data OMDB'}
             </button>
           </div>
+
+          {/* Feedback OMDB */}
           {omdbError && (
-            <div style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.6rem', padding: '0.6rem 0.875rem', background: 'rgba(239,68,68,0.08)', borderRadius: '0.4rem', border: '1px solid rgba(239,68,68,0.25)' }}>
+            <div style={{
+              color: '#ef4444', fontSize: '0.82rem', marginTop: '0.6rem',
+              padding: '0.6rem 0.875rem', background: 'rgba(239,68,68,0.08)',
+              borderRadius: '0.4rem', border: '1px solid rgba(239,68,68,0.25)',
+            }}>
               ⚠️ {omdbError}
             </div>
           )}
           {omdbSuccess && (
-            <div style={{ color: '#22c55e', fontSize: '0.85rem', marginTop: '0.6rem', padding: '0.6rem 0.875rem', background: 'rgba(34,197,94,0.08)', borderRadius: '0.4rem', border: '1px solid rgba(34,197,94,0.25)' }}>
+            <div style={{
+              color: '#22c55e', fontSize: '0.85rem', marginTop: '0.6rem',
+              padding: '0.6rem 0.875rem', background: 'rgba(34,197,94,0.08)',
+              borderRadius: '0.4rem', border: '1px solid rgba(34,197,94,0.25)',
+            }}>
               ✅ Data berhasil ditarik dari OMDB & TMDB dan telah diisi ke form!
             </div>
           )}
         </div>
 
-        {/* Rating & Durasi */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+        <hr style={divider} />
+
+        {/* ── Rating IMDb + Durasi (grid 2 kolom) ── */}
+        <div style={grid2}>
           <div>
-            <label style={labelStyle}>Rating IMDb (1-10)</label>
+            <label style={labelStyle}>⭐ Rating IMDb (1–10)</label>
             <input
               type="text"
               value={formData.rating}
@@ -224,7 +266,7 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
             />
           </div>
           <div>
-            <label style={labelStyle}>Durasi</label>
+            <label style={labelStyle}>⏱ Durasi</label>
             <input
               type="text"
               value={formData.durationMin}
@@ -235,8 +277,8 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
           </div>
         </div>
 
-        {/* RT & Metacritic */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+        {/* ── Rotten Tomatoes + Metacritic (grid 2 kolom) ── */}
+        <div style={grid2}>
           <div>
             <label style={labelStyle}>🍅 Rating Rotten Tomatoes</label>
             <input
@@ -259,40 +301,103 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
           </div>
         </div>
 
-        {/* Genre + Sections */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '1.5rem', alignItems: 'start' }}>
+        <hr style={divider} />
+
+        {/* ── Genre + Section Dashboard (grid 1fr 1.5fr) ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: TOKEN.gridGap, alignItems: 'start' }}>
+
+          {/* Genre checkbox list */}
           <div>
             <label style={labelStyle}>Genre</label>
-            <div style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.625rem', padding: '0.875rem', display: 'flex', flexDirection: 'column', gap: '0.6rem', background: 'rgba(255,255,255,0.02)', maxHeight: '220px', overflowY: 'auto' }} className="hide-scrollbar">
+            <div style={{
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '0.625rem',
+              padding: '1rem',
+              background: 'rgba(255,255,255,0.02)',
+              maxHeight: '236px',
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: TOKEN.checkboxGap,   // ← gap antar checkbox konsisten
+            }} className="hide-scrollbar">
               {GENRES.map(g => (
-                <label key={g} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', cursor: 'pointer', color: 'rgba(255,255,255,0.8)' }}>
-                  <input type="checkbox" checked={selectedGenres.includes(g)} onChange={e => { if (e.target.checked) setSelectedGenres([...selectedGenres, g]); else setSelectedGenres(selectedGenres.filter(x => x !== g)); }} style={{ accentColor: '#e50914' }} />
+                <label key={g} style={{
+                  display: 'flex',
+                  alignItems: 'center',  // ← checkbox sejajar teks
+                  gap: '0.6rem',
+                  fontSize: '0.875rem',
+                  cursor: 'pointer',
+                  color: selectedGenres.includes(g) ? '#fff' : 'rgba(255,255,255,0.7)',
+                  fontWeight: selectedGenres.includes(g) ? 600 : 400,
+                  lineHeight: 1,
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedGenres.includes(g)}
+                    onChange={e => {
+                      if (e.target.checked) setSelectedGenres([...selectedGenres, g]);
+                      else setSelectedGenres(selectedGenres.filter(x => x !== g));
+                    }}
+                    style={{ accentColor: '#e50914', width: '15px', height: '15px', flexShrink: 0 }}
+                  />
                   {g}
                 </label>
               ))}
             </div>
           </div>
+
+          {/* Section Dashboard checkbox grid */}
           <div>
-            <label style={labelStyle}>Kategori Section Dashboard (Pilih 1 atau lebih)</label>
-            <div style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.625rem', padding: '0.875rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem', background: 'rgba(255,255,255,0.02)' }}>
+            <label style={labelStyle}>Kategori Section Dashboard</label>
+            <div style={{
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '0.625rem',
+              padding: '1rem',
+              background: 'rgba(255,255,255,0.02)',
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: TOKEN.checkboxGap,   // ← gap seragam (row & column)
+            }}>
               {SECTIONS.map(s => (
-                <label key={s} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.82rem', cursor: 'pointer', lineHeight: 1.3, color: 'rgba(255,255,255,0.8)' }}>
-                  <input type="checkbox" checked={selectedSections.includes(s)} onChange={e => { if (e.target.checked) setSelectedSections([...selectedSections, s]); else setSelectedSections(selectedSections.filter(x => x !== s)); }} style={{ accentColor: '#e50914', marginTop: '0.15rem', flexShrink: 0 }} />
+                <label key={s} style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',  // ← multi-line: checkbox di atas
+                  gap: '0.6rem',
+                  fontSize: '0.82rem',
+                  cursor: 'pointer',
+                  lineHeight: 1.35,
+                  color: selectedSections.includes(s) ? '#fff' : 'rgba(255,255,255,0.7)',
+                  fontWeight: selectedSections.includes(s) ? 600 : 400,
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedSections.includes(s)}
+                    onChange={e => {
+                      if (e.target.checked) setSelectedSections([...selectedSections, s]);
+                      else setSelectedSections(selectedSections.filter(x => x !== s));
+                    }}
+                    style={{
+                      accentColor: '#e50914',
+                      width: '15px', height: '15px',
+                      marginTop: '0.1rem', flexShrink: 0,  // ← sejajar baris pertama teks
+                    }}
+                  />
                   {s}
                 </label>
               ))}
             </div>
-            <input type="text" placeholder="Atau ketik nama section baru di sini..." style={{ ...inputStyle, marginTop: '0.75rem', background: 'transparent' }} />
           </div>
         </div>
 
-        {/* Hidden fields for director & cast */}
+        <hr style={divider} />
+
+        {/* ── Hidden fields ── */}
         <input type="hidden" value={formData.director} name="director" />
         <input type="hidden" value={formData.cast} name="cast" />
 
-        {/* Poster URL */}
+        {/* ── URL Poster ── */}
         <div>
-          <label style={labelStyle}>URL Poster Film (TMDB)</label>
+          <label style={labelStyle}>🖼 URL Poster Film (TMDB)</label>
           <input
             type="text"
             value={formData.posterUrl}
@@ -302,9 +407,9 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
           />
         </div>
 
-        {/* Trailer URL */}
+        {/* ── Link Trailer ── */}
         <div>
-          <label style={labelStyle}>Link Trailer YouTube</label>
+          <label style={labelStyle}>▶ Link Trailer YouTube</label>
           <input
             type="text"
             value={formData.trailerUrl}
@@ -314,9 +419,9 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
           />
         </div>
 
-        {/* Status */}
+        {/* ── Status Tayang ── */}
         <div>
-          <label style={labelStyle}>Status Tayang</label>
+          <label style={labelStyle}>📡 Status Tayang</label>
           <select
             value={formData.status}
             onChange={e => setFormData({ ...formData, status: e.target.value })}
@@ -327,25 +432,30 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
           </select>
         </div>
 
-        {/* Synopsis */}
+        {/* ── Sinopsis ── */}
         <div>
-          <label style={labelStyle}>Sinopsis</label>
+          <label style={labelStyle}>📝 Sinopsis</label>
           <textarea
             value={formData.synopsis}
             onChange={e => setFormData({ ...formData, synopsis: e.target.value })}
-            style={{ ...inputStyle, resize: 'vertical', minHeight: '120px' }}
+            style={{ ...inputStyle, resize: 'vertical', minHeight: '130px', lineHeight: 1.6 }}
             rows={5}
+            placeholder="Tulis sinopsis singkat film..."
           />
         </div>
 
-        {/* Submit */}
+        <hr style={divider} />
+
+        {/* ── Tombol Simpan ── */}
         <button
           type="submit"
           disabled={isPending}
           style={{
-            padding: '1rem',
+            padding: '0.95rem 1.5rem',
             fontSize: '1rem',
-            background: isPending ? 'rgba(229,9,20,0.5)' : 'linear-gradient(135deg, #e50914, #c0000f)',
+            background: isPending
+              ? 'rgba(229,9,20,0.5)'
+              : 'linear-gradient(135deg, #e50914, #c0000f)',
             border: 'none',
             borderRadius: '0.75rem',
             color: 'white',
@@ -357,10 +467,12 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
             gap: '0.5rem',
             boxShadow: '0 4px 20px rgba(229,9,20,0.4)',
             transition: 'all 0.2s',
+            // mt-6 dari elemen di atasnya sudah ditangani oleh sectionGap di parent
           }}
         >
           {isPending ? '⟳ Menyimpan...' : '💾 Simpan Perubahan'}
         </button>
+
       </div>
     </form>
   );
