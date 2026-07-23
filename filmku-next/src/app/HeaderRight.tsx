@@ -1,10 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
 export default function HeaderRight({ session, logoutAction }: { session: any, logoutAction: any }) {
   const [isSearchActive, setIsSearchActive] = useState(false);
+  const pathname = usePathname();
+  const isAuthPage = pathname === '/auth';
   
   const initials = session?.name
     ? session.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
@@ -13,62 +16,64 @@ export default function HeaderRight({ session, logoutAction }: { session: any, l
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
       
-      {/* Search Bar */}
-      <div 
-        className="search-container"
-        style={{
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          width: isSearchActive ? '260px' : '40px',
-          height: '40px',
-          background: isSearchActive ? 'rgba(255,255,255,0.05)' : 'transparent',
-          border: isSearchActive ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent',
-          borderRadius: '20px',
-          overflow: 'hidden',
-          cursor: isSearchActive ? 'text' : 'pointer'
-        }}
-        onMouseEnter={() => setIsSearchActive(true)}
-        onMouseLeave={(e) => {
-          if (document.activeElement !== e.currentTarget.querySelector('input')) {
-            setIsSearchActive(false);
-          }
-        }}
-      >
-        <input 
-          type="text" 
-          placeholder="Cari judul film..."
-          onFocus={() => setIsSearchActive(true)}
-          onBlur={() => setIsSearchActive(false)}
+      {/* Search Bar — disembunyikan di halaman /auth */}
+      {!isAuthPage && (
+        <div 
+          className="search-container"
           style={{
-            background: 'transparent',
-            border: 'none',
-            color: 'var(--text-primary)',
-            fontSize: '0.9rem',
-            width: '100%',
-            height: '100%',
-            padding: isSearchActive ? '0 40px 0 16px' : '0',
-            opacity: isSearchActive ? 1 : 0,
-            transition: 'opacity 0.2s',
-            outline: 'none',
-            fontFamily: 'var(--font-body)'
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            width: isSearchActive ? '260px' : '40px',
+            height: '40px',
+            background: isSearchActive ? 'rgba(255,255,255,0.05)' : 'transparent',
+            border: isSearchActive ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent',
+            borderRadius: '20px',
+            overflow: 'hidden',
+            cursor: isSearchActive ? 'text' : 'pointer'
           }}
-        />
-        <svg 
-          width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-          style={{
-            position: 'absolute',
-            right: '10px',
-            color: isSearchActive ? 'var(--text-secondary)' : 'var(--text-primary)',
-            transition: 'color 0.2s',
-            pointerEvents: 'none'
+          onMouseEnter={() => setIsSearchActive(true)}
+          onMouseLeave={(e) => {
+            if (document.activeElement !== e.currentTarget.querySelector('input')) {
+              setIsSearchActive(false);
+            }
           }}
         >
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-      </div>
+          <input 
+            type="text" 
+            placeholder="Cari judul film..."
+            onFocus={() => setIsSearchActive(true)}
+            onBlur={() => setIsSearchActive(false)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-primary)',
+              fontSize: '0.9rem',
+              width: '100%',
+              height: '100%',
+              padding: isSearchActive ? '0 40px 0 16px' : '0',
+              opacity: isSearchActive ? 1 : 0,
+              transition: 'opacity 0.2s',
+              outline: 'none',
+              fontFamily: 'var(--font-body)'
+            }}
+          />
+          <svg 
+            width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            style={{
+              position: 'absolute',
+              right: '10px',
+              color: isSearchActive ? 'var(--text-secondary)' : 'var(--text-primary)',
+              transition: 'color 0.2s',
+              pointerEvents: 'none'
+            }}
+          >
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </div>
+      )}
 
       {session ? (
         <div 
