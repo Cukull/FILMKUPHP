@@ -1778,3 +1778,13 @@ a.cast-item--linked:hover .cast-avatar-overlay {
   }
 }
 
+/* ── BorderGlow auth page overrides ──────────────────────────────────────
+   border-glow-inner default = overflow:auto
+   The auth 4-panel slider needs overflow:hidden to clip correctly.
+────────────────────────────────────────────────────────────────────────── */
+.auth-border-glow {
+  width: 100%;
+}
+.auth-border-glow .border-glow-inner {
+  overflow: hidden;   /* clip 200%-wide slider to visible 50% */
+}

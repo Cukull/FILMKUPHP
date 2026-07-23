@@ -5,7 +5,8 @@ import { loginAction, registerAction } from '@/actions/auth';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 
-const DotField = dynamic(() => import('@/components/DotField'), { ssr: false });
+const DotField    = dynamic(() => import('@/components/DotField'),    { ssr: false });
+const BorderGlow  = dynamic(() => import('@/components/BorderGlow'),  { ssr: false });
 
 /**
  * /auth — Card sliding panel di atas DotField fullscreen
@@ -189,22 +190,24 @@ export default function AuthPage() {
         background: 'radial-gradient(ellipse at 40% 50%, transparent 20%, rgba(7,7,15,0.72) 90%)',
       }} />
 
-      {/* ══ AUTH CARD ══════════════════════════════════════════
-          overflow: hidden → clips the 200%-wide inner slider
-          so only the visible 50% is shown at a time
-      ════════════════════════════════════════════════════════ */}
-      <div style={{
-        position: 'relative', zIndex: 1,
-        width: '100%', maxWidth: '860px',
-        borderRadius: '18px',
-        overflow: 'hidden',
-        border: '1px solid rgba(229,9,20,0.18)',
-        boxShadow: [
-          '0 32px 80px rgba(0,0,0,0.65)',
-          '0 0 0 1px rgba(255,255,255,0.04)',
-          '0 0 60px rgba(229,9,20,0.08)',
-        ].join(', '),
-      }}>
+      {/* ══ AUTH CARD — wrapped dengan BorderGlow interaktif ══════════
+          BorderGlow handles: border, box-shadow, borderRadius
+          .auth-border-glow .border-glow-inner → overflow:hidden
+          (agar 4-panel slider ter-clip dengan benar)
+      ════════════════════════════════════════════════════════════════ */}
+      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '860px' }}>
+        <BorderGlow
+          className="auth-border-glow"
+          colors={['#e50914', '#ff4444', '#9333ea']}
+          glowColor="0 85 60"
+          backgroundColor="#0a0a14"
+          borderRadius={18}
+          glowRadius={45}
+          glowIntensity={0.95}
+          fillOpacity={0.35}
+          edgeSensitivity={25}
+          coneSpread={22}
+        >
 
         {/*
           ── 4-PANEL SLIDER (width = 200% of card) ──
@@ -442,7 +445,8 @@ export default function AuthPage() {
           </div>
 
         </div>{/* end 4-panel slider */}
-      </div>{/* end card */}
+        </BorderGlow>
+      </div>{/* end BorderGlow wrapper */}
     </div>
   );
 }
