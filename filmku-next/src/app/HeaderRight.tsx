@@ -139,12 +139,13 @@ export default function HeaderRight({ session, logoutAction }: { session: any, l
         </div>
       ) : (
         <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-          <Link href="/login" style={{ textDecoration: "none" }}>
+          <Link href="/auth" style={{ textDecoration: "none" }}>
             <button className="btn-outline">Masuk</button>
           </Link>
-          <Link href="/register" style={{ textDecoration: "none" }}>
+          <Link href="/auth" style={{ textDecoration: "none" }}>
             <button className="btn-primary">Daftar</button>
           </Link>
+
         </div>
       )}
     </div>
