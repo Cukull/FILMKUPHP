@@ -283,16 +283,6 @@ export default function HomeHero({ films }: Props) {
             </button>
           </div>
 
-          {/* ── Mobile/touch: always-visible arrows via CSS ── */}
-          <style>{`
-            @media (hover: none) {
-              .hero-carousel-arrow {
-                opacity: 1 !important;
-                transform: translateY(-50%) translateX(0px) !important;
-                pointer-events: auto !important;
-              }
-            }
-          `}</style>
         </>
       )}
 
