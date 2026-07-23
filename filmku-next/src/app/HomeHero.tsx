@@ -296,34 +296,98 @@ export default function HomeHero({ films }: Props) {
           transition: 'opacity 0.28s ease, transform 0.28s ease',
         }}
       >
-        {/* Badges */}
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-          {film.rating && <span className="badge badge-gold">⭐ {film.rating} / 10</span>}
-          {film.genre && <span className="badge badge-accent">{film.genre.split(',')[0].trim()}</span>}
-          <span className="badge badge-muted">HD</span>
-        </div>
-
-        <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 900, lineHeight: 1.1, marginBottom: '1rem', color: '#fff', letterSpacing: '-0.02em' }}>
+        {/* ── Judul film ── */}
+        <h1 style={{
+          fontSize: 'clamp(1.6rem, 3.5vw, 2.6rem)', // lebih proporsional, tidak dominan berlebihan
+          fontWeight: 800,
+          lineHeight: 1.15,
+          marginBottom: '0.6rem',
+          color: '#fff',
+          letterSpacing: '-0.015em',
+          maxWidth: '560px',
+        }}>
           {film.title}
         </h1>
 
-        <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, fontSize: '0.95rem', marginBottom: '2rem', maxWidth: '520px' }}>
-          {film.synopsis ? (film.synopsis.length > 180 ? film.synopsis.slice(0, 180) + '…' : film.synopsis) : ''}
+        {/* ── Baris atribut: Rating • Durasi • Badge usia • Genre ── */}
+        {/* Semua kecil, sejajar horizontal, gap konsisten — mirip referensi PHP */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          flexWrap: 'wrap',
+          marginBottom: '0.875rem',
+        }}>
+          {/* ⭐ IMDb Rating */}
+          {film.rating && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.82rem', fontWeight: 700, color: '#f5c518' }}>
+              ⭐ {film.rating}
+            </span>
+          )}
+
+          {/* Separator dot */}
+          {film.rating && <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.7rem' }}>●</span>}
+
+          {/* Durasi — ambil dari synopsis placeholder, atau tampil "HD" */}
+          <span style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.65)', fontWeight: 500 }}>
+            HD
+          </span>
+
+          <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.7rem' }}>●</span>
+
+          {/* Badge rating usia — pill kecil dengan border */}
+          <span style={{
+            fontSize: '0.72rem',
+            fontWeight: 700,
+            padding: '0.1rem 0.45rem',
+            borderRadius: '0.3rem',
+            border: '1px solid rgba(255,255,255,0.4)',
+            color: 'rgba(255,255,255,0.85)',
+            lineHeight: 1.5,
+            letterSpacing: '0.02em',
+          }}>
+            13+
+          </span>
+
+          {/* Genre — ambil genre pertama */}
+          {film.genre && (
+            <>
+              <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.7rem' }}>●</span>
+              <span style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.65)', fontWeight: 500 }}>
+                {film.genre.split(',')[0].trim()}
+              </span>
+            </>
+          )}
+        </div>
+
+        {/* ── Sinopsis — max 3 baris ── */}
+        <p style={{
+          color: 'rgba(255,255,255,0.65)',
+          lineHeight: 1.65,
+          fontSize: '0.875rem',
+          marginBottom: '1.75rem',
+          maxWidth: '500px',
+          display: '-webkit-box',
+          WebkitLineClamp: 3,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+        }}>
+          {film.synopsis ?? ''}
         </p>
 
-        {/* CTA Buttons */}
+        {/* ── CTA Buttons ── */}
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           <Link
             href={`/film/${film.id}`}
             className="btn-primary"
-            style={{ fontSize: '0.95rem', padding: '0.75rem 1.75rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+            style={{ fontSize: '0.9rem', padding: '0.65rem 1.5rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
           >
             🎬 Pilih Sesi Tayang
           </Link>
           <Link
             href={`/film/${film.id}`}
             className="btn-outline"
-            style={{ padding: '0.75rem 1.75rem', fontSize: '0.95rem', textDecoration: 'none' }}
+            style={{ padding: '0.65rem 1.5rem', fontSize: '0.9rem', textDecoration: 'none' }}
           >
             ▶ Detail Film
           </Link>
