@@ -197,6 +197,21 @@ export default function HomeHero({ films }: Props) {
         )}
       </button>
 
+      {/* ── Vignette tepi kiri & kanan — selalu terlihat, pointer-events-none ── */}
+      {/* Dual purpose: (1) percantik tepi, (2) kontras supaya arrow putih terbaca */}
+      <div style={{
+        position: 'absolute', inset: '0', left: 0,
+        width: '14%',
+        background: 'linear-gradient(to right, rgba(8,8,16,0.72) 0%, transparent 100%)',
+        zIndex: 3, pointerEvents: 'none',
+      }} />
+      <div style={{
+        position: 'absolute', inset: '0', right: 0, left: 'auto',
+        width: '14%',
+        background: 'linear-gradient(to left, rgba(8,8,16,0.72) 0%, transparent 100%)',
+        zIndex: 3, pointerEvents: 'none',
+      }} />
+
       {/* ── Carousel Prev / Next arrows ── only if multiple films */}
       {total > 1 && (
         <>
@@ -208,9 +223,8 @@ export default function HomeHero({ films }: Props) {
               position: 'absolute',
               inset: '0',
               right: 'auto',
-              width: '17%',
-              zIndex: 9,
-              // no background — fully invisible trigger zone
+              width: '18%',
+              zIndex: 10,
             }}
           >
             <button
@@ -219,26 +233,46 @@ export default function HomeHero({ films }: Props) {
               className="hero-carousel-arrow"
               style={{
                 position: 'absolute',
-                left: '1.25rem',
+                left: '1.5rem',
                 top: '50%',
-                transform: `translateY(-50%) translateX(${showPrev ? '0px' : '-14px'})`,
-                zIndex: 10,
-                background: 'rgba(0,0,0,0.50)',
-                border: '1px solid rgba(255,255,255,0.18)',
+                /* slide dari tepi: hidden → dalam */
+                transform: `translateY(-50%) translateX(${showPrev ? '0px' : '-18px'})`,
+                zIndex: 11,
+                /* NO solid background — hanya drop-shadow dan blur halus */
+                background: 'none',
+                border: 'none',
                 borderRadius: '50%',
-                width: '48px', height: '48px',
+                width: '52px', height: '52px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer', color: 'white',
-                backdropFilter: 'blur(8px)',
-                fontSize: '1.4rem',
+                filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.7))',
                 opacity: showPrev ? 1 : 0,
                 pointerEvents: showPrev ? 'auto' : 'none',
-                transition: 'opacity 0.25s ease, transform 0.25s ease, background 0.2s ease',
+                transition: 'opacity 0.25s ease, transform 0.25s ease',
+                padding: 0,
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(229,9,20,0.55)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.50)'; }}
+              onMouseEnter={e => {
+                (e.currentTarget.querySelector('svg') as SVGElement | null)
+                  ?.setAttribute('stroke', 'rgba(229,9,20,0.9)');
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget.querySelector('svg') as SVGElement | null)
+                  ?.setAttribute('stroke', 'rgba(255,255,255,0.92)');
+              }}
             >
-              ‹
+              {/* SVG chevron kiri — stroke tipis, bukan filled */}
+              <svg
+                width="28" height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="rgba(255,255,255,0.92)"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ display: 'block' }}
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
             </button>
           </div>
 
@@ -250,8 +284,8 @@ export default function HomeHero({ films }: Props) {
               position: 'absolute',
               inset: '0',
               left: 'auto',
-              width: '17%',
-              zIndex: 9,
+              width: '18%',
+              zIndex: 10,
             }}
           >
             <button
@@ -260,26 +294,44 @@ export default function HomeHero({ films }: Props) {
               className="hero-carousel-arrow"
               style={{
                 position: 'absolute',
-                right: '1.25rem',
+                right: '1.5rem',
                 top: '50%',
-                transform: `translateY(-50%) translateX(${showNext ? '0px' : '14px'})`,
-                zIndex: 10,
-                background: 'rgba(0,0,0,0.50)',
-                border: '1px solid rgba(255,255,255,0.18)',
+                transform: `translateY(-50%) translateX(${showNext ? '0px' : '18px'})`,
+                zIndex: 11,
+                background: 'none',
+                border: 'none',
                 borderRadius: '50%',
-                width: '48px', height: '48px',
+                width: '52px', height: '52px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer', color: 'white',
-                backdropFilter: 'blur(8px)',
-                fontSize: '1.4rem',
+                filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.7))',
                 opacity: showNext ? 1 : 0,
                 pointerEvents: showNext ? 'auto' : 'none',
-                transition: 'opacity 0.25s ease, transform 0.25s ease, background 0.2s ease',
+                transition: 'opacity 0.25s ease, transform 0.25s ease',
+                padding: 0,
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(229,9,20,0.55)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.50)'; }}
+              onMouseEnter={e => {
+                (e.currentTarget.querySelector('svg') as SVGElement | null)
+                  ?.setAttribute('stroke', 'rgba(229,9,20,0.9)');
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget.querySelector('svg') as SVGElement | null)
+                  ?.setAttribute('stroke', 'rgba(255,255,255,0.92)');
+              }}
             >
-              ›
+              {/* SVG chevron kanan */}
+              <svg
+                width="28" height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="rgba(255,255,255,0.92)"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ display: 'block' }}
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
             </button>
           </div>
 

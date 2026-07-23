@@ -1759,10 +1759,22 @@ a.cast-item--linked:hover .cast-avatar-overlay {
    HERO CAROUSEL — MOBILE ARROW VISIBILITY
    (moved from inline <style> in HomeHero.tsx to fix SSR hydration error)
 ═══════════════════════════════════════════════ */
+
+/* Desktop/mouse: handled by JS state (showPrev/showNext) */
+/* Touch/mobile: arrows always visible — tidak ada konsep hover */
 @media (hover: none) {
   .hero-carousel-arrow {
     opacity: 1 !important;
     transform: translateY(-50%) translateX(0px) !important;
     pointer-events: auto !important;
+    /* Perbesar tap target di mobile */
+    width: 60px !important;
+    height: 60px !important;
+  }
+  /* SVG sedikit lebih besar di touch */
+  .hero-carousel-arrow svg {
+    width: 32px;
+    height: 32px;
   }
 }
+
