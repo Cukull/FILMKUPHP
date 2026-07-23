@@ -4,6 +4,7 @@ import Link from "next/link";
 import WishlistButton from "./WishlistButton";
 import ShowtimeSelector from "./ShowtimeSelector";
 import HeroTrailer from "./HeroTrailer";
+import RatingBadges from "@/components/RatingBadges";
 
 // ───────────────────────────────────────────────────────────────────
 // DUMMY SHOWTIME GENERATOR — Opsi B (on-the-fly, idempotent)
@@ -138,41 +139,6 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
   // freshShowtimes sudah di-fetch setelah generate di atas
   const todayShowtimes = freshShowtimes;
 
-  // ── Rotten Tomatoes: fresh (≥60%) vs rotten (<60%) ──────────────────
-  // RT value dari DB berupa string misal "79%" atau "45%"
-  const getRTBadge = (rt: string | null) => {
-    if (!rt) return null;
-    const numStr = rt.replace(/[^\d]/g, '');
-    const score = parseInt(numStr, 10);
-    if (isNaN(score)) return { icon: '🍅', color: '#fa320a', bg: 'rgba(250,50,10,0.15)', border: 'rgba(250,50,10,0.35)' };
-    if (score >= 60) {
-      // Fresh — tomat merah cerah
-      return { icon: '🍅', color: '#fa320a', bg: 'rgba(250,50,10,0.15)', border: 'rgba(250,50,10,0.35)' };
-    } else {
-      // Rotten — warna abu/hijau gelap (splat)
-      return { icon: '🤢', color: '#8fbc8f', bg: 'rgba(100,120,100,0.15)', border: 'rgba(100,120,100,0.35)' };
-    }
-  };
-
-  // ── Metacritic: hijau 61-100, kuning 40-60, merah 0-39 ──────────────
-  // MC value dari DB berupa string misal "74/100" atau "38/100"
-  const getMCBadge = (mc: string | null) => {
-    if (!mc) return null;
-    const numStr = mc.replace(/[^\d].*/, ''); // ambil angka sebelum "/"
-    const score = parseInt(numStr, 10);
-    if (isNaN(score)) return { color: '#f5c518', bg: 'rgba(245,197,24,0.12)', border: 'rgba(245,197,24,0.35)' };
-    if (score >= 61) {
-      return { color: '#22c55e', bg: 'rgba(34,197,94,0.12)', border: 'rgba(34,197,94,0.35)' };
-    } else if (score >= 40) {
-      return { color: '#f5c518', bg: 'rgba(245,197,24,0.12)', border: 'rgba(245,197,24,0.35)' };
-    } else {
-      return { color: '#ef4444', bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.35)' };
-    }
-  };
-
-  const rtBadge = getRTBadge(movie.rottenTomatoes ?? null);
-  const mcBadge = getMCBadge(movie.metacritic ?? null);
-
   // Parse Cast and Crew
   let parsedCrew: any[] = [];
   try {
@@ -222,77 +188,15 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
             {movie.title}
           </h1>
 
-          {/* Ratings Row — IMDb → RT → Metacritic → Durasi → HD → Genre → Status */}
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center", marginBottom: "1rem" }}>
-
-            {/* ⭐ IMDb Rating */}
-            {movie.rating && (
-              <span className="badge badge-gold" style={{ fontSize: "0.8rem" }}
-                title={`IMDb Rating: ${movie.rating}/10`}>
-                ⭐ {movie.rating} / 10
-              </span>
-            )}
-
-            {/* 🍅 Rotten Tomatoes — fresh/rotten logic */}
-            {rtBadge && movie.rottenTomatoes && (
-              <span
-                title={`Rotten Tomatoes: ${movie.rottenTomatoes} — ${parseInt(movie.rottenTomatoes) >= 60 ? 'Fresh 🍅' : 'Rotten 🤢'}`}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-                  padding: '0.2rem 0.6rem',
-                  borderRadius: '999px',
-                  fontSize: '0.8rem',
-                  fontWeight: 700,
-                  background: rtBadge.bg,
-                  color: rtBadge.color,
-                  border: `1px solid ${rtBadge.border}`,
-                }}
-              >
-                {rtBadge.icon} {movie.rottenTomatoes}
-              </span>
-            )}
-
-            {/* Ⓜ Metacritic — color-coded by score */}
-            {mcBadge && movie.metacritic && (
-              <span
-                title={`Metacritic: ${movie.metacritic}`}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-                  padding: '0.2rem 0.6rem',
-                  borderRadius: '999px',
-                  fontSize: '0.8rem',
-                  fontWeight: 700,
-                  background: mcBadge.bg,
-                  color: mcBadge.color,
-                  border: `1px solid ${mcBadge.border}`,
-                }}
-              >
-                Ⓜ {movie.metacritic}
-              </span>
-            )}
-
-            {/* ⏱ Durasi */}
-            {movie.durationMin && (
-              <span className="badge badge-muted" style={{ fontSize: "0.8rem" }}>
-                ⏱ {durationHours}h {durationMins}m
-              </span>
-            )}
-
-            {/* HD */}
-            <span className="badge badge-muted" style={{ fontSize: "0.8rem" }}>HD</span>
-
-            {/* Genre / Kategori */}
-            {(movie.category || movie.genre) && (
-              <span className="badge badge-accent" style={{ fontSize: "0.8rem" }}>
-                {movie.genre || movie.category?.name}
-              </span>
-            )}
-
-            {/* Status tayang */}
-            {movie.status === "NOW_PLAYING" && (
-              <span className="badge badge-now-playing" style={{ borderRadius: "999px", fontSize: "0.8rem" }}>Sedang Tayang</span>
-            )}
-          </div>
+          {/* Ratings Row — satu baris horizontal sesuai referensi PHP */}
+          <RatingBadges
+            rating={movie.rating}
+            rottenTomatoes={movie.rottenTomatoes}
+            metacritic={movie.metacritic}
+            durationMin={movie.durationMin}
+            genre={movie.genre}
+            status={movie.status}
+          />
 
           {/* Synopsis (short, 3 lines) */}
           {movie.synopsis && (
