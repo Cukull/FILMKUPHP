@@ -168,7 +168,7 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
         ) : (
           <img className="hero-backdrop-img" src={backdropUrl} alt={movie.title} style={{ zIndex: 0 }} />
         )}
-        <div className="hero-backdrop-overlay" style={{ zIndex: 1, position: "absolute", top: 0, left: 0, width: "100%", height: "100%", background: "linear-gradient(to right, var(--bg-base) 0%, rgba(8,8,16,0.75) 40%, rgba(8,8,16,0.1) 100%), linear-gradient(to top, var(--bg-base) 0%, transparent 50%)" }} />
+        <div className="hero-backdrop-overlay" style={{ zIndex: 1, position: "absolute", top: 0, left: 0, width: "100%", height: "100%", background: "radial-gradient(circle at 15% 85%, rgba(8,8,16,0.9) 0%, rgba(8,8,16,0.5) 30%, transparent 60%), linear-gradient(to top, rgba(8,8,16,0.7) 0%, transparent 15%)", pointerEvents: "none" }} />
 
         <div className="hero-content" style={{ paddingBottom: "3rem", zIndex: 2, position: "relative" }}>
           {/* CTA Buttons row */}
