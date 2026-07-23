@@ -5,6 +5,109 @@ import WishlistButton from "./WishlistButton";
 import ShowtimeSelector from "./ShowtimeSelector";
 import HeroTrailer from "./HeroTrailer";
 
+// ───────────────────────────────────────────────────────────────────
+// DUMMY SHOWTIME GENERATOR — Opsi B (on-the-fly, idempotent)
+//
+// Jalan setiap kali halaman detail film diakses untuk film NOW_PLAYING.
+// • Cleanup: hapus showtime yang sudah lewat (< tengah malam hari ini).
+// • Generate: buat showtime untuk H+0 s/d H+6 (7 hari) jika belum ada.
+// • Idempotent: cek existing sebelum insert — tidak akan duplikat.
+// ———————————————————————————————————————————————————————————————————
+
+const DUMMY_SLOTS = [
+  { hour: 13, minute: 0  },
+  { hour: 16, minute: 0  },
+  { hour: 19, minute: 0  },
+  { hour: 21, minute: 30 },
+];
+
+const DUMMY_STUDIOS = ['Studio 1', 'Studio 2', 'Studio 3'];
+const DUMMY_PRICE   = 50_000;
+const DUMMY_DAYS    = 7; // H+0 … H+6
+
+async function ensureDummyShowtimes(movieId: string): Promise<void> {
+  // ─ 1. Tentukan "tengah malam hari ini" (WIB = UTC+7) ───────────────
+  const nowUtc  = new Date();
+  const wibOffset = 7 * 60; // menit
+  const todayWib  = new Date(nowUtc.getTime() + wibOffset * 60_000);
+  // Reset ke 00:00:00 WIB, lalu konversi balik ke UTC untuk patokan DB
+  const midnightWib = new Date(
+    todayWib.getUTCFullYear(),
+    todayWib.getUTCMonth(),
+    todayWib.getUTCDate(),
+    0, 0, 0, 0
+  );
+  // Ini adalah Date object yang represent 00:00 WIB di UTC
+  const midnightUtc = new Date(midnightWib.getTime() - wibOffset * 60_000);
+
+  // ─ 2. Cleanup: hapus showtime expired (mulai sebelum tengah malam hari ini) ─
+  await prisma.showtime.deleteMany({
+    where: {
+      movieId,
+      startTime: { lt: midnightUtc },
+    },
+  });
+
+  // ─ 3. Build daftar semua startTime yang harus ada (28 slot) ─────────
+  const targetSlots: { startTime: Date; studio: string; price: number }[] = [];
+  let studioIdx = 0;
+
+  for (let day = 0; day < DUMMY_DAYS; day++) {
+    for (const slot of DUMMY_SLOTS) {
+      // Bangun waktu di WIB: tanggal hari-ini+day, jam slot
+      const slotWib = new Date(
+        todayWib.getUTCFullYear(),
+        todayWib.getUTCMonth(),
+        todayWib.getUTCDate() + day,
+        slot.hour,
+        slot.minute,
+        0, 0
+      );
+      // Konversi WIB → UTC untuk disimpan ke DB
+      const slotUtc = new Date(slotWib.getTime() - wibOffset * 60_000);
+
+      targetSlots.push({
+        startTime: slotUtc,
+        studio:    DUMMY_STUDIOS[studioIdx % DUMMY_STUDIOS.length],
+        price:     DUMMY_PRICE,
+      });
+      studioIdx++;
+    }
+  }
+
+  // ─ 4. Cek existing — ambil semua showtime dalam range H+0 … H+7 ──
+  const rangeEnd = new Date(midnightUtc.getTime() + DUMMY_DAYS * 24 * 3600_000);
+  const existing = await prisma.showtime.findMany({
+    where: {
+      movieId,
+      startTime: { gte: midnightUtc, lt: rangeEnd },
+    },
+    select: { startTime: true },
+  });
+
+  // Set of existing startTime ISO strings for O(1) lookup
+  const existingSet = new Set(
+    existing.map(st => st.startTime.toISOString())
+  );
+
+  // ─ 5. Insert hanya slot yang belum ada ───────────────────────────
+  const toInsert = targetSlots.filter(
+    s => !existingSet.has(s.startTime.toISOString())
+  );
+
+  if (toInsert.length > 0) {
+    await prisma.showtime.createMany({
+      data: toInsert.map(s => ({
+        movieId,
+        startTime: s.startTime,
+        studio:    s.studio,
+        price:     s.price,
+      })),
+      skipDuplicates: true, // extra safety
+    });
+  }
+}
+
 export default async function MovieDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
@@ -15,7 +118,18 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
 
   if (!movie) notFound();
 
-  // Build YouTube video ID
+  // Generate dummy jadwal jika film sedang tayang & belum ada jadwal (Opsi B)
+  // Cleanup otomatis jadwal expired + fill H+0 s/d H+6 jika kosong
+  if (movie.status === 'NOW_PLAYING') {
+    await ensureDummyShowtimes(movie.id);
+  }
+
+  // Re-fetch showtimes setelah generate supaya ShowtimeSelector dapat data terbaru
+  const freshShowtimes = await prisma.showtime.findMany({
+    where: { movieId: id },
+    orderBy: { startTime: 'asc' },
+  });
+
   let videoId: string | null = null;
   if (movie.trailerUrl) {
     videoId = movie.trailerUrl;
@@ -26,7 +140,8 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
   const backdropUrl = movie.posterUrl || "https://image.tmdb.org/t/p/original/tElnmtQ6snFIg4VfS768kK9rS9X.jpg";
   const durationHours = movie.durationMin ? Math.floor(movie.durationMin / 60) : null;
   const durationMins = movie.durationMin ? movie.durationMin % 60 : null;
-  const todayShowtimes = movie.showtimes;
+  // freshShowtimes sudah di-fetch setelah generate di atas
+  const todayShowtimes = freshShowtimes;
 
   // ── Rotten Tomatoes: fresh (≥60%) vs rotten (<60%) ──────────────────
   // RT value dari DB berupa string misal "79%" atau "45%"
@@ -337,7 +452,7 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
         </div>
 
         {/* ── RIGHT COLUMN: Date + Time Picker ── */}
-        <ShowtimeSelector movieTitle={movie.title} movieId={movie.id} showtimes={movie.showtimes} />
+        <ShowtimeSelector movieTitle={movie.title} movieId={movie.id} showtimes={freshShowtimes} />
       </div>
     </div>
   );
