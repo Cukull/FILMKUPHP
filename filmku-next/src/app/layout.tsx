@@ -11,34 +11,6 @@ import SplashScreen from "./SplashScreen";
 import NavbarScrollEffect from "./NavbarScrollEffect";
 import PageLoadingOverlay from "./PageLoadingOverlay";
 import { NavigationProvider } from "./NavigationContext";
-import localFont from 'next/font/local';
-
-const googleSans = localFont({
-  src: [
-    {
-      path: '../../public/fonts/Google_Sans/static/GoogleSans-Regular.ttf',
-      weight: '400',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/Google_Sans/static/GoogleSans-Medium.ttf',
-      weight: '500',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/Google_Sans/static/GoogleSans-SemiBold.ttf',
-      weight: '600',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/Google_Sans/static/GoogleSans-Bold.ttf',
-      weight: '700',
-      style: 'normal',
-    },
-  ],
-  variable: '--font-google-sans',
-  display: 'swap',
-});
 
 export const metadata: Metadata = {
   title: "FILMKU | Platform Bioskop Premium",
@@ -61,11 +33,11 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800;12..96,900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800;12..96,900&family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body className={googleSans.variable}>
+      <body>
         {/* NavigationProvider: detects forward/back direction for page transitions */}
         <NavigationProvider>
         {/* Premium Splash Screen — first visit only */}
