@@ -16,12 +16,24 @@ import localFont from 'next/font/local';
 const googleSans = localFont({
   src: [
     {
-      path: '../../public/fonts/Google_Sans/GoogleSans-VariableFont_GRAD,opsz,wght.ttf',
+      path: '../../public/fonts/Google_Sans/static/GoogleSans-Regular.ttf',
+      weight: '400',
       style: 'normal',
     },
     {
-      path: '../../public/fonts/Google_Sans/GoogleSans-Italic-VariableFont_GRAD,opsz,wght.ttf',
-      style: 'italic',
+      path: '../../public/fonts/Google_Sans/static/GoogleSans-Medium.ttf',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/Google_Sans/static/GoogleSans-SemiBold.ttf',
+      weight: '600',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/Google_Sans/static/GoogleSans-Bold.ttf',
+      weight: '700',
+      style: 'normal',
     },
   ],
   variable: '--font-google-sans',
