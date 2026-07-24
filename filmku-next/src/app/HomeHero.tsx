@@ -343,7 +343,7 @@ export default function HomeHero({ films }: Props) {
       <div
         className="home-hero-content"
         style={{
-          zIndex: 2, position: 'relative',
+          zIndex: 20, position: 'relative',
           opacity: fading ? 0 : 1,
           transform: fading ? 'translateY(10px)' : 'translateY(0)',
           transition: 'opacity 0.28s ease, transform 0.28s ease',
@@ -431,11 +431,11 @@ export default function HomeHero({ films }: Props) {
         {/* ── CTA Buttons ── */}
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           <Link
-            href={`/film/${film.id}`}
+            href={`/test-streaming?title=${encodeURIComponent(film.title)}&id=${film.id}`}
             className="btn-primary"
             style={{ fontSize: '0.9rem', padding: '0.65rem 1.5rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
           >
-            🎬 Pilih Sesi Tayang
+            ▶ Tonton Film
           </Link>
           <Link
             href={`/film/${film.id}`}

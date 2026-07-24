@@ -11,14 +11,19 @@ export async function loginAction(formData: FormData) {
 
   if (!email || !password) return { error: 'Semua field harus diisi.' };
 
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) return { error: 'Email tidak ditemukan.' };
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) return { error: 'Email tidak ditemukan.' };
 
-  const isValid = await bcrypt.compare(password, user.password);
-  if (!isValid) return { error: 'Password salah.' };
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) return { error: 'Password salah.' };
 
-  await setAuthCookie(user.id, user.email, user.name || 'User');
-  return { success: true };
+    await setAuthCookie(user.id, user.email, user.name || 'User');
+    return { success: true };
+  } catch (error) {
+    console.error('Login Database Error:', error);
+    return { error: 'Terjadi kesalahan pada server/database. Silakan coba lagi.' };
+  }
 }
 
 export async function registerAction(formData: FormData) {
@@ -28,16 +33,21 @@ export async function registerAction(formData: FormData) {
 
   if (!name || !email || !password) return { error: 'Semua field harus diisi.' };
 
-  const exists = await prisma.user.findUnique({ where: { email } });
-  if (exists) return { error: 'Email sudah terdaftar.' };
+  try {
+    const exists = await prisma.user.findUnique({ where: { email } });
+    if (exists) return { error: 'Email sudah terdaftar.' };
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const user = await prisma.user.create({
-    data: { name, email, password: hashedPassword }
-  });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await prisma.user.create({
+      data: { name, email, password: hashedPassword }
+    });
 
-  await setAuthCookie(user.id, user.email, user.name || 'User');
-  return { success: true };
+    await setAuthCookie(user.id, user.email, user.name || 'User');
+    return { success: true };
+  } catch (error) {
+    console.error('Register Database Error:', error);
+    return { error: 'Terjadi kesalahan pada server/database. Silakan coba lagi.' };
+  }
 }
 
 export async function logoutAction() {
