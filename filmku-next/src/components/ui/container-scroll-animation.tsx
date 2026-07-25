@@ -33,19 +33,18 @@ export const ContainerScroll = ({
 
   const rotate = useTransform(scrollYProgress, [0, 1], [20, 0]);
   const scale = useTransform(scrollYProgress, [0, 1], scaleDimensions());
-  const translate = useTransform(scrollYProgress, [0, 1], [200, 0]);
-  const opacity = useTransform(scrollYProgress, [0, 1], [0.2, 1]);
+  const translate = useTransform(scrollYProgress, [0, 1], [150, 0]);
+  const opacity = useTransform(scrollYProgress, [0, 1], [0.3, 1]);
 
   return (
-    // Outer container — must NOT have overflow-hidden
-    // Height is tall enough for title + card + animation room
+    // Outer container height reduced from 80rem/90rem down to 40rem/60rem
     <div
-      className="h-[70rem] md:h-[90rem] flex items-start justify-center relative pt-20 md:pt-32"
+      className="h-[40rem] md:h-[60rem] flex items-center justify-center relative p-2 md:p-10"
       ref={containerRef}
     >
       <div
-        className="w-full relative"
-        style={{ perspective: "1200px" }}
+        className="w-full relative py-10 md:py-20"
+        style={{ perspective: "1000px" }}
       >
         <Header translate={translate} opacity={opacity} titleComponent={titleComponent} />
         <Card rotate={rotate} scale={scale}>
@@ -92,47 +91,22 @@ export const Card = ({
       style={{
         rotateX: rotate,
         scale,
-        // Realistic layered shadow like a physical device
         boxShadow:
-          "0 2px 4px rgba(0,0,0,0.4), 0 12px 40px rgba(0,0,0,0.6), 0 40px 80px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08)",
-      }}
-      // KEY FIX: explicit inline style for border to bypass any Tailwind JIT miss
-      // border-[14px] = thick physical bezel; bg dark grey like real tablet body
-      // rounded-[40px] = big corner radius like iPad/Android tablet
-      // -mt-28 md:-mt-40 = tablet overlaps heading (reveal effect)
-      className="max-w-5xl -mt-28 md:-mt-40 mx-auto w-full relative z-20 rounded-[40px]"
-      style={{
-        height: "clamp(320px, 45vw, 640px)",
-        border: "14px solid #2a2a2a",
-        padding: "10px",
+          "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 24px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1)",
+        // Inline styles to guarantee rendering even if Tailwind JIT has issues
+        border: "14px solid #1a1a1a",
         backgroundColor: "#1a1a1a",
       }}
+      // max-w-5xl limits the width, h-[24rem] md:h-[32rem] ensures it is proportional landscape
+      // p-3 md:p-5 adds the internal padding so content breathes
+      className="max-w-5xl -mt-20 mx-auto h-[24rem] md:h-[32rem] w-full p-3 md:p-5 rounded-[30px] relative z-20"
     >
-      {/* Camera notch — top center of the bezel */}
-      <div
-        className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center z-30"
-        style={{ top: "-7px" }}
-      >
-        <div
-          className="rounded-full bg-[#111]"
-          style={{
-            width: "10px",
-            height: "10px",
-            border: "1px solid #333",
-            boxShadow: "inset 0 0 3px rgba(0,0,0,0.8)",
-          }}
-        />
+      {/* Tablet Camera Notch */}
+      <div className="absolute top-1.5 left-1/2 -translate-x-1/2 flex items-center justify-center z-30">
+        <div className="w-2.5 h-2.5 rounded-full bg-black shadow-[inset_0_0_2px_rgba(255,255,255,0.3)] border border-neutral-700"></div>
       </div>
 
-      {/* Inner screen area */}
-      <div
-        className="h-full w-full overflow-hidden relative z-10"
-        style={{
-          borderRadius: "28px",
-          backgroundColor: "#000",
-          border: "1px solid #333",
-        }}
-      >
+      <div className="h-full w-full overflow-hidden rounded-[16px] md:rounded-[20px] bg-black relative z-10 border border-neutral-800">
         {children}
       </div>
     </motion.div>
