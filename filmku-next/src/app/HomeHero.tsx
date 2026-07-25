@@ -63,12 +63,28 @@ export default function HomeHero({ films }: Props) {
   }, []);
 
   /* ── YouTube postMessage helper — toggle mute tanpa reload iframe ── */
-  const postYT = useCallback((cmd: 'mute' | 'unMute') => {
+  const postYT = useCallback((cmd: 'mute' | 'unMute' | 'pauseVideo' | 'playVideo') => {
     iframeRef.current?.contentWindow?.postMessage(
       JSON.stringify({ event: 'command', func: cmd, args: [] }),
       '*'
     );
   }, []);
+
+  /* ── Pause on scroll out of viewport ── */
+  useEffect(() => {
+    if (!heroRef.current) return;
+    const observer = new IntersectionObserver((entries) => {
+      const [entry] = entries;
+      if (entry.isIntersecting) {
+        postYT('playVideo');
+      } else {
+        postYT('pauseVideo');
+      }
+    }, { threshold: 0.1 });
+    
+    observer.observe(heroRef.current);
+    return () => observer.disconnect();
+  }, [postYT]);
 
   /* ── Manual navigation ── */
   const goTo = (i: number) => {

@@ -35,6 +35,16 @@ const FEATURES = [
   { icon: "🍿", title: "Snack-Ku FnB", desc: "Pesan makanan & minuman favorit dan dikirim langsung ke kursi Anda." },
 ];
 
+// Fisher-Yates shuffle to randomize movie order for dynamic UI
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 export default async function Home() {
   // Fetch ALL movies — grouping is done in JS by sections/genre strings
   const allMovies = await prisma.movie.findMany({
@@ -51,11 +61,13 @@ export default async function Home() {
     .map(sec => ({
       name: sec.name,
       icon: sec.icon || 'Film',
-      movies: allMovies.filter(m =>
-        m.sections
-          ?.split(',')
-          .map(s => s.trim())
-          .includes(sec.name)
+      movies: shuffleArray(
+        allMovies.filter(m =>
+          m.sections
+            ?.split(',')
+            .map(s => s.trim())
+            .includes(sec.name)
+        )
       ),
     }))
     .filter(s => s.movies.length > 0);
