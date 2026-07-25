@@ -16,6 +16,7 @@
  */
 
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 
 type Props = {
   id: string;
@@ -40,39 +41,47 @@ export default function MovieLaneCard({
   const primaryGenre = genre?.split(',')[0]?.trim() ?? '';
 
   return (
-    <Link href={`/film/${id}`} style={{ textDecoration: 'none', flexShrink: 0 }}>
-      <div className="mlc-card">
-        {/* Status badge */}
-        {status === 'NOW_PLAYING' && (
-          <span className="movie-status-badge badge-now-playing">Tayang</span>
-        )}
-        {status === 'UPCOMING' && (
-          <span className="movie-status-badge badge-upcoming">Segera</span>
-        )}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.85, y: 30 }}
+      whileInView={{ opacity: 1, scale: 1, y: 0 }}
+      viewport={{ once: false, amount: 0.1 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      style={{ flexShrink: 0 }}
+    >
+      <Link href={`/film/${id}`} style={{ textDecoration: 'none', display: 'block' }}>
+        <div className="mlc-card">
+          {/* Status badge */}
+          {status === 'NOW_PLAYING' && (
+            <span className="movie-status-badge badge-now-playing">Tayang</span>
+          )}
+          {status === 'UPCOMING' && (
+            <span className="movie-status-badge badge-upcoming">Segera</span>
+          )}
 
-        {/* Poster */}
-        <img src={poster} alt={title} loading="lazy" className="mlc-img" />
+          {/* Poster */}
+          <img src={poster} alt={title} loading="lazy" className="mlc-img" />
 
-        {/* Hover overlay — slide up dari bawah */}
-        <div className="mlc-overlay" aria-hidden="true">
-          <div className="mlc-overlay-inner">
-            {/* Judul */}
-            <h4 className="mlc-title">{title}</h4>
+          {/* Hover overlay — slide up dari bawah */}
+          <div className="mlc-overlay" aria-hidden="true">
+            <div className="mlc-overlay-inner">
+              {/* Judul */}
+              <h4 className="mlc-title">{title}</h4>
 
-            {/* Rating badge */}
-            {rating ? (
-              <span className="mlc-rating">⭐ {rating}</span>
-            ) : primaryGenre ? (
-              <span className="mlc-genre">{primaryGenre}</span>
-            ) : null}
+              {/* Rating badge */}
+              {rating ? (
+                <span className="mlc-rating">⭐ {rating}</span>
+              ) : primaryGenre ? (
+                <span className="mlc-genre">{primaryGenre}</span>
+              ) : null}
 
-            {/* Sinopsis — max 2 baris */}
-            {synopsis && (
-              <p className="mlc-synopsis">{synopsis}</p>
-            )}
+              {/* Sinopsis — max 2 baris */}
+              {synopsis && (
+                <p className="mlc-synopsis">{synopsis}</p>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </Link>
+      </Link>
+    </motion.div>
   );
 }
