@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import BlurText from '@/components/ui/BlurText';
 
 const LETTERS = 'FILMKU'.split('');
 
@@ -86,32 +87,28 @@ export default function SplashScreen() {
             </motion.div>
           ))}
 
-          {/* ── FILMKU letter-by-letter reveal ── */}
-          <div style={{ display: 'flex', gap: '0.15em', position: 'relative' }}>
-            {LETTERS.map((char, i) => (
-              <motion.span
-                key={i}
-                initial={{ opacity: 0, y: 70, filter: 'blur(12px)' }}
-                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                transition={{ duration: 0.75, delay: i * 0.1 + 0.25, ease: [0.22, 1, 0.36, 1] }}
-                style={{
-                  fontSize: 'clamp(3.5rem, 9vw, 5.5rem)',
-                  fontWeight: 900,
-                  color: '#e50914',
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  textShadow: `
-                    0 0 20px rgba(229,9,20,0.9),
-                    0 0 40px rgba(229,9,20,0.6),
-                    0 0 80px rgba(229,9,20,0.3),
-                    0 0 120px rgba(229,9,20,0.15)
-                  `,
-                  display: 'inline-block',
-                }}
-              >
-                {char}
-              </motion.span>
-            ))}
+          {/* ── FILMKU letter-by-letter reveal using BlurText ── */}
+          <div style={{
+            position: 'relative',
+            fontSize: 'clamp(3.5rem, 9vw, 5.5rem)',
+            fontWeight: 900,
+            color: '#e50914',
+            letterSpacing: '0.15em',
+            textTransform: 'uppercase',
+            textShadow: `
+              0 0 20px rgba(229,9,20,0.9),
+              0 0 40px rgba(229,9,20,0.6),
+              0 0 80px rgba(229,9,20,0.3),
+              0 0 120px rgba(229,9,20,0.15)
+            `,
+            zIndex: 10
+          }}>
+            <BlurText 
+              text="FILMKU"
+              delay={150}
+              animateBy="letters"
+              direction="bottom"
+            />
           </div>
 
           {/* ── Tagline ── */}
