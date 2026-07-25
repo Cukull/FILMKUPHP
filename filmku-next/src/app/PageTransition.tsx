@@ -22,6 +22,7 @@
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
+import BlurText from '@/components/ui/BlurText';
 
 export const PAGE_TRANSITION_DURATION_MS = 1300;
 
@@ -140,11 +141,12 @@ export default function PageTransition({ children }: { children: React.ReactNode
               '0 0 80px rgba(229,9,20,0.3)',
               '0 0 120px rgba(229,9,20,0.15)',
             ].join(', '),
-            position: 'relative',
             userSelect: 'none',
+            display: 'flex',
+            justifyContent: 'center',
           }}
         >
-          FILMKU
+          <BlurText key={pathname} text="FILMKU" delay={80} stepDuration={0.3} animateBy="letters" direction="bottom" />
         </div>
 
         {/* Garis bawah merah tipis */}
