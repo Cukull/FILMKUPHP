@@ -1,7 +1,18 @@
 import FilmForm from '../FilmForm';
+import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/auth';
 import Link from 'next/link';
 
-export default function BaruFilmPage() {
+export const revalidate = 0; // Disable cache for admin pages
+
+export default async function TambahFilmPage() {
+  await requireAdmin();
+
+  // Ambil daftar section/kategori dinamis
+  const sectionsList = await prisma.dashboardSection.findMany({
+    orderBy: { order: 'asc' },
+  });
+
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
@@ -12,7 +23,7 @@ export default function BaruFilmPage() {
         </Link>
         <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Tambah Film</h1>
       </div>
-      <FilmForm />
+      <FilmForm sectionsList={sectionsList} />
     </div>
   );
 }

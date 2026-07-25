@@ -69,7 +69,7 @@ export async function GET(request: Request) {
       }
     }
 
-    // ─── OMDB: rating + RT + metacritic + synopsis + runtime ────
+    // ─── OMDB: rating + RT + metacritic + synopsis + runtime + genre ────
     // Try with clean title first, then with year if available
     const yearMatch = title.match(/\((\d{4})\)/);
     const omdbYear = yearMatch ? `&y=${yearMatch[1]}` : '';
@@ -90,6 +90,11 @@ export async function GET(request: Request) {
       if (runtimeStr && runtimeStr !== 'N/A') {
         const match = runtimeStr.match(/(\d+)/);
         if (match) durationMin = parseInt(match[1], 10);
+      }
+
+      // Genre (Use OMDB to ensure English output)
+      if (omdbData.Genre && omdbData.Genre !== 'N/A') {
+        genre = omdbData.Genre;
       }
 
       // IMDb Rating

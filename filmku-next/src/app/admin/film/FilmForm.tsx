@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import DarkSelect, { type SelectOption } from '@/components/DarkSelect';
 
 const GENRES = ['Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 'Documentary', 'Drama', 'Family', 'Fantasy', 'Horror', 'Mystery', 'Romance', 'Science Fiction', 'Thriller', 'War', 'Western'];
-const SECTIONS = ['Sorotan Layar Utama', 'Pesona Asia & K-Drama', 'Rilisan Tersegar', 'Lagi Viral Nih', 'Tangga Teratas Box Office', 'Karya Anak Bangsa', 'Serem Banget', 'Yang Akan Datang', 'Perang'];
+
 const STATUS_OPTIONS: SelectOption[] = [
   { value: 'NOW_PLAYING', label: '🎬 Sedang Tayang (Now Playing)' },
   { value: 'UPCOMING',    label: '🔜 Akan Datang (Upcoming)' },
@@ -50,7 +50,13 @@ const TOKEN = {
   labelGap: '0.45rem',
 };
 
-export default function FilmForm({ initialData }: { initialData?: any }) {
+export default function FilmForm({ 
+  initialData, 
+  sectionsList = [] 
+}: { 
+  initialData?: any,
+  sectionsList?: { id: string, name: string, icon: string }[] 
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isFetchingOMDB, setIsFetchingOMDB] = useState(false);
@@ -416,22 +422,20 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
               borderRadius: '0.625rem',
               padding: '1rem',
               background: 'rgba(255,255,255,0.02)',
-              maxHeight: '236px',
-              overflowY: 'auto',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: TOKEN.checkboxGap,   // ← gap antar checkbox konsisten
-            }} className="hide-scrollbar">
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: TOKEN.checkboxGap,   // ← gap seragam (row & column)
+            }}>
               {GENRES.map(g => (
                 <label key={g} style={{
                   display: 'flex',
-                  alignItems: 'center',  // ← checkbox sejajar teks
+                  alignItems: 'flex-start',  // ← multi-line: checkbox di atas
                   gap: '0.6rem',
-                  fontSize: '0.875rem',
+                  fontSize: '0.82rem',
                   cursor: 'pointer',
+                  lineHeight: 1.35,
                   color: selectedGenres.includes(g) ? '#fff' : 'rgba(255,255,255,0.7)',
                   fontWeight: selectedGenres.includes(g) ? 600 : 400,
-                  lineHeight: 1,
                 }}>
                   <input
                     type="checkbox"
@@ -440,7 +444,11 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
                       if (e.target.checked) setSelectedGenres([...selectedGenres, g]);
                       else setSelectedGenres(selectedGenres.filter(x => x !== g));
                     }}
-                    style={{ accentColor: '#e50914', width: '15px', height: '15px', flexShrink: 0 }}
+                    style={{
+                      accentColor: '#e50914',
+                      width: '15px', height: '15px',
+                      marginTop: '0.1rem', flexShrink: 0,  // ← sejajar baris pertama teks
+                    }}
                   />
                   {g}
                 </label>
@@ -460,31 +468,31 @@ export default function FilmForm({ initialData }: { initialData?: any }) {
               gridTemplateColumns: '1fr 1fr',
               gap: TOKEN.checkboxGap,   // ← gap seragam (row & column)
             }}>
-              {SECTIONS.map(s => (
-                <label key={s} style={{
+              {sectionsList.map(sec => (
+                <label key={sec.id} style={{
                   display: 'flex',
-                  alignItems: 'flex-start',  // ← multi-line: checkbox di atas
+                  alignItems: 'flex-start',
                   gap: '0.6rem',
                   fontSize: '0.82rem',
                   cursor: 'pointer',
                   lineHeight: 1.35,
-                  color: selectedSections.includes(s) ? '#fff' : 'rgba(255,255,255,0.7)',
-                  fontWeight: selectedSections.includes(s) ? 600 : 400,
+                  color: selectedSections.includes(sec.name) ? '#fff' : 'rgba(255,255,255,0.7)',
+                  fontWeight: selectedSections.includes(sec.name) ? 600 : 400,
                 }}>
                   <input
                     type="checkbox"
-                    checked={selectedSections.includes(s)}
+                    checked={selectedSections.includes(sec.name)}
                     onChange={e => {
-                      if (e.target.checked) setSelectedSections([...selectedSections, s]);
-                      else setSelectedSections(selectedSections.filter(x => x !== s));
+                      if (e.target.checked) setSelectedSections([...selectedSections, sec.name]);
+                      else setSelectedSections(selectedSections.filter(x => x !== sec.name));
                     }}
                     style={{
                       accentColor: '#e50914',
                       width: '15px', height: '15px',
-                      marginTop: '0.1rem', flexShrink: 0,  // ← sejajar baris pertama teks
+                      marginTop: '0.1rem', flexShrink: 0,
                     }}
                   />
-                  {s}
+                  {sec.icon} {sec.name}
                 </label>
               ))}
             </div>

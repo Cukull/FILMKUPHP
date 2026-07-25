@@ -52,6 +52,14 @@ enum MovieStatus {
   UPCOMING
 }
 
+model DashboardSection {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  icon      String   @default("🎬")
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
 model Category {
   id     String  @id @default(uuid())
   name   String  @unique

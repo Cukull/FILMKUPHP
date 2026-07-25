@@ -199,7 +199,43 @@ export async function deleteShowtime(id: string, movieId: string) {
   // Delete seats first
   await prisma.seat.deleteMany({ where: { showtimeId: id } });
   await prisma.showtime.delete({ where: { id } });
-  revalidatePath(`/film/${movieId}`);
+    revalidatePath(`/film/${movieId}`);
   revalidatePath('/admin/film');
+  return { success: true };
+}
+
+// ─────────────────────────────────────────────
+// DASHBOARD SECTION (KATEGORI) CRUD
+// ─────────────────────────────────────────────
+export async function createDashboardSection(data: { name: string; icon: string; order: number }) {
+  await requireAdmin();
+  const section = await prisma.dashboardSection.create({
+    data: {
+      name: data.name,
+      icon: data.icon,
+      order: data.order,
+    },
+  });
+  revalidatePath('/admin/sections');
+  revalidatePath('/'); // Revalidate homepage
+  return { success: true, section };
+}
+
+export async function updateDashboardSection(id: string, data: { name?: string; icon?: string; order?: number }) {
+  await requireAdmin();
+  const section = await prisma.dashboardSection.update({
+    where: { id },
+    data,
+  });
+  revalidatePath('/admin/sections');
+  revalidatePath('/'); // Revalidate homepage
+  return { success: true, section };
+}
+
+export async function deleteDashboardSection(id: string) {
+  await requireAdmin();
+  await prisma.dashboardSection.delete({ where: { id } });
+  revalidatePath('/admin/sections');
+  revalidatePath('/'); // Revalidate homepage
   return { success: true };
 }

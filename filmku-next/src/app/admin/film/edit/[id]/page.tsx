@@ -16,6 +16,10 @@ export default async function EditFilmPage({ params }: { params: Promise<{ id: s
     include: { showtimes: true },
   });
 
+  const sectionsList = await prisma.dashboardSection.findMany({
+    orderBy: { order: 'asc' },
+  });
+
   if (!movie) {
     notFound();
   }
@@ -31,7 +35,7 @@ export default async function EditFilmPage({ params }: { params: Promise<{ id: s
         <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Edit Film</h1>
       </div>
 
-      <FilmForm initialData={movie} />
+      <FilmForm initialData={movie} sectionsList={sectionsList} />
 
       {/* Showtime Manager Section */}
       <div style={{ maxWidth: '900px', margin: '2rem auto 0', padding: '2.5rem', background: 'rgba(12, 12, 22, 0.7)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '1.25rem', boxShadow: '0 20px 60px rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)' }}>

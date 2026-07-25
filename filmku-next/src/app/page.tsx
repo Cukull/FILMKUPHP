@@ -8,31 +8,6 @@ import DomeGallery from "@/components/ui/DomeGallery";
 
 export const revalidate = 30;
 
-// Ordered list — same names used in FilmForm checkboxes
-const SECTION_ORDER = [
-  'Sorotan Layar Utama',
-  'Rilisan Tersegar',
-  'Lagi Viral Nih',
-  'Tangga Teratas Box Office',
-  'Pesona Asia & K-Drama',
-  'Karya Anak Bangsa',
-  'Serem Banget',
-  'Yang Akan Datang',
-  'Perang',
-];
-
-const SECTION_ICONS: Record<string, string> = {
-  'Sorotan Layar Utama': '🎬',
-  'Rilisan Tersegar': '🆕',
-  'Lagi Viral Nih': '🔥',
-  'Tangga Teratas Box Office': '🏆',
-  'Pesona Asia & K-Drama': '🌸',
-  'Karya Anak Bangsa': '🇮🇩',
-  'Serem Banget': '👻',
-  'Yang Akan Datang': '🔜',
-  'Perang': '⚔️',
-};
-
 // Extract 11-char YouTube video ID from any trailerUrl format
 export function extractYouTubeId(url: string | null | undefined): string {
   if (!url) return '';
@@ -59,16 +34,21 @@ export default async function Home() {
     orderBy: { title: 'asc' },
   });
 
+  // Fetch dynamic sections
+  const dashboardSections = await prisma.dashboardSection.findMany({
+    orderBy: { order: 'asc' },
+  });
+
   // Group by sections (each movie can belong to multiple sections)
-  const sections = SECTION_ORDER
-    .map(name => ({
-      name,
-      icon: SECTION_ICONS[name] ?? '🎬',
+  const sections = dashboardSections
+    .map(sec => ({
+      name: sec.name,
+      icon: sec.icon || '🎬',
       movies: allMovies.filter(m =>
         m.sections
           ?.split(',')
           .map(s => s.trim())
-          .includes(name)
+          .includes(sec.name)
       ),
     }))
     .filter(s => s.movies.length > 0);
