@@ -5,6 +5,7 @@ import HomeHero from "./HomeHero";
 import MovieLaneCard from "@/components/MovieLaneCard";
 import MovieLaneCarousel from "@/components/MovieLaneCarousel";
 import DomeGallery from "@/components/ui/DomeGallery";
+import * as LucideIcons from 'lucide-react';
 
 export const revalidate = 30;
 
@@ -19,6 +20,12 @@ export function extractYouTubeId(url: string | null | undefined): string {
   if (shortMatch) return shortMatch[1];
   if (/^[a-zA-Z0-9_-]{11}$/.test(url.trim())) return url.trim();
   return '';
+}
+
+// Helper to render Lucide Icon by name
+function RenderLucideIcon({ name, size = 24 }: { name: string, size?: number }) {
+  const IconComponent = (LucideIcons as any)[name] || LucideIcons.Film;
+  return <IconComponent size={size} />;
 }
 
 const FEATURES = [
@@ -43,7 +50,7 @@ export default async function Home() {
   const sections = dashboardSections
     .map(sec => ({
       name: sec.name,
-      icon: sec.icon || '🎬',
+      icon: sec.icon || 'Film',
       movies: allMovies.filter(m =>
         m.sections
           ?.split(',')
@@ -91,8 +98,8 @@ export default async function Home() {
           sections.map(section => (
             <div key={section.name} className="movie-lane">
               <div className="movie-lane-header">
-                <h3 className="movie-lane-title">
-                  {section.icon} {section.name}
+                <h3 className="movie-lane-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ color: 'var(--primary)' }}><RenderLucideIcon name={section.icon} size={20} /></span> {section.name}
                 </h3>
                 <Link
                   href="/genre"

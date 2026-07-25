@@ -223,19 +223,70 @@ export async function createDashboardSection(data: { name: string; icon: string;
 
 export async function updateDashboardSection(id: string, data: { name?: string; icon?: string; order?: number }) {
   await requireAdmin();
+  const oldSection = await prisma.dashboardSection.findUnique({ where: { id } });
+  if (!oldSection) throw new Error("Kategori tidak ditemukan");
+
   const section = await prisma.dashboardSection.update({
     where: { id },
     data,
   });
+
+  // Sync section names in movies if name changed
+  if (data.name && oldSection.name !== data.name) {
+    const movies = await prisma.movie.findMany();
+    for (const m of movies) {
+      if (m.sections && m.sections.includes(oldSection.name)) {
+        // Use regex to replace the exact name (surrounded by commas or string boundaries)
+        const regex = new RegExp(`(^|,)\\s*${oldSection.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*(,|$)`, 'g');
+        let newSections = m.sections.replace(regex, (match, p1, p2) => {
+           if (p1 === ',' && p2 === ',') return ', ';
+           if (p1 === '^' && p2 === '$') return '';
+           return p1 === ',' ? ', ' : '';
+        }).replace(/,\s*$/, '').replace(/^,\s*/, '').trim();
+
+        // Just a simpler fallback: split, modify, join
+        const parts = m.sections.split(',').map(s => s.trim());
+        const updatedParts = parts.map(s => s === oldSection.name ? data.name! : s);
+        const finalSections = updatedParts.join(', ');
+
+        await prisma.movie.update({
+          where: { id: m.id },
+          data: { sections: finalSections }
+        });
+      }
+    }
+  }
+
   revalidatePath('/admin/sections');
+  revalidatePath('/admin/film');
   revalidatePath('/'); // Revalidate homepage
   return { success: true, section };
 }
 
 export async function deleteDashboardSection(id: string) {
   await requireAdmin();
+  const oldSection = await prisma.dashboardSection.findUnique({ where: { id } });
+  
+  if (oldSection) {
+    // Remove the section from all movies
+    const movies = await prisma.movie.findMany();
+    for (const m of movies) {
+      if (m.sections && m.sections.includes(oldSection.name)) {
+        const parts = m.sections.split(',').map(s => s.trim());
+        const updatedParts = parts.filter(s => s !== oldSection.name);
+        const finalSections = updatedParts.join(', ');
+
+        await prisma.movie.update({
+          where: { id: m.id },
+          data: { sections: finalSections }
+        });
+      }
+    }
+  }
+
   await prisma.dashboardSection.delete({ where: { id } });
   revalidatePath('/admin/sections');
+  revalidatePath('/admin/film');
   revalidatePath('/'); // Revalidate homepage
   return { success: true };
 }

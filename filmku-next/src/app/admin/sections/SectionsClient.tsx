@@ -2,6 +2,26 @@
 
 import { useState, useTransition } from 'react';
 import { createDashboardSection, updateDashboardSection, deleteDashboardSection } from '@/actions/admin';
+import * as LucideIcons from 'lucide-react';
+
+// List of available professional icons
+const ICON_OPTIONS = [
+  'Film',
+  'TrendingUp',
+  'Star',
+  'Play',
+  'Heart',
+  'Award',
+  'MonitorPlay',
+  'Flame',
+  'Zap',
+  'Compass',
+  'Globe',
+  'Ghost',
+  'Sword',
+  'Clock',
+  'Ticket'
+];
 
 type Section = {
   id: string;
@@ -9,6 +29,12 @@ type Section = {
   icon: string;
   order: number;
 };
+
+// Helper component to render a Lucide icon by string name
+export function DynamicIcon({ name, size = 20 }: { name: string, size?: number }) {
+  const IconComponent = (LucideIcons as any)[name] || LucideIcons.Film;
+  return <IconComponent size={size} />;
+}
 
 export default function SectionsClient({ initialData }: { initialData: Section[] }) {
   const [sections, setSections] = useState<Section[]>(initialData);
@@ -19,14 +45,14 @@ export default function SectionsClient({ initialData }: { initialData: Section[]
   
   const [formData, setFormData] = useState({
     name: '',
-    icon: '🎬',
+    icon: 'Film',
     order: '0',
   });
 
   const resetForm = () => {
     setIsEditing(false);
     setEditId(null);
-    setFormData({ name: '', icon: '🎬', order: '0' });
+    setFormData({ name: '', icon: 'Film', order: '0' });
   };
 
   const handleEdit = (sec: Section) => {
@@ -40,7 +66,7 @@ export default function SectionsClient({ initialData }: { initialData: Section[]
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Yakin ingin menghapus kategori ini? Film yang menggunakan kategori ini tidak akan terhapus, namun tidak akan muncul di beranda pada baris ini.')) return;
+    if (!confirm('Yakin ingin menghapus kategori ini? Nama kategori akan otomatis dihapus dari semua film terkait secara real-time.')) return;
     
     startTransition(async () => {
       try {
@@ -113,15 +139,19 @@ export default function SectionsClient({ initialData }: { initialData: Section[]
             />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Ikon (Emoji)</label>
-            <input 
+            <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Ikon (SVG Profesional)</label>
+            <select 
               required
-              type="text" 
               value={formData.icon}
               onChange={e => setFormData({ ...formData, icon: e.target.value })}
-              placeholder="🎬"
-              style={inputStyle}
-            />
+              style={{...inputStyle, WebkitAppearance: 'none'}}
+            >
+              {ICON_OPTIONS.map(iconName => (
+                <option key={iconName} value={iconName} style={{ background: '#111' }}>
+                  {iconName}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Urutan (Terkecil tampil paling atas)</label>
@@ -187,21 +217,21 @@ export default function SectionsClient({ initialData }: { initialData: Section[]
               <tr key={sec.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                 <td style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600 }}>#{sec.order}</td>
                 <td style={{ padding: '1rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span>{sec.icon}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <span style={{ color: 'var(--primary)' }}><DynamicIcon name={sec.icon} /></span>
                     <span style={{ fontWeight: 500 }}>{sec.name}</span>
                   </div>
                 </td>
                 <td style={{ padding: '1rem', textAlign: 'right' }}>
                   <button 
                     onClick={() => handleEdit(sec)}
-                    style={{ background: 'transparent', border: 'none', color: '#4a90e2', cursor: 'pointer', marginRight: '1rem', fontWeight: 600 }}
+                    style={{ background: 'transparent', border: 'none', color: '#3b82f6', cursor: 'pointer', marginRight: '1rem', fontWeight: 600 }}
                   >
                     Edit
                   </button>
                   <button 
                     onClick={() => handleDelete(sec.id)}
-                    style={{ background: 'transparent', border: 'none', color: '#e50914', cursor: 'pointer', fontWeight: 600 }}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontWeight: 600 }}
                   >
                     Hapus
                   </button>

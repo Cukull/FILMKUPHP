@@ -4,6 +4,13 @@ import { useState, useTransition } from 'react';
 import { createMovie, updateMovie } from '@/actions/admin';
 import { useRouter } from 'next/navigation';
 import DarkSelect, { type SelectOption } from '@/components/DarkSelect';
+import * as LucideIcons from 'lucide-react';
+
+// Helper to render Lucide Icon by name
+function RenderLucideIcon({ name, size = 16 }: { name: string, size?: number }) {
+  const IconComponent = (LucideIcons as any)[name] || LucideIcons.Film;
+  return <IconComponent size={size} />;
+}
 
 const GENRES = ['Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 'Documentary', 'Drama', 'Family', 'Fantasy', 'Horror', 'Mystery', 'Romance', 'Science Fiction', 'Thriller', 'War', 'Western'];
 
@@ -492,7 +499,10 @@ export default function FilmForm({
                       marginTop: '0.1rem', flexShrink: 0,
                     }}
                   />
-                  {sec.icon} {sec.name}
+                  <span style={{ color: 'var(--primary)', flexShrink: 0, marginTop: '-0.1rem' }}>
+                    <RenderLucideIcon name={sec.icon} size={16} />
+                  </span>
+                  <span>{sec.name}</span>
                 </label>
               ))}
             </div>
