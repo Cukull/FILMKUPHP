@@ -5,6 +5,7 @@ import HomeHero from "./HomeHero";
 import MovieLaneCard from "@/components/MovieLaneCard";
 import MovieLaneCarousel from "@/components/MovieLaneCarousel";
 import DomeGallery from "@/components/ui/DomeGallery";
+import ScrollFloat from "@/components/ui/ScrollFloat";
 import * as LucideIcons from 'lucide-react';
 
 export const revalidate = 30;
@@ -156,12 +157,27 @@ export default async function Home() {
       {/* ── FEATURE SECTION ── */}
       <section className="feature-section">
         <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
-          <h2 style={{ fontSize: 'clamp(1.4rem, 3vw, 2rem)', fontWeight: 800, color: 'var(--text-primary)' }}>
+          <ScrollFloat 
+            animationDuration={1}
+            ease="back.inOut(2)"
+            scrollStart="center bottom+=50%"
+            scrollEnd="bottom bottom-=40%"
+            stagger={0.03}
+            textStyle={{ fontSize: 'clamp(1.4rem, 3vw, 2rem)', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'normal', display: 'block' }}
+          >
             Mengapa Nonton FILMKU?
-          </h2>
-          <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', fontSize: '0.9rem' }}>
+          </ScrollFloat>
+          
+          <ScrollFloat 
+            animationDuration={1}
+            ease="back.out(2)"
+            scrollStart="center bottom+=50%"
+            scrollEnd="bottom bottom-=40%"
+            stagger={0.01}
+            textStyle={{ color: 'var(--text-secondary)', marginTop: '0.5rem', fontSize: '0.9rem', fontWeight: 400, whiteSpace: 'normal', display: 'block' }}
+          >
             Platform bioskop premium dengan pengalaman pesan tiket paling mudah di Indonesia.
-          </p>
+          </ScrollFloat>
         </div>
         <div className="feature-grid">
           {FEATURES.map((f, i) => (
