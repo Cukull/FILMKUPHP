@@ -83,19 +83,11 @@ export const Card = ({
         rotateX: rotate,
         scale,
         boxShadow:
-          "0 0 #0000004d, 0 9px 20px #0000004a, 0 37px 37px #00000042, 0 84px 50px #00000026, 0 149px 60px #0000000a, 0 233px 65px #00000003, inset 0 0 0 2px rgba(255,255,255,0.1)",
+          "0 0 #0000004d, 0 9px 20px #0000004a, 0 37px 37px #00000042, 0 84px 50px #00000026, 0 149px 60px #0000000a, 0 233px 65px #00000003",
       }}
-      className="max-w-5xl -mt-12 mx-auto h-[35rem] md:h-[45rem] w-full border-[8px] border-[#1e1e1e] p-2 md:p-3 bg-[#000] rounded-[40px] shadow-2xl relative"
+      className="max-w-5xl -mt-12 mx-auto h-[30rem] md:h-[40rem] w-full border-4 border-[#6C6C6C] p-2 md:p-6 bg-[#222222] rounded-[30px] shadow-2xl"
     >
-      {/* Tablet Camera Notch */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-[#1e1e1e] rounded-b-xl flex items-center justify-center z-20">
-        <div className="w-2 h-2 rounded-full bg-[#0a0a0a] border border-[#2a2a2a]"></div>
-      </div>
-      
-      {/* Tablet Home Indicator */}
-      <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/20 rounded-full z-20"></div>
-
-      <div className="h-full w-full overflow-hidden rounded-[28px] bg-[#0a0a0a] relative z-10">
+      <div className=" h-full w-full  overflow-hidden rounded-2xl bg-gray-100 dark:bg-zinc-900 md:rounded-2xl md:p-4 ">
         {children}
       </div>
     </motion.div>

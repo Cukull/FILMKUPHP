@@ -155,18 +155,13 @@ export default async function Home() {
             </>
           }
         >
-          {/* Grid of movie posters simulating tablet content */}
-          <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 md:gap-3 p-2 md:p-4 h-full overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {allMovies.slice(0, 36).map((movie, idx) => (
-              <div key={idx} className="relative aspect-[2/3] rounded-md overflow-hidden shadow-sm border border-white/5 group bg-[#111]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={movie.posterUrl} alt={movie.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700 ease-out opacity-90 group-hover:opacity-100" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-2 md:p-3">
-                  <span className="text-white font-bold text-[10px] md:text-xs leading-tight drop-shadow-md">{movie.title}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/collage-poster.jpg"
+            alt="Koleksi Poster Film"
+            className="mx-auto rounded-2xl object-cover h-full w-full object-center"
+            draggable={false}
+          />
         </ContainerScroll>
       </div>
 
