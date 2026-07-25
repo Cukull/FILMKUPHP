@@ -4,6 +4,7 @@ import FAQSection from "./FAQSection";
 import HomeHero from "./HomeHero";
 import MovieLaneCard from "@/components/MovieLaneCard";
 import MovieLaneCarousel from "@/components/MovieLaneCarousel";
+import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 
 export const revalidate = 30;
 
@@ -138,6 +139,35 @@ export default async function Home() {
             </div>
           ))
         )}
+      </div>
+
+      {/* ── ACETERNITY SCROLL ANIMATION ── */}
+      <div className="flex flex-col overflow-hidden pb-10 pt-20">
+        <ContainerScroll
+          titleComponent={
+            <>
+              <h2 className="text-3xl md:text-5xl font-semibold text-white">
+                Temukan Mahakarya di <br />
+                <span className="text-5xl md:text-[6rem] font-bold mt-1 leading-none" style={{ color: 'var(--primary)' }}>
+                  Koleksi Premium Kami
+                </span>
+              </h2>
+            </>
+          }
+        >
+          {/* Grid of movie posters simulating tablet content */}
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 p-4 h-full overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {allMovies.slice(0, 30).map((movie, idx) => (
+              <div key={idx} className="relative aspect-[2/3] rounded-lg overflow-hidden shadow-lg border border-white/10 group">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={movie.posterUrl} alt={movie.title} className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500" />
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center text-center p-2">
+                  <span className="text-white font-bold text-xs md:text-sm">{movie.title}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </ContainerScroll>
       </div>
 
       {/* ── FEATURE SECTION ── */}
