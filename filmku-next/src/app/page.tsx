@@ -140,7 +140,6 @@ export default async function Home() {
           ))
         )}
       </div>
-      </div>
 
       {/* ── TABLET SCROLL REVEAL ── */}
       <TabletScrollReveal
