@@ -1,11 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
+type SearchResult = {
+  id: string;
+  title: string;
+  posterUrl: string | null;
+  rating: number | null;
+  genre: string | null;
+};
+
 export default function HeaderRight({ session, logoutAction }: { session: any, logoutAction: any }) {
   const [isSearchActive, setIsSearchActive] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const searchContainerRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const isAuthPage = pathname === '/auth';
   
@@ -13,65 +26,170 @@ export default function HeaderRight({ session, logoutAction }: { session: any, l
     ? session.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
     : "U";
 
+  // Debounced Search API call
+  useEffect(() => {
+    if (!searchQuery || searchQuery.trim().length < 2) {
+      setResults([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsLoading(true);
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setResults(data.results || []);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Handle click outside to close search
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setIsSearchActive(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
       
       {/* Search Bar — disembunyikan di halaman /auth */}
       {!isAuthPage && (
-        <div 
-          className="search-container"
-          style={{
-            position: 'relative',
-            display: 'flex',
-            alignItems: 'center',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            width: isSearchActive ? '260px' : '40px',
-            height: '40px',
-            background: isSearchActive ? 'rgba(255,255,255,0.05)' : 'transparent',
-            border: isSearchActive ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent',
-            borderRadius: '20px',
-            overflow: 'hidden',
-            cursor: isSearchActive ? 'text' : 'pointer'
-          }}
-          onMouseEnter={() => setIsSearchActive(true)}
-          onMouseLeave={(e) => {
-            if (document.activeElement !== e.currentTarget.querySelector('input')) {
-              setIsSearchActive(false);
-            }
-          }}
-        >
-          <input 
-            type="text" 
-            placeholder="Cari judul film..."
-            onFocus={() => setIsSearchActive(true)}
-            onBlur={() => setIsSearchActive(false)}
+        <div style={{ position: 'relative' }} ref={searchContainerRef}>
+          <div 
+            className="search-container"
             style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--text-primary)',
-              fontSize: '0.9rem',
-              width: '100%',
-              height: '100%',
-              padding: isSearchActive ? '0 40px 0 16px' : '0',
-              opacity: isSearchActive ? 1 : 0,
-              transition: 'opacity 0.2s',
-              outline: 'none',
-              fontFamily: 'var(--font-body)'
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              width: isSearchActive ? '300px' : '40px',
+              height: '40px',
+              background: isSearchActive ? 'rgba(255,255,255,0.08)' : 'transparent',
+              border: isSearchActive ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent',
+              borderRadius: '20px',
+              cursor: isSearchActive ? 'text' : 'pointer',
+              zIndex: 50
             }}
-          />
-          <svg 
-            width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-            style={{
-              position: 'absolute',
-              right: '10px',
-              color: isSearchActive ? 'var(--text-secondary)' : 'var(--text-primary)',
-              transition: 'color 0.2s',
-              pointerEvents: 'none'
+            onClick={() => {
+              if (!isSearchActive) {
+                setIsSearchActive(true);
+                setTimeout(() => {
+                  searchContainerRef.current?.querySelector('input')?.focus();
+                }, 100);
+              }
             }}
           >
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
+            <input 
+              type="text" 
+              placeholder="Cari judul film..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchActive(true)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--text-primary)',
+                fontSize: '0.9rem',
+                width: '100%',
+                height: '100%',
+                padding: isSearchActive ? '0 40px 0 16px' : '0',
+                opacity: isSearchActive ? 1 : 0,
+                transition: 'opacity 0.2s',
+                outline: 'none',
+                fontFamily: 'var(--font-body)',
+                borderRadius: '20px',
+              }}
+            />
+            <svg 
+              width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              style={{
+                position: 'absolute',
+                right: '10px',
+                color: isSearchActive ? 'var(--text-secondary)' : 'var(--text-primary)',
+                transition: 'color 0.2s',
+                pointerEvents: 'none'
+              }}
+            >
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </div>
+
+          {/* Search Dropdown */}
+          {isSearchActive && searchQuery.trim().length >= 2 && (
+            <div style={{
+              position: 'absolute',
+              top: 'calc(100% + 8px)',
+              right: 0,
+              width: '100%',
+              minWidth: '300px',
+              background: '#111',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '0.75rem',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+              overflow: 'hidden',
+              zIndex: 49,
+              display: 'flex',
+              flexDirection: 'column'
+            }}>
+              {isLoading ? (
+                <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                  Mencari...
+                </div>
+              ) : results.length > 0 ? (
+                results.map(movie => (
+                  <Link 
+                    key={movie.id} 
+                    href={`/film/${movie.id}`}
+                    onClick={() => {
+                      setIsSearchActive(false);
+                      setSearchQuery('');
+                    }}
+                    style={{
+                      display: 'flex',
+                      gap: '0.75rem',
+                      padding: '0.75rem 1rem',
+                      textDecoration: 'none',
+                      color: 'var(--text-primary)',
+                      borderBottom: '1px solid rgba(255,255,255,0.05)',
+                      alignItems: 'center',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  >
+                    {movie.posterUrl ? (
+                      <img src={movie.posterUrl} alt={movie.title} style={{ width: '40px', height: '60px', objectFit: 'cover', borderRadius: '4px' }} />
+                    ) : (
+                      <div style={{ width: '40px', height: '60px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px' }} />
+                    )}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                      <span style={{ fontWeight: 600, fontSize: '0.9rem', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{movie.title}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{movie.genre?.split(',').slice(0, 2).join(', ')}</span>
+                      {movie.rating && <span style={{ fontSize: '0.75rem', color: '#fbbf24', fontWeight: 600 }}>★ {movie.rating}</span>}
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                  Tidak ada film ditemukan
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
