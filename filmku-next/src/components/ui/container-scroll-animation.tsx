@@ -33,8 +33,8 @@ export const ContainerScroll = ({
 
   const rotate = useTransform(scrollYProgress, [0, 1], [20, 0]);
   const scale = useTransform(scrollYProgress, [0, 1], scaleDimensions());
-  // Text starts at +120px (behind the tablet) and moves up to 0 to reveal
-  const translate = useTransform(scrollYProgress, [0, 1], [120, 0]);
+  const translate = useTransform(scrollYProgress, [0, 1], [150, 0]);
+  const opacity = useTransform(scrollYProgress, [0, 1], [0.3, 1]);
 
   return (
     <div
@@ -47,7 +47,7 @@ export const ContainerScroll = ({
           perspective: "1000px",
         }}
       >
-        <Header translate={translate} titleComponent={titleComponent} />
+        <Header translate={translate} opacity={opacity} titleComponent={titleComponent} />
         <Card rotate={rotate} scale={scale}>
           {children}
         </Card>
@@ -56,11 +56,12 @@ export const ContainerScroll = ({
   );
 };
 
-export const Header = ({ translate, titleComponent }: any) => {
+export const Header = ({ translate, opacity, titleComponent }: any) => {
   return (
     <motion.div
       style={{
         translateY: translate,
+        opacity: opacity,
       }}
       className="max-w-5xl mx-auto text-center relative z-0"
     >
@@ -84,18 +85,18 @@ export const Card = ({
         rotateX: rotate,
         scale,
         boxShadow:
-          "0 0 #0000004d, 0 9px 20px #0000004a, 0 37px 37px #00000042, 0 84px 50px #00000026, 0 149px 60px #0000000a, 0 233px 65px #00000003, inset 0 0 0 1px rgba(255,255,255,0.2)",
+          "0 0 #0000004d, 0 9px 20px #0000004a, 0 37px 37px #00000042, 0 84px 50px #00000026, 0 149px 60px #0000000a, 0 233px 65px #00000003, inset 0 0 0 1px rgba(255,255,255,0.1)",
+        backgroundColor: "var(--bg-surface, #0f0f1a)",
+        borderColor: "rgba(229, 9, 20, 0.2)"
       }}
-      className="max-w-5xl -mt-16 mx-auto h-[24rem] md:h-[40rem] w-full border-[4px] border-[#b3b3b3] p-4 md:p-10 bg-[#000000] rounded-[40px] shadow-2xl relative z-20"
+      className="max-w-5xl -mt-24 md:-mt-32 mx-auto h-[24rem] md:h-[40rem] w-full border-[3px] p-3 md:p-8 rounded-[40px] shadow-2xl relative z-20"
     >
       {/* Tablet Camera Hole */}
-      <div className="absolute top-2 md:top-4 left-1/2 -translate-x-1/2 flex items-center justify-center space-x-2">
-        <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-[#111] shadow-[inset_0_0_2px_rgba(0,0,0,1)] border border-[#333]"></div>
-        <div className="w-1 h-1 rounded-full bg-[#111] opacity-50"></div>
+      <div className="absolute top-2 md:top-3 left-1/2 -translate-x-1/2 flex items-center justify-center space-x-2 z-30">
+        <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-black shadow-[inset_0_0_2px_rgba(255,255,255,0.2)] border border-neutral-800"></div>
       </div>
 
-      {/* The actual screen area */}
-      <div className="h-full w-full overflow-hidden rounded-[16px] md:rounded-[24px] bg-[#0a0a0a] relative z-10 border border-[#222]">
+      <div className="h-full w-full overflow-hidden rounded-[20px] md:rounded-[28px] bg-black relative z-10 border border-neutral-800/50">
         {children}
       </div>
     </motion.div>
