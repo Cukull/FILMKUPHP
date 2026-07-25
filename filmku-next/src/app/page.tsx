@@ -4,7 +4,6 @@ import FAQSection from "./FAQSection";
 import HomeHero from "./HomeHero";
 import MovieLaneCard from "@/components/MovieLaneCard";
 import MovieLaneCarousel from "@/components/MovieLaneCarousel";
-import { TabletScrollReveal } from "@/components/ui/TabletScrollReveal";
 
 export const revalidate = 30;
 
@@ -140,29 +139,6 @@ export default async function Home() {
           ))
         )}
       </div>
-
-      {/* ── TABLET SCROLL REVEAL ── */}
-      <TabletScrollReveal
-        heading={{
-          small: "Temukan Mahakarya di",
-          large: "Koleksi",
-          largeAccent: "Premium Kami"
-        }}
-      >
-        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 p-2 md:p-3 h-full overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          {allMovies.filter(m => m.posterUrl).slice(0, 20).map((movie, idx) => (
-            <div key={idx} className="relative aspect-[2/3] rounded-md overflow-hidden bg-neutral-900 border border-neutral-800">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={movie.posterUrl!}
-                alt={movie.title}
-                className="object-cover w-full h-full opacity-90 hover:opacity-100 transition-opacity"
-                loading="lazy"
-              />
-            </div>
-          ))}
-        </div>
-      </TabletScrollReveal>
 
       {/* ── FEATURE SECTION ── */}
       <section className="feature-section">
