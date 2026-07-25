@@ -142,15 +142,15 @@ export default async function Home() {
       </div>
 
       {/* ── ACETERNITY SCROLL ANIMATION ── */}
-      <div className="flex flex-col overflow-hidden pb-10 pt-20">
+      <div className="flex flex-col pb-10 pt-20">
         <ContainerScroll
           titleComponent={
             <>
-              <h2 className="text-xl md:text-2xl font-medium text-gray-300 mb-2">
-                Temukan Mahakarya di <br />
-                <span className="text-5xl md:text-7xl lg:text-8xl font-black mt-2 inline-block leading-tight drop-shadow-lg" style={{ color: 'var(--primary)' }}>
-                  Koleksi Premium Kami
-                </span>
+              <p className="text-lg md:text-xl font-medium text-gray-400 mb-3 tracking-widest uppercase">
+                Temukan Mahakarya di
+              </p>
+              <h2 className="text-6xl md:text-8xl lg:text-9xl font-black leading-none drop-shadow-2xl" style={{ color: 'var(--primary)' }}>
+                Koleksi Premium Kami
               </h2>
             </>
           }

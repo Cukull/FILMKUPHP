@@ -12,7 +12,7 @@ export const ContainerScroll = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ["start end", "end end"], // smooth progress mapping
+    offset: ["start end", "end end"],
   });
   const [isMobile, setIsMobile] = React.useState(false);
 
@@ -33,19 +33,19 @@ export const ContainerScroll = ({
 
   const rotate = useTransform(scrollYProgress, [0, 1], [20, 0]);
   const scale = useTransform(scrollYProgress, [0, 1], scaleDimensions());
-  const translate = useTransform(scrollYProgress, [0, 1], [150, 0]);
-  const opacity = useTransform(scrollYProgress, [0, 1], [0.3, 1]);
+  const translate = useTransform(scrollYProgress, [0, 1], [200, 0]);
+  const opacity = useTransform(scrollYProgress, [0, 1], [0.2, 1]);
 
   return (
+    // Outer container — must NOT have overflow-hidden
+    // Height is tall enough for title + card + animation room
     <div
-      className="h-[40rem] md:h-[60rem] flex items-center justify-center relative p-2 md:p-20"
+      className="h-[70rem] md:h-[90rem] flex items-start justify-center relative pt-20 md:pt-32"
       ref={containerRef}
     >
       <div
-        className="py-10 md:py-40 w-full relative"
-        style={{
-          perspective: "1000px",
-        }}
+        className="w-full relative"
+        style={{ perspective: "1200px" }}
       >
         <Header translate={translate} opacity={opacity} titleComponent={titleComponent} />
         <Card rotate={rotate} scale={scale}>
@@ -56,10 +56,10 @@ export const ContainerScroll = ({
   );
 };
 
-export const Header = ({ 
-  translate, 
-  opacity, 
-  titleComponent 
+export const Header = ({
+  translate,
+  opacity,
+  titleComponent,
 }: {
   translate: MotionValue<number>;
   opacity: MotionValue<number>;
@@ -71,7 +71,7 @@ export const Header = ({
         translateY: translate,
         opacity: opacity,
       }}
-      className="max-w-5xl mx-auto text-center relative z-0"
+      className="max-w-5xl mx-auto text-center relative z-0 px-4"
     >
       {titleComponent}
     </motion.div>
@@ -92,19 +92,47 @@ export const Card = ({
       style={{
         rotateX: rotate,
         scale,
+        // Realistic layered shadow like a physical device
         boxShadow:
-          "0 0 #0000004d, 0 9px 20px #0000004a, 0 37px 37px #00000042, 0 84px 50px #00000026, 0 149px 60px #0000000a, 0 233px 65px #00000003, inset 0 0 0 1px rgba(255,255,255,0.1)",
-        backgroundColor: "var(--bg-surface, #0f0f1a)",
-        borderColor: "rgba(229, 9, 20, 0.2)"
+          "0 2px 4px rgba(0,0,0,0.4), 0 12px 40px rgba(0,0,0,0.6), 0 40px 80px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08)",
       }}
-      className="max-w-5xl -mt-24 md:-mt-32 mx-auto h-[24rem] md:h-[40rem] w-full border-[3px] p-3 md:p-8 rounded-[40px] shadow-2xl relative z-20"
+      // KEY FIX: explicit inline style for border to bypass any Tailwind JIT miss
+      // border-[14px] = thick physical bezel; bg dark grey like real tablet body
+      // rounded-[40px] = big corner radius like iPad/Android tablet
+      // -mt-28 md:-mt-40 = tablet overlaps heading (reveal effect)
+      className="max-w-5xl -mt-28 md:-mt-40 mx-auto w-full relative z-20 rounded-[40px]"
+      style={{
+        height: "clamp(320px, 45vw, 640px)",
+        border: "14px solid #2a2a2a",
+        padding: "10px",
+        backgroundColor: "#1a1a1a",
+      }}
     >
-      {/* Tablet Camera Hole */}
-      <div className="absolute top-2 md:top-3 left-1/2 -translate-x-1/2 flex items-center justify-center space-x-2 z-30">
-        <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-black shadow-[inset_0_0_2px_rgba(255,255,255,0.2)] border border-neutral-800"></div>
+      {/* Camera notch — top center of the bezel */}
+      <div
+        className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center z-30"
+        style={{ top: "-7px" }}
+      >
+        <div
+          className="rounded-full bg-[#111]"
+          style={{
+            width: "10px",
+            height: "10px",
+            border: "1px solid #333",
+            boxShadow: "inset 0 0 3px rgba(0,0,0,0.8)",
+          }}
+        />
       </div>
 
-      <div className="h-full w-full overflow-hidden rounded-[20px] md:rounded-[28px] bg-black relative z-10 border border-neutral-800/50">
+      {/* Inner screen area */}
+      <div
+        className="h-full w-full overflow-hidden relative z-10"
+        style={{
+          borderRadius: "28px",
+          backgroundColor: "#000",
+          border: "1px solid #333",
+        }}
+      >
         {children}
       </div>
     </motion.div>
