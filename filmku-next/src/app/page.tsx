@@ -3,6 +3,7 @@ import Link from "next/link";
 import FAQSection from "./FAQSection";
 import HomeHero from "./HomeHero";
 import MovieLaneCard from "@/components/MovieLaneCard";
+import MovieLaneCarousel from "@/components/MovieLaneCarousel";
 
 export const revalidate = 30;
 
@@ -120,7 +121,7 @@ export default async function Home() {
                 </Link>
               </div>
 
-              <div className="movie-lane-scroll">
+              <MovieLaneCarousel>
                 {section.movies.map(movie => (
                   <MovieLaneCard
                     key={movie.id}
@@ -133,7 +134,7 @@ export default async function Home() {
                     status={movie.status}
                   />
                 ))}
-              </div>
+              </MovieLaneCarousel>
             </div>
           ))
         )}

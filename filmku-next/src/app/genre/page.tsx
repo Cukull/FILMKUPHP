@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import MovieLaneCard from "@/components/MovieLaneCard";
+import MovieLaneCarousel from "@/components/MovieLaneCarousel";
 
-export const revalidate = 30;
+export const revalidate = 60;
 
 // All possible genres — same list as FilmForm checkboxes
 const ALL_GENRES = [
@@ -101,7 +102,7 @@ export default async function GenrePage() {
                 </h3>
               </div>
 
-              <div className="movie-lane-scroll" style={{ paddingBottom: '1rem' }}>
+              <MovieLaneCarousel>
                 {genre.movies.map(movie => (
                   <MovieLaneCard
                     key={movie.id}
@@ -114,7 +115,7 @@ export default async function GenrePage() {
                     status={movie.status}
                   />
                 ))}
-              </div>
+              </MovieLaneCarousel>
             </div>
           ))}
         </div>
