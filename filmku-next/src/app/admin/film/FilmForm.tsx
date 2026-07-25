@@ -12,7 +12,7 @@ function RenderLucideIcon({ name, size = 16 }: { name: string, size?: number }) 
   return <IconComponent size={size} />;
 }
 
-const GENRES = ['Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 'Documentary', 'Drama', 'Family', 'Fantasy', 'Horror', 'Mystery', 'Romance', 'Science Fiction', 'Thriller', 'War', 'Western'];
+const GENRES = ['Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 'Documentary', 'Drama', 'Family', 'Fantasy', 'Horror', 'Mystery', 'Romance', 'Sci-Fi', 'Science Fiction', 'Thriller', 'War', 'Western'];
 
 const STATUS_OPTIONS: SelectOption[] = [
   { value: 'NOW_PLAYING', label: '🎬 Sedang Tayang (Now Playing)' },
