@@ -1,11 +1,13 @@
 import { prisma } from '@/lib/prisma';
 import SectionsClient from './SectionsClient';
-import { requireAdmin } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 
 export const revalidate = 0; // Disable cache for admin pages
 
 export default async function AdminSectionsPage() {
-  await requireAdmin();
+  const session = await getSession();
+  if (!session || session.role !== 'ADMIN') redirect('/');
 
   const sections = await prisma.dashboardSection.findMany({
     orderBy: { order: 'asc' },

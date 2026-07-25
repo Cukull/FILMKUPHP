@@ -1,12 +1,14 @@
 import FilmForm from '../FilmForm';
 import { prisma } from '@/lib/prisma';
-import { requireAdmin } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
 export const revalidate = 0; // Disable cache for admin pages
 
 export default async function TambahFilmPage() {
-  await requireAdmin();
+  const session = await getSession();
+  if (!session || session.role !== 'ADMIN') redirect('/');
 
   // Ambil daftar section/kategori dinamis
   const sectionsList = await prisma.dashboardSection.findMany({
