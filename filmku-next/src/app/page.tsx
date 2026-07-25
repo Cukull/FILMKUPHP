@@ -144,11 +144,11 @@ export default async function Home() {
       {/* ── DOME GALLERY ── */}
       <div style={{ width: '100%', height: '100vh', position: 'relative', overflow: 'hidden', backgroundColor: '#000' }}>
         <DomeGallery
-          images={allMovies.filter(m => m.posterUrl).slice(0, 15).map(m => ({ src: m.posterUrl, alt: m.title }))}
+          images={allMovies.filter(m => m.posterUrl).slice(0, 25).map(m => ({ src: m.posterUrl, alt: m.title }))}
           fit={0.8}
           minRadius={600}
           maxVerticalRotationDeg={0}
-          segments={14}
+          segments={25}
           dragDampening={2}
           grayscale={false}
         />
