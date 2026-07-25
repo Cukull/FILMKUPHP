@@ -4,7 +4,6 @@ import FAQSection from "./FAQSection";
 import HomeHero from "./HomeHero";
 import MovieLaneCard from "@/components/MovieLaneCard";
 import MovieLaneCarousel from "@/components/MovieLaneCarousel";
-import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 
 export const revalidate = 30;
 
@@ -140,29 +139,6 @@ export default async function Home() {
           ))
         )}
       </div>
-
-      {/* ── ACETERNITY SCROLL ANIMATION ── */}
-      <div className="flex flex-col pb-10 pt-20">
-        <ContainerScroll
-          titleComponent={
-            <>
-              <h2 className="text-lg md:text-2xl font-medium text-gray-300">
-                Temukan Mahakarya di <br />
-                <span className="text-5xl md:text-7xl font-extrabold mt-2 inline-block leading-tight" style={{ color: 'var(--primary)' }}>
-                  Koleksi Premium Kami
-                </span>
-              </h2>
-            </>
-          }
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/collage-poster.jpg"
-            alt="Koleksi Poster Film"
-            className="mx-auto rounded-2xl object-cover h-full w-full object-center"
-            draggable={false}
-          />
-        </ContainerScroll>
       </div>
 
       {/* ── FEATURE SECTION ── */}
