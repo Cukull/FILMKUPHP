@@ -78,7 +78,7 @@ export default async function RootLayout({
                   <li><Link href="/" className="nav-link">Beranda</Link></li>
                   <li><Link href="/komunitas" className="nav-link">Cine-Community</Link></li>
                   <li><Link href="/wishlist" className="nav-link">Wishlist</Link></li>
-                  <li><Link href="/kategori/genre" className="nav-link">Genre</Link></li>
+                  <li><Link href="/genre" className="nav-link">Genre</Link></li>
                   <li><Link href="/cafe" className="nav-link">Snack-Ku</Link></li>
                 </ul>
               </div>
