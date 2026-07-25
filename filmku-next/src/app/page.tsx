@@ -146,9 +146,9 @@ export default async function Home() {
         <ContainerScroll
           titleComponent={
             <>
-              <h2 className="text-3xl md:text-5xl font-semibold text-white">
+              <h2 className="text-4xl md:text-6xl font-semibold text-white">
                 Temukan Mahakarya di <br />
-                <span className="text-5xl md:text-[6rem] font-bold mt-1 leading-none" style={{ color: 'var(--primary)' }}>
+                <span className="text-6xl md:text-[8rem] font-bold mt-1 leading-none" style={{ color: 'var(--primary)' }}>
                   Koleksi Premium Kami
                 </span>
               </h2>
