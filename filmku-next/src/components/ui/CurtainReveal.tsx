@@ -30,13 +30,31 @@ export default function CurtainReveal({
   };
 
   return (
-    <div style={{ position: 'relative', width: '100%', overflow: 'hidden', borderRadius: '12px' }}>
+    <div 
+      style={{ 
+        position: 'relative', 
+        width: '100%', 
+        overflow: 'hidden', 
+        borderRadius: '12px',
+        background: '#1a0000',
+        minHeight: '360px'
+      }}
+    >
       {/* ── Lapisan Konten Video Player di Bawah Tirai ── */}
-      <div style={{ position: 'relative', zIndex: 1, width: '100%' }}>
+      <div 
+        style={{ 
+          position: 'relative', 
+          zIndex: 1, 
+          width: '100%',
+          opacity: isOpen ? 1 : 0,
+          pointerEvents: isOpen ? 'auto' : 'none',
+          transition: 'opacity 0.6s ease-in'
+        }}
+      >
         {children}
       </div>
 
-      {/* ── Lapisan Tirai & Tombol Buka ── */}
+      {/* ── Lapisan Tirai & Tombol Buka (Forced GPU Layering + High Z-Index) ── */}
       {!isUnmounted && (
         <div 
           style={{
@@ -45,9 +63,10 @@ export default function CurtainReveal({
             left: 0,
             width: '100%',
             height: '100%',
-            zIndex: 20,
+            zIndex: 99999,
             display: 'flex',
-            pointerEvents: isOpen ? 'none' : 'auto'
+            pointerEvents: isOpen ? 'none' : 'auto',
+            transform: 'translateZ(10px)'
           }}
         >
           {/* Panel Kiri (50% lebar) */}
@@ -65,7 +84,8 @@ export default function CurtainReveal({
               background: 'linear-gradient(90deg, #380202 0%, #680404 55%, #8b0000 100%)',
               boxShadow: 'inset -20px 0 35px -5px rgba(0,0,0,0.88), 10px 0 25px rgba(0,0,0,0.75)',
               overflow: 'hidden',
-              zIndex: 2
+              zIndex: 2,
+              transform: 'translateZ(10px)'
             }}
           >
             {/* Tekstur lipatan tirai vertikal */}
@@ -95,7 +115,8 @@ export default function CurtainReveal({
               background: 'linear-gradient(90deg, #8b0000 0%, #680404 45%, #380202 100%)',
               boxShadow: 'inset 20px 0 35px -5px rgba(0,0,0,0.88), -10px 0 25px rgba(0,0,0,0.75)',
               overflow: 'hidden',
-              zIndex: 2
+              zIndex: 2,
+              transform: 'translateZ(10px)'
             }}
           >
             {/* Tekstur lipatan tirai vertikal */}
@@ -121,7 +142,7 @@ export default function CurtainReveal({
                   top: '50%',
                   left: '50%',
                   transform: 'translate(-50%, -50%)',
-                  zIndex: 10,
+                  zIndex: 100,
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -160,10 +181,11 @@ export default function CurtainReveal({
                 </button>
                 <span
                   style={{
-                    fontSize: '0.8rem',
-                    color: 'rgba(255, 255, 255, 0.7)',
-                    textShadow: '0 2px 4px rgba(0,0,0,0.8)',
-                    letterSpacing: '0.05em'
+                    fontSize: '0.85rem',
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    textShadow: '0 2px 4px rgba(0,0,0,0.9)',
+                    letterSpacing: '0.05em',
+                    fontWeight: 600
                   }}
                 >
                   Klik untuk membuka tirai bioskop
