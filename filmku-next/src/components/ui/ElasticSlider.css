@@ -1,0 +1,109 @@
+/* ElasticSlider.css - React Bits Elastic Slider integrated for FILMKU Cinema Volume Control */
+
+.slider-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 13rem;
+  position: relative;
+}
+
+.slider-wrapper {
+  display: flex;
+  width: 100%;
+  touch-action: none;
+  user-select: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.slider-root {
+  position: relative;
+  display: flex;
+  width: 100%;
+  max-width: 200px;
+  flex-grow: 1;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  align-items: center;
+  padding: 0.8rem 0;
+}
+
+.slider-root:active {
+  cursor: grabbing;
+}
+
+.slider-track-wrapper {
+  display: flex;
+  flex-grow: 1;
+}
+
+.slider-track {
+  position: relative;
+  height: 100%;
+  flex-grow: 1;
+  overflow: hidden;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.25);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.slider-range {
+  position: absolute;
+  height: 100%;
+  background: linear-gradient(90deg, #ff1e3c, #e50914);
+  border-radius: 9999px;
+  box-shadow: 0 0 10px rgba(229, 9, 20, 0.65);
+  transition: width 0.05s linear;
+}
+
+.value-indicator {
+  color: rgba(255, 255, 255, 0.95);
+  position: absolute;
+  top: -1.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95);
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.75);
+  padding: 0.1rem 0.5rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.2s ease, color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon:hover {
+  transform: scale(1.15);
+  color: #ff1e3c;
+}
+
+/* FILMKU Cinematic Frosted Glass Pill Wrapper */
+.filmku-volume-pill {
+  background: rgba(10, 10, 15, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 50px;
+  padding: 0.5rem 1rem;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7);
+  transition: all 0.3s ease;
+}
+.filmku-volume-pill:hover {
+  background: rgba(10, 10, 15, 0.85);
+  border-color: rgba(229, 9, 20, 0.5);
+  box-shadow: 0 8px 25px rgba(229, 9, 20, 0.3);
+}

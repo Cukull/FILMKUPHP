@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import ElasticSlider from '@/components/ui/ElasticSlider';
 
 type HeroFilm = {
   id: string;
@@ -17,12 +18,13 @@ type Props = {
 };
 
 const AUTOPLAY_DURATION = 12000; // 12s per slide
-const MUTE_FADE_DELAY   = 1500;  // 1.5s inactivity → fade speaker icon
+const MUTE_FADE_DELAY   = 3000;  // 3s inactivity → fade volume slider
 
 export default function HomeHero({ films }: Props) {
   const [index, setIndex]         = useState(0);
   const [isMuted, setIsMuted]     = useState(true);
-  const [showMute, setShowMute]   = useState(false); // speaker visibility
+  const [volume, setVolume]       = useState(0);     // 0-100 volume level for ElasticSlider
+  const [showMute, setShowMute]   = useState(false); // speaker/slider visibility
   const [fading, setFading]       = useState(false); // crossfade between slides
   const [showPrev, setShowPrev]   = useState(false); // left hover-zone active
   const [showNext, setShowNext]   = useState(false); // right hover-zone active
@@ -63,13 +65,27 @@ export default function HomeHero({ films }: Props) {
     muteTimer.current = setTimeout(() => setShowMute(false), MUTE_FADE_DELAY);
   }, []);
 
-  /* ── YouTube postMessage helper — toggle mute tanpa reload iframe ── */
-  const postYT = useCallback((cmd: 'mute' | 'unMute' | 'pauseVideo' | 'playVideo') => {
+  /* ── YouTube postMessage helper ── */
+  const postYT = useCallback((cmd: string, args: any[] = []) => {
     iframeRef.current?.contentWindow?.postMessage(
-      JSON.stringify({ event: 'command', func: cmd, args: [] }),
+      JSON.stringify({ event: 'command', func: cmd, args }),
       '*'
     );
   }, []);
+
+  const handleVolumeChange = useCallback((newVol: number) => {
+    setVolume(newVol);
+    if (newVol > 0) {
+      if (isMuted) {
+        setIsMuted(false);
+        postYT('unMute');
+      }
+      postYT('setVolume', [newVol]);
+    } else {
+      setIsMuted(true);
+      postYT('mute');
+    }
+  }, [isMuted, postYT]);
 
   /* ── Pause on scroll out of viewport ── */
   useEffect(() => {
@@ -185,51 +201,32 @@ export default function HomeHero({ films }: Props) {
         pointerEvents: 'none',
       }} />
 
-      {/* ── Mute/Unmute button ── fades out on inactivity */}
-      <button
-        onClick={() => {
-          // Toggle icon state (hanya untuk SVG icon — TIDAK mengubah src iframe)
-          setIsMuted(prev => {
-            const next = !prev;
-            // Kirim perintah ke YouTube IFrame API via postMessage
-            postYT(next ? 'mute' : 'unMute');
-            return next;
-          });
-        }}
-        aria-label={isMuted ? 'Unmute trailer' : 'Mute trailer'}
+      {/* ── ElasticSlider Volume Control (0-100) ── */}
+      <div
+        className="filmku-volume-pill"
         style={{
           position: 'absolute',
           bottom: total > 1 ? '13%' : '15%',
           right: '5%',
-          zIndex: 25, /* Di atas z-index: 10 dari hover-zone panah agar bisa diklik */
-          background: 'rgba(0,0,0,0.5)',
-          border: '1px solid rgba(255,255,255,0.25)',
-          borderRadius: '50%',
-          width: '48px', height: '48px',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer',
-          color: 'white',
-          backdropFilter: 'blur(8px)',
+          zIndex: 25,
           opacity: showMute ? 1 : 0,
-          transition: 'opacity 0.6s ease, background 0.2s ease',
+          transition: 'opacity 0.6s ease, transform 0.6s ease',
+          transform: showMute ? 'translateY(0)' : 'translateY(10px)',
           pointerEvents: showMute ? 'auto' : 'none',
         }}
-        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.2)')}
-        onMouseLeave={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.5)')}
+        onMouseEnter={() => {
+          setShowMute(true);
+          if (muteTimer.current) clearTimeout(muteTimer.current);
+        }}
       >
-        {isMuted ? (
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-            <line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" />
-          </svg>
-        ) : (
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-            <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-          </svg>
-        )}
-      </button>
+        <ElasticSlider
+          startingValue={0}
+          defaultValue={0}
+          maxValue={100}
+          value={volume}
+          onChange={handleVolumeChange}
+        />
+      </div>
 
       {/* ── Vignette tepi kiri & kanan — selalu terlihat, pointer-events-none ── */}
       {/* Tipis saja (8%) untuk kontras arrow putih */}
