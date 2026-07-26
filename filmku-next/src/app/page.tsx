@@ -157,7 +157,7 @@ export default async function Home() {
       {/* ── FEATURE SECTION ── */}
       <section className="feature-section">
         <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
-          <ScrollFloat 
+          <ScrollFloat
             animationDuration={1}
             ease="back.inOut(2)"
             scrollStart="center bottom+=50%"
@@ -167,8 +167,8 @@ export default async function Home() {
           >
             Mengapa Nonton FILMKU?
           </ScrollFloat>
-          
-          <ScrollFloat 
+
+          <ScrollFloat
             animationDuration={1}
             ease="back.out(2)"
             scrollStart="center bottom+=50%"

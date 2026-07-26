@@ -11,6 +11,7 @@ import SplashScreen from "./SplashScreen";
 import NavbarScrollEffect from "./NavbarScrollEffect";
 import PageLoadingOverlay from "./PageLoadingOverlay";
 import { NavigationProvider } from "./NavigationContext";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: "FILMKU | Platform Bioskop Premium",
@@ -126,6 +127,7 @@ export default async function RootLayout({
           </div>
         </SmoothScroll>
         </NavigationProvider>
+        <Analytics />
       </body>
     </html>
   );
