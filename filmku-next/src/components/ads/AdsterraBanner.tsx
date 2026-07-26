@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { checkIsAdminAction } from '@/actions/check-admin';
 
 interface AdsterraBannerProps {
   className?: string;
@@ -8,8 +9,13 @@ interface AdsterraBannerProps {
 
 export default function AdsterraBanner({ className = '' }: AdsterraBannerProps) {
   const [isDesktop, setIsDesktop] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    checkIsAdminAction().then((adminStatus) => {
+      setIsAdmin(adminStatus);
+    });
+
     const checkWidth = () => {
       setIsDesktop(window.innerWidth >= 768);
     };
@@ -17,6 +23,8 @@ export default function AdsterraBanner({ className = '' }: AdsterraBannerProps) 
     window.addEventListener('resize', checkWidth);
     return () => window.removeEventListener('resize', checkWidth);
   }, []);
+
+  if (isAdmin) return null; // Tidak menampilkan banner iklan untuk admin (didosyukur123@gmail.com)
 
   const bannerKey = isDesktop
     ? '2863e6835dd7edd3cc58807ea1d450f8' // 728x90

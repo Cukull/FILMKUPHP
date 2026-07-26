@@ -1,22 +1,24 @@
 'use client';
 
 import { useEffect } from 'react';
+import { checkIsAdminAction } from '@/actions/check-admin';
 
 export default function AdsterraSocialBar() {
   useEffect(() => {
-    // Hindari duplikasi script jika navigasi client-side terjadi
-    const scriptId = 'adsterra-social-bar-script';
-    if (document.getElementById(scriptId)) return;
+    async function initAds() {
+      const isAdmin = await checkIsAdminAction();
+      if (isAdmin) return; // Tidak menampilkan iklan untuk admin (didosyukur123@gmail.com)
 
-    const script = document.createElement('script');
-    script.id = scriptId;
-    script.src = 'https://pl30544130.effectivecpmnetwork.com/c3/96/ec/c396ec71cb1b4d7fb2c60fa98a186229.js';
-    script.async = true;
-    document.body.appendChild(script);
+      const scriptId = 'adsterra-social-bar-script';
+      if (document.getElementById(scriptId)) return;
 
-    return () => {
-      // Tidak menghapus script pada cleanup agar social bar tetap aktif antar halaman
-    };
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.src = 'https://pl30544130.effectivecpmnetwork.com/c3/96/ec/c396ec71cb1b4d7fb2c60fa98a186229.js';
+      script.async = true;
+      document.body.appendChild(script);
+    }
+    initAds();
   }, []);
 
   return null;
