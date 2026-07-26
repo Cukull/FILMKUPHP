@@ -202,3 +202,9 @@ main.sphere-main {
 .edge-fade--bottom {
   bottom: 0;
 }
+
+@media (max-width: 600px) {
+  .sphere-root {
+    --radius: 170px !important;
+  }
+}

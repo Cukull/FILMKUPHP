@@ -64,7 +64,7 @@ export default function HeaderRight({ session, logoutAction }: { session: any, l
   }, []);
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
+    <div className="header-right-container" style={{ display: "flex", alignItems: "center", gap: "1.25rem" }}>
       
       {/* Search Bar — disembunyikan di halaman /auth */}
       {!isAuthPage && (
@@ -379,7 +379,13 @@ export default function HeaderRight({ session, logoutAction }: { session: any, l
               height: '48px',
               boxShadow: '0 0 20px rgba(229, 9, 20, 0.3)',
             }}>
-              <span style={{ fontSize: '1.1rem', marginRight: '0.6rem' }}>🔍</span>
+              <svg 
+                width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+                style={{ marginRight: '0.6rem', flexShrink: 0 }}
+              >
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
               <input
                 type="text"
                 autoFocus
@@ -495,9 +501,57 @@ export default function HeaderRight({ session, logoutAction }: { session: any, l
                 Tidak ada film yang cocok dengan &quot;{searchQuery}&quot;.
               </div>
             ) : (
-              <div style={{ textAlign: 'center', padding: '4rem 1rem', color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem' }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>✨</div>
-                Ketik minimal 2 karakter untuk melihat hasil pencarian realtime
+              <div style={{ padding: '1rem 0.5rem' }}>
+                <div style={{
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  color: 'rgba(255,255,255,0.55)',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  marginBottom: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                    <polyline points="17 6 23 6 23 12"></polyline>
+                  </svg>
+                  Pencarian Populer / Sering Dicari
+                </div>
+                <div style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '0.6rem'
+                }}>
+                  {['Spider-Man', 'Black Box', 'Supergirl', 'Backrooms', 'Horror', 'Action', 'Thriller', 'Animation', 'Robin Hood', 'Ghost'].map((term) => (
+                    <button
+                      key={term}
+                      type="button"
+                      onClick={() => setSearchQuery(term)}
+                      style={{
+                        padding: '0.55rem 1rem',
+                        background: 'rgba(255,255,255,0.08)',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                        borderRadius: '20px',
+                        color: 'var(--text-primary)',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                      </svg>
+                      {term}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>

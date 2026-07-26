@@ -90,7 +90,7 @@ export default async function RootLayout({
             </nav>
 
             {/* ══════════════════ MAIN CONTENT ══════════════════ */}
-            <main style={{ paddingTop: "72px", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+            <main className="main-content" style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
               <PageTransition>
                 {children}
               </PageTransition>

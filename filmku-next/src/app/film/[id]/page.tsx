@@ -5,6 +5,8 @@ import WishlistButton from "./WishlistButton";
 import ShowtimeSelector from "./ShowtimeSelector";
 import HeroTrailer from "./HeroTrailer";
 import RatingBadges from "@/components/RatingBadges";
+import WatchMovieButton from "@/components/WatchMovieButton";
+import AdsterraBanner from "@/components/ads/AdsterraBanner";
 
 // ───────────────────────────────────────────────────────────────────
 // DUMMY SHOWTIME GENERATOR — Opsi B (on-the-fly, idempotent)
@@ -162,9 +164,9 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
   return (
     <div className="page-transition">
       {/* ── HERO BACKDROP ── */}
-      <section className="hero-backdrop" style={{ minHeight: "85vh", position: "relative", overflow: "hidden", marginTop: "-72px" }}>
+      <section className="hero-backdrop" style={{ minHeight: "85vh", position: "relative", overflow: "hidden", marginTop: 0 }}>
         {videoId ? (
-          <HeroTrailer videoId={videoId} title={movie.title} />
+          <HeroTrailer videoId={videoId} title={movie.title} posterUrl={movie.posterUrl} backdropUrl={backdropUrl} />
         ) : (
           <img className="hero-backdrop-img" src={backdropUrl} alt={movie.title} style={{ zIndex: 0 }} />
         )}
@@ -173,11 +175,7 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
         <div className="hero-content" style={{ paddingBottom: "3rem", zIndex: 2, position: "relative" }}>
           {/* CTA Buttons row */}
           <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center", marginBottom: "1.25rem" }}>
-            <a href={`/test-streaming?title=${encodeURIComponent(movie.title)}&id=${movie.id}`} style={{ textDecoration: "none" }}>
-              <button className="btn-primary" style={{ fontSize: "0.9rem", padding: "0.65rem 1.5rem", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
-                ▶ Tonton Film
-              </button>
-            </a>
+            <WatchMovieButton title={movie.title} movieId={movie.id} />
             <WishlistButton movieId={movie.id} />
             <button aria-label="Bagikan" style={{ width: "38px", height: "38px", borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "white", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.9rem" }}>🔗</button>
           </div>
@@ -351,6 +349,10 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
 
         {/* ── RIGHT COLUMN: Date + Time Picker ── */}
         <ShowtimeSelector movieTitle={movie.title} movieId={movie.id} showtimes={freshShowtimes} />
+      </div>
+
+      <div style={{ padding: '0 1.5rem 3rem' }}>
+        <AdsterraBanner />
       </div>
     </div>
   );

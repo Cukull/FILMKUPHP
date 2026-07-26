@@ -88,12 +88,14 @@ export default async function Home() {
       synopsis: m.synopsis,
       rating: m.rating,
       genre: m.genre,
+      posterUrl: m.posterUrl,
+      backdropUrl: m.backdropUrl,
       trailerVideoId: extractYouTubeId(m.trailerUrl),
     }))
     .filter(m => m.trailerVideoId !== '');
 
   return (
-    <div>
+    <div className="page-transition" style={{ width: '100%', maxWidth: '100%', overflowX: 'hidden', position: 'relative', boxSizing: 'border-box' }}>
       {/* ── HERO BANNER (Carousel) ── */}
       <HomeHero films={heroMovies} />
 
@@ -140,7 +142,7 @@ export default async function Home() {
                   ))}
                 </MovieLaneCarousel>
               </div>
-              {idx === 1 && <AdsterraBanner />}
+              {(idx === 0 || idx === 2) && <AdsterraBanner />}
             </React.Fragment>
           ))
         )}
@@ -160,6 +162,8 @@ export default async function Home() {
           grayscale={false}
         />
       </div>
+
+      <AdsterraBanner />
 
       {/* ── FEATURE SECTION ── */}
       <section className="feature-section">
@@ -197,8 +201,15 @@ export default async function Home() {
         </div>
       </section>
 
+      <AdsterraBanner />
+
       {/* ── FAQ ── */}
       <FAQSection />
+
+      {/* ── BOTTOM BANNER AD ── */}
+      <div style={{ paddingBottom: '3rem' }}>
+        <AdsterraBanner />
+      </div>
     </div>
   );
 }

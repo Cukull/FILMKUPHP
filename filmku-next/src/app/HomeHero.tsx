@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import ElasticSlider from '@/components/ui/ElasticSlider';
+import WatchMovieButton from '@/components/WatchMovieButton';
 
 type HeroFilm = {
   id: string;
@@ -10,6 +11,8 @@ type HeroFilm = {
   synopsis: string | null;
   rating: number | null;
   genre: string | null;
+  posterUrl?: string | null;
+  backdropUrl?: string | null;
   trailerVideoId: string;
 };
 
@@ -28,6 +31,16 @@ export default function HomeHero({ films }: Props) {
   const [fading, setFading]       = useState(false); // crossfade between slides
   const [showPrev, setShowPrev]   = useState(false); // left hover-zone active
   const [showNext, setShowNext]   = useState(false); // right hover-zone active
+  const [isMobile, setIsMobile]   = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const muteTimer    = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoTimer    = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -153,8 +166,13 @@ export default function HomeHero({ films }: Props) {
       style={{
         position: 'relative',
         overflow: 'hidden',
-        marginTop: '-72px',        /* pull up behind transparent navbar */
-        minHeight: '100vh',        /* fill full viewport including navbar height */
+        clipPath: 'inset(0 0 0 0)',
+        contain: 'paint',
+        marginTop: 0,
+        minHeight: '100vh',
+        width: '100%',
+        maxWidth: '100%',
+        boxSizing: 'border-box',
       }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
@@ -164,35 +182,60 @@ export default function HomeHero({ films }: Props) {
         muteTimer.current = setTimeout(() => setShowMute(false), 600);
       }}
     >
-      {/* ── YouTube iframe background ── */}
-      <div style={{
-        position: 'absolute',
-        width: '100vw', height: '56.25vw',
-        minHeight: '100vh', minWidth: '177.77vh',
-        transform: 'translate(-50%, -50%)',
-        top: '50%', left: '50%',
-        zIndex: 0, pointerEvents: 'none',
-        opacity: fading ? 0 : 1,
-        transition: 'opacity 0.28s ease',
-      }}>
-        <iframe
-          ref={iframeRef}
-          key={`${film.id}-${index}`}
-          src={embedUrl}
-          style={{ width: '100%', height: '100%', border: 'none', transform: 'scale(1.2)' }}
-          allow="autoplay; encrypted-media"
-          title={film.title}
-          // Saat iframe baru load (slide berganti), sync state mute ke iframe
-          onLoad={() => {
-            // Iframe selalu mulai muted=1; kalau user sudah unmute sebelumnya,
-            // kirim perintah unMute setelah iframe siap.
-            if (!isMuted) {
-              // Beri jeda singkat agar YouTube player API benar-benar ready
-              setTimeout(() => postYT('unMute'), 800);
-            }
-          }}
-        />
-      </div>
+      {/* ── Background: Poster/Backdrop Image on Mobile, YouTube iframe on Desktop ── */}
+      {isMobile ? (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          zIndex: 0,
+          pointerEvents: 'none',
+          opacity: fading ? 0 : 1,
+          transition: 'opacity 0.28s ease',
+        }}>
+          <img
+            key={`${film.id}-${index}-img`}
+            src={film.backdropUrl || film.posterUrl || '/placeholder.jpg'}
+            alt={film.title}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center top',
+            }}
+          />
+        </div>
+      ) : (
+        <div style={{
+          position: 'absolute',
+          width: '100%', height: '56.25vw',
+          minHeight: '100vh', minWidth: '100%',
+          transform: 'translate(-50%, -50%)',
+          top: '50%', left: '50%',
+          zIndex: 0, pointerEvents: 'none',
+          opacity: fading ? 0 : 1,
+          transition: 'opacity 0.28s ease',
+        }}>
+          <iframe
+            ref={iframeRef}
+            key={`${film.id}-${index}`}
+            src={embedUrl}
+            style={{ width: '100%', height: '100%', border: 'none', transform: 'scale(1.2)' }}
+            allow="autoplay; encrypted-media"
+            title={film.title}
+            // Saat iframe baru load (slide berganti), sync state mute ke iframe
+            onLoad={() => {
+              // Iframe selalu mulai muted=1; kalau user sudah unmute sebelumnya,
+              // kirim perintah unMute setelah iframe siap.
+              if (!isMuted) {
+                // Beri jeda singkat agar YouTube player API benar-benar ready
+                setTimeout(() => postYT('unMute'), 800);
+              }
+            }}
+          />
+        </div>
+      )}
 
       {/* ── Gradient overlay: gelap hanya di sekitar judul/deskripsi (kiri bawah) ── */}
       <div className="home-hero-overlay" style={{
@@ -327,7 +370,7 @@ export default function HomeHero({ films }: Props) {
                 position: 'absolute',
                 right: '1.5rem',
                 top: '50%',
-                transform: `translateY(-50%) translateX(${showNext ? '0px' : '18px'})`,
+                transform: `translateY(-50%) translateX(${showNext ? '0px' : '0px'})`,
                 zIndex: 11,
                 background: 'none',
                 border: 'none',
@@ -460,13 +503,7 @@ export default function HomeHero({ films }: Props) {
 
         {/* ── CTA Buttons ── */}
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <Link
-            href={`/test-streaming?title=${encodeURIComponent(film.title)}&id=${film.id}`}
-            className="btn-primary"
-            style={{ fontSize: '0.9rem', padding: '0.65rem 1.5rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
-          >
-            ▶ Tonton Film
-          </Link>
+          <WatchMovieButton title={film.title} movieId={film.id} />
           <Link
             href={`/film/${film.id}`}
             className="btn-outline"

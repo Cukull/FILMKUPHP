@@ -11,16 +11,31 @@ export async function GET(request: Request) {
   const tmdbKey = process.env.TMDB_API_KEY || 'b34956eaa87450c0f9dd7817a69dc555';
   const omdbKey = process.env.OMDB_API_KEY || '65bbf102';
 
-  // Strip year like "(2014)" or "2014" from title for cleaner OMDB search
+  // Extract year like "(1995)" or "1995"
+  let year: string | null = null;
+  const yearMatch = title.match(/\((\d{4})\)/) || title.match(/\s+(\d{4})$/);
+  if (yearMatch) {
+    year = yearMatch[1];
+  }
+  // Strip year like "(2014)" or "2014" from title for cleaner TMDB/OMDB search
   const cleanTitle = title.replace(/\s*\(\d{4}\)\s*$/, '').replace(/\s+\d{4}$/, '').trim();
 
   try {
     // ─── TMDB: poster + cast + crew ────────────────────────────
-    const tmdbSearchRes = await fetch(
-      `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(cleanTitle)}&api_key=${tmdbKey}&language=id-ID`
-    );
+    let tmdbUrl = `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(cleanTitle)}&api_key=${tmdbKey}&language=id-ID`;
+    if (year) {
+      tmdbUrl += `&year=${year}`;
+    }
+    const tmdbSearchRes = await fetch(tmdbUrl);
     const tmdbSearchData = await tmdbSearchRes.json();
-    const tmdbMovie = tmdbSearchData.results?.[0];
+    let tmdbMovie = tmdbSearchData.results?.[0];
+    if (!tmdbMovie && year) {
+      const fallbackRes = await fetch(
+        `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(cleanTitle)}&api_key=${tmdbKey}&language=id-ID`
+      );
+      const fallbackData = await fallbackRes.json();
+      tmdbMovie = fallbackData.results?.[0];
+    }
 
     let cast: any[] = [];
     let crew: any[] = [];

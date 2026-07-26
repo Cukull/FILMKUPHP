@@ -14,6 +14,8 @@ type PlayerState = 'idle' | 'playing' | 'paused' | 'ended';
 function StreamingContent() {
   const searchParams = useSearchParams();
   const queryTitle = searchParams.get('title') || 'The Backrooms'; // Default fallback
+  const queryId = searchParams.get('id') || '';
+  const movieKey = queryId ? `${queryTitle}_${queryId}` : queryTitle;
   
   const [streamUrl, setStreamUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -106,6 +108,12 @@ function StreamingContent() {
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
+  useEffect(() => {
+    if (queryTitle) {
+      handleTontonFilm();
+    }
+  }, [queryTitle]);
+
   const handleTontonFilm = async () => {
     setLoading(true);
     setErrorMsg('');
@@ -192,7 +200,7 @@ function StreamingContent() {
                   strokeLinejoin="round"
                 />
               </svg>
-              <span>{loading ? 'Memproses...' : 'Tonton Film'}</span>
+              <span>{loading ? 'Memuat Teater...' : 'Tonton Sekarang'}</span>
             </SpecularButton>
           </div>
         )}
@@ -208,6 +216,7 @@ function StreamingContent() {
             <CinemaFrame title={`PREMIUM THEATER: ${queryTitle}`}>
               <CurtainReveal 
                 buttonText="Tonton Sekarang"
+                movieKey={movieKey}
                 onOpen={() => {
                   setPlayerState('playing');
                 }}

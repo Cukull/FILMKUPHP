@@ -8,7 +8,7 @@ interface AdsterraBannerProps {
 }
 
 export default function AdsterraBanner({ className = '' }: AdsterraBannerProps) {
-  const [isDesktop, setIsDesktop] = useState(true);
+  const [isDesktop, setIsDesktop] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -28,10 +28,10 @@ export default function AdsterraBanner({ className = '' }: AdsterraBannerProps) 
 
   const bannerKey = isDesktop
     ? '2863e6835dd7edd3cc58807ea1d450f8' // 728x90
-    : '4aca16c852c4c6497c64f66836a59775'; // 468x60
+    : '4aca16c852c4c6497c64f66836a59775'; // 320x50 / mobile
 
-  const width = isDesktop ? 728 : 468;
-  const height = isDesktop ? 90 : 60;
+  const width = isDesktop ? 728 : 320;
+  const height = isDesktop ? 90 : 50;
 
   const srcDoc = `
     <!DOCTYPE html>
@@ -79,10 +79,11 @@ export default function AdsterraBanner({ className = '' }: AdsterraBannerProps) 
         border: '1px solid rgba(229, 9, 20, 0.25)',
         borderRadius: '12px',
         boxShadow: '0 8px 24px rgba(0, 0, 0, 0.6)',
-        maxWidth: `${width + 24}px`,
+        maxWidth: isDesktop ? `${width + 24}px` : '100%',
         width: '100%',
         overflow: 'hidden',
-        transition: 'all 0.3s ease'
+        transition: 'all 0.3s ease',
+        boxSizing: 'border-box'
       }}
     >
       <span
