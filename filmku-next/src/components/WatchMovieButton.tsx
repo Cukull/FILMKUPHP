@@ -7,7 +7,8 @@ import { checkIsAdminAction } from '@/actions/check-admin';
 // ══════════════════════════════════════════════════════════════════════════════════════
 // TEMPELKAN URL SMARTLINK (DIRECT LINK) ADSTERRA ANDA DI SINI:
 // ══════════════════════════════════════════════════════════════════════════════════════
-const SMARTLINK_URL = "https://www.effectivecpmnetwork.com/kne0qw3q7?key=9e4530e778fb6f17627bb9b3b53ef516";
+const SMARTLINK_URL = "https://dischargeconceiteffort.com/kne0qw3q7?key=9e4530e778fb6f17627bb9b3b53ef516";
+
 
 interface WatchMovieButtonProps {
   title: string;

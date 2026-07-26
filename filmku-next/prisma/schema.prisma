@@ -17,6 +17,7 @@ model User {
   avatarUrl String?
   orders    Order[]
   posts     ForumPost[]
+  comments  MovieComment[]
   createdAt DateTime    @default(now())
 }
 
@@ -37,6 +38,7 @@ model Movie {
   category    Category?   @relation(fields: [categoryId], references: [id])
   categoryId  String?
   showtimes   Showtime[]
+  comments    MovieComment[]
 
   // OMDB integration fields
   rottenTomatoes String?
@@ -139,3 +141,20 @@ model FnBItem {
   category    String   // e.g., "Snack", "Minuman", "Combo"
   isAvailable Boolean  @default(true)
 }
+
+model MovieComment {
+  id        String   @id @default(uuid())
+  movieId   String
+  movie     Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   String
+  rating    Int      @default(10)
+  likes     Int      @default(0)
+  parentId  String?
+  parent    MovieComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   MovieComment[] @relation("CommentReplies")
+  createdAt DateTime @default(now())
+}
+
+

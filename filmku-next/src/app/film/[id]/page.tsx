@@ -7,6 +7,8 @@ import HeroTrailer from "./HeroTrailer";
 import RatingBadges from "@/components/RatingBadges";
 import WatchMovieButton from "@/components/WatchMovieButton";
 import AdsterraBanner from "@/components/ads/AdsterraBanner";
+import MovieComments from "@/components/MovieComments";
+import { getAuthUser } from "@/lib/auth";
 
 // ───────────────────────────────────────────────────────────────────
 // DUMMY SHOWTIME GENERATOR — Opsi B (on-the-fly, idempotent)
@@ -108,6 +110,8 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
   });
 
   if (!movie) notFound();
+
+  const user = await getAuthUser();
 
   // Generate dummy jadwal jika film sedang tayang & belum ada jadwal (Opsi B)
   // Cleanup otomatis jadwal expired + fill H+0 s/d H+6 jika kosong
@@ -351,7 +355,24 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
         <ShowtimeSelector movieTitle={movie.title} movieId={movie.id} showtimes={freshShowtimes} />
       </div>
 
-      <div style={{ padding: '0 1.5rem 3rem' }}>
+      {/* ── MOVIE COMMENTS & REVIEWS SECTION ── */}
+      <div style={{ padding: '0 1.5rem', maxWidth: '1280px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+        <MovieComments
+          movieId={movie.id}
+          isLoggedIn={!!user}
+          currentUser={
+            user
+              ? {
+                  id: user.id,
+                  name: user.name || user.email.split('@')[0],
+                  email: user.email,
+                }
+              : null
+          }
+        />
+      </div>
+
+      <div style={{ padding: '2rem 1.5rem 3rem' }}>
         <AdsterraBanner />
       </div>
     </div>

@@ -54,3 +54,46 @@ export async function getSession() {
 export async function logout() {
   (await cookies()).set('session', '', { expires: new Date(0) });
 }
+
+export async function getAuthUser() {
+  const session = await getSession();
+  if (!session || !session.userId) return null;
+  return {
+    id: session.userId as string,
+    email: session.email as string,
+    name: session.name as string,
+    role: session.role,
+  };
+}
+
+export function isDummyEmail(email: string): boolean {
+  if (!email || !email.includes('@')) return true;
+  const lower = email.toLowerCase().trim();
+  const domain = lower.split('@')[1] || '';
+  const local = lower.split('@')[0] || '';
+
+  // Kata/Domain dummy yang pasti ditolak
+  const dummyDomains = [
+    'mailinator.com', 'tempmail.com', 'guerrillamail.com', '10minutemail.com',
+    'yopmail.com', 'trashmail.com', 'sharklasers.com', 'example.com', 'test.com',
+    'dummy.com', 'fake.com', 'mail.com', 'email.com'
+  ];
+  if (dummyDomains.includes(domain)) return true;
+
+  // Izinkan gmail.com, yahoo.com, outlook.com, hotmail.com, icloud.com, serta ac.id, sch.id, co.id
+  const validProviders = [
+    'gmail.com', 'yahoo.com', 'yahoo.co.id', 'outlook.com', 'hotmail.com', 
+    'icloud.com', 'live.com', 'googlemail.com'
+  ];
+  if (!validProviders.includes(domain) && !domain.endsWith('.id')) {
+    return true;
+  }
+
+  // Tolak local username asal-asalan
+  if (['test', 'testing', 'dummy', 'fake', 'admin123', 'user123', 'email123'].includes(local)) {
+    return true;
+  }
+
+  return false;
+}
+
