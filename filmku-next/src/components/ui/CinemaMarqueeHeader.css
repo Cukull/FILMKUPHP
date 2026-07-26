@@ -41,8 +41,8 @@
   font-weight: 800;
   letter-spacing: 0.35em;
   text-transform: uppercase;
-  color: #ff3355;
-  text-shadow: 0 0 10px rgba(255, 30, 60, 0.85);
+  color: #e50914;
+  text-shadow: 0 0 10px rgba(229, 9, 20, 0.85);
 }
 
 .cinema-marquee-title {
@@ -52,39 +52,39 @@
   letter-spacing: 0.04em;
   text-shadow: 
     0 2px 4px rgba(0, 0, 0, 0.9),
-    0 0 15px rgba(255, 30, 60, 0.5),
+    0 0 15px rgba(229, 9, 20, 0.6),
     0 0 35px rgba(229, 9, 20, 0.45);
   margin: 0;
   line-height: 1.25;
 }
 
-/* Lampu Marquee Bulb Dasar - Merah Neon */
+/* Lampu Marquee Bulb Dasar - Merah Pekat FILMKU */
 .cinema-marquee-bulb {
   position: absolute;
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #ff1133;
+  background: #e50914;
   z-index: 10;
   animation: marqueeChasingGlow 1.6s infinite ease-in-out;
 }
 
-/* Animasi Chasing Light / Berkedip Bergantian Merah Neon */
+/* Animasi Chasing Light - Merah Pekat FILMKU (tanpa merah muda/pink) */
 @keyframes marqueeChasingGlow {
   0%, 100% {
     opacity: 0.25;
     transform: scale(0.85);
-    box-shadow: 0 0 2px rgba(255, 20, 50, 0.2);
-    background: #680010;
+    box-shadow: 0 0 2px rgba(229, 9, 20, 0.3);
+    background: #5a0206;
   }
   50% {
     opacity: 1;
     transform: scale(1.25);
     box-shadow: 
-      0 0 8px #ff0033,
-      0 0 16px #ff2a4b,
-      0 0 26px rgba(255, 40, 70, 0.95);
-    background: #ff5577;
+      0 0 8px #e50914,
+      0 0 16px #b80710,
+      0 0 28px rgba(229, 9, 20, 0.95);
+    background: #ff1a26;
   }
 }
 
