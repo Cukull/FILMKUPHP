@@ -277,7 +277,7 @@ function StreamingContent() {
 
 export default function TestStreamingPage() {
   return (
-    <div style={{ padding: '2rem', maxWidth: '1080px', margin: '4rem auto', color: '#fff', fontFamily: 'sans-serif' }}>
+    <div style={{ padding: '1.5rem', maxWidth: '1400px', margin: '3rem auto', color: '#fff', fontFamily: 'sans-serif' }}>
       <Suspense fallback={<div style={{ color: '#fff' }}>Memuat halaman...</div>}>
         <StreamingContent />
       </Suspense>

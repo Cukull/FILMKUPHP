@@ -2,20 +2,17 @@
 
 import React from 'react';
 import './CinemaFrame.css';
-import CinemaSilhouettes from './CinemaSilhouettes';
 
 interface CinemaFrameProps {
   children: React.ReactNode;
   title?: string;
   className?: string;
-  showSilhouettes?: boolean;
 }
 
 export default function CinemaFrame({
   children,
   title = 'FILMKU PREMIUM THEATER',
   className = '',
-  showSilhouettes = true
 }: CinemaFrameProps) {
   return (
     <div className={`cinema-frame-container ${className}`}>
@@ -37,8 +34,6 @@ export default function CinemaFrame({
         {/* Konten Utama (Video Player) */}
         <div className="cinema-stage-content">
           {children}
-          {/* Siluet Penonton & Kursi Bioskop di Tepi Bawah */}
-          {showSilhouettes && <CinemaSilhouettes />}
         </div>
 
         {/* Kolom Pilar Dekoratif Kanan */}
