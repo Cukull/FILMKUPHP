@@ -145,53 +145,11 @@ export default function MovieComments({ movieId, isLoggedIn, currentUser }: Movi
     return `${Math.floor(diffSec / 86400)}d ago`;
   };
 
-  // Default fallback sample comments if empty so the movie review section is never lonely
-  const displayComments: MovieCommentItem[] = comments.length > 0 ? comments : [
-    {
-      id: 'default-1',
-      content: 'Ciri khas film sinema premium yang selalu punya scene ikonis bikin emosi penonton terbawa suasana!',
-      rating: 10,
-      likes: 19,
-      createdAt: new Date(Date.now() - 86400000 * 2),
-      user: {
-        id: 'usr-1',
-        name: 'Mighty Bonyon',
-        email: 'bonyon.official@gmail.com',
-      },
-      replies: [
-        {
-          id: 'rep-1',
-          content: 'Setuju banget bro! Kualitas audio & visualnya juara teater abis!',
-          rating: 10,
-          likes: 5,
-          createdAt: new Date(Date.now() - 86400000),
-          user: {
-            id: 'usr-3',
-            name: 'FILMKU Theater VIP',
-            email: 'admin.vip@gmail.com',
-          }
-        }
-      ]
-    },
-    {
-      id: 'default-2',
-      content: 'Pas scene klimaks soundtrack-nya dapet banget, kualitas gambarnya bening HD 1080p!',
-      rating: 9,
-      likes: 11,
-      createdAt: new Date(Date.now() - 86400000),
-      user: {
-        id: 'usr-2',
-        name: 'Sternritter',
-        email: 'asmodeuss@gmail.com',
-      },
-      replies: []
-    }
-  ];
+  const totalCount = comments.reduce((sum, c) => sum + 1 + (c.replies?.length || 0), 0);
+  const avgRating = comments.length > 0
+    ? (comments.reduce((acc, c) => acc + c.rating, 0) / comments.length).toFixed(1)
+    : '0.0';
 
-  const totalCount = displayComments.reduce((sum, c) => sum + 1 + (c.replies?.length || 0), 0);
-  const avgRating = (
-    displayComments.reduce((acc, c) => acc + c.rating, 0) / displayComments.length
-  ).toFixed(1);
 
   return (
     <div
@@ -222,7 +180,7 @@ export default function MovieComments({ movieId, isLoggedIn, currentUser }: Movi
           <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
             Comments{' '}
             <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'rgba(255,255,255,0.5)' }}>
-              {displayComments.length} • {totalCount} with replies
+              {comments.length} • {totalCount} with replies
             </span>
           </h3>
 
@@ -242,8 +200,9 @@ export default function MovieComments({ movieId, isLoggedIn, currentUser }: Movi
             }}
           >
             <span>★ {avgRating}/10</span>
-            <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)' }}>({displayComments.length})</span>
+            <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)' }}>({comments.length})</span>
           </div>
+
         </div>
 
         {/* Filters & Sorting */}
@@ -518,19 +477,19 @@ export default function MovieComments({ movieId, isLoggedIn, currentUser }: Movi
             filter: 'drop-shadow(0 2px 6px rgba(34, 197, 94, 0.8))'
           }}>💰</div>
 
-          {/* Bold 3D Stacked Purple Typography persis gambar */}
+          {/* Bold 3D Stacked Purple Typography */}
           <div style={{
             fontFamily: "'Impact', 'Arial Black', sans-serif",
-            fontSize: '2.5rem',
+            fontSize: '2.15rem',
             fontWeight: 900,
-            lineHeight: 1.05,
+            lineHeight: 1.08,
             letterSpacing: '1.5px',
             color: '#c084fc',
             textTransform: 'uppercase',
             textShadow: '0 3px 0 #6b21a8, 0 8px 20px rgba(0,0,0,0.9)',
           }}>
-            BISA<br />
-            DAPET<br />
+            NONTON FILM<br />
+            BISA DAPET<br />
             UANG
           </div>
 
@@ -554,10 +513,31 @@ export default function MovieComments({ movieId, isLoggedIn, currentUser }: Movi
 
       {/* ── DAFTAR KOMENTAR & BALASAN (NESTED REPLIES) ── */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem' }}>
-        {displayComments.map((item) => {
-          const initial = (item.user?.name || item.user?.email || 'U')[0].toUpperCase();
-          const username = (item.user?.email || 'user').split('@')[0];
-          const isReplying = activeReplyId === item.id;
+        {comments.length === 0 ? (
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '3rem 1.5rem',
+              color: 'rgba(255,255,255,0.4)',
+              background: 'rgba(255,255,255,0.03)',
+              borderRadius: '12px',
+              border: '1px dashed rgba(255,255,255,0.15)',
+            }}
+          >
+            <div style={{ fontSize: '2.4rem', marginBottom: '0.6rem' }}>🎬</div>
+            <p style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'rgba(255,255,255,0.8)' }}>
+              Belum ada komentar untuk film ini.
+            </p>
+            <p style={{ margin: '6px 0 0', fontSize: '0.84rem', color: 'rgba(255,255,255,0.45)' }}>
+              Jadilah yang pertama memberikan ulasan & rating bintang untuk film ini!
+            </p>
+          </div>
+        ) : (
+          comments.map((item) => {
+            const initial = (item.user?.name || item.user?.email || 'U')[0].toUpperCase();
+            const username = (item.user?.email || 'user').split('@')[0];
+            const isReplying = activeReplyId === item.id;
+
 
           return (
             <div
@@ -800,8 +780,9 @@ export default function MovieComments({ movieId, isLoggedIn, currentUser }: Movi
               </div>
             </div>
           );
-        })}
+        }))}
       </div>
     </div>
   );
 }
+
