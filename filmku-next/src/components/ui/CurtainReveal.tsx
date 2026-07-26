@@ -36,8 +36,7 @@ export default function CurtainReveal({
         width: '100%', 
         overflow: 'hidden', 
         borderRadius: '12px',
-        background: '#1a0000',
-        minHeight: '360px'
+        background: '#000'
       }}
     >
       {/* ── Lapisan Konten Video Player di Bawah Tirai ── */}
@@ -45,28 +44,24 @@ export default function CurtainReveal({
         style={{ 
           position: 'relative', 
           zIndex: 1, 
-          width: '100%',
-          opacity: isOpen ? 1 : 0,
-          pointerEvents: isOpen ? 'auto' : 'none',
-          transition: 'opacity 0.6s ease-in'
+          width: '100%'
         }}
       >
         {children}
       </div>
 
-      {/* ── Lapisan Tirai & Tombol Buka (Forced GPU Layering + High Z-Index) ── */}
+      {/* ── Lapisan Tirai & Tombol Buka (top/right/bottom/left = 0 agar full cover) ── */}
       {!isUnmounted && (
         <div 
           style={{
             position: 'absolute',
             top: 0,
             left: 0,
-            width: '100%',
-            height: '100%',
-            zIndex: 99999,
+            right: 0,
+            bottom: 0,
+            zIndex: 50,
             display: 'flex',
-            pointerEvents: isOpen ? 'none' : 'auto',
-            transform: 'translateZ(10px)'
+            pointerEvents: isOpen ? 'none' : 'auto'
           }}
         >
           {/* Panel Kiri (50% lebar) */}
@@ -79,13 +74,13 @@ export default function CurtainReveal({
             }}
             style={{
               width: '50%',
-              height: '100%',
+              flex: '1 1 50%',
+              alignSelf: 'stretch',
               position: 'relative',
               background: 'linear-gradient(90deg, #380202 0%, #680404 55%, #8b0000 100%)',
               boxShadow: 'inset -20px 0 35px -5px rgba(0,0,0,0.88), 10px 0 25px rgba(0,0,0,0.75)',
               overflow: 'hidden',
-              zIndex: 2,
-              transform: 'translateZ(10px)'
+              zIndex: 2
             }}
           >
             {/* Tekstur lipatan tirai vertikal */}
@@ -110,13 +105,13 @@ export default function CurtainReveal({
             onAnimationComplete={handleAnimationComplete}
             style={{
               width: '50%',
-              height: '100%',
+              flex: '1 1 50%',
+              alignSelf: 'stretch',
               position: 'relative',
               background: 'linear-gradient(90deg, #8b0000 0%, #680404 45%, #380202 100%)',
               boxShadow: 'inset 20px 0 35px -5px rgba(0,0,0,0.88), -10px 0 25px rgba(0,0,0,0.75)',
               overflow: 'hidden',
-              zIndex: 2,
-              transform: 'translateZ(10px)'
+              zIndex: 2
             }}
           >
             {/* Tekstur lipatan tirai vertikal */}
