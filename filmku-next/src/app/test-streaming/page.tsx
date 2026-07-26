@@ -3,6 +3,7 @@
 import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { getMovieStreamUrl } from './action';
+import CurtainReveal from '@/components/ui/CurtainReveal';
 
 function StreamingContent() {
   const searchParams = useSearchParams();
@@ -70,16 +71,18 @@ function StreamingContent() {
       )}
 
       {streamUrl && (
-        <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000', borderRadius: '12px', overflow: 'hidden', border: '1px solid #333' }}>
-          <iframe 
-            src={streamUrl} 
-            width="100%" 
-            height="100%" 
-            frameBorder="0" 
-            allowFullScreen 
-            style={{ position: 'absolute', top: 0, left: 0 }}
-          />
-        </div>
+        <CurtainReveal buttonText="Tonton Sekarang">
+          <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000', borderRadius: '12px', overflow: 'hidden', border: '1px solid #333' }}>
+            <iframe 
+              src={streamUrl} 
+              width="100%" 
+              height="100%" 
+              frameBorder="0" 
+              allowFullScreen 
+              style={{ position: 'absolute', top: 0, left: 0 }}
+            />
+          </div>
+        </CurtainReveal>
       )}
     </>
   );
