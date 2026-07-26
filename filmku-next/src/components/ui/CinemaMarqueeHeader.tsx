@@ -14,10 +14,10 @@ export default function CinemaMarqueeHeader({
   subtitle = 'NOW SHOWING IN FILMKU THEATER',
   className = ''
 }: CinemaMarqueeHeaderProps) {
-  // Dikurangi jumlah lampu (total 30 lampu) agar sangat ringan untuk CPU/GPU device (tetap simetris dan aestetik)
-  const topBulbsCount = 12;
-  const bottomBulbsCount = 12;
-  const sideBulbsCount = 3;
+  // Dikurangi lagi jumlah lampu (total 20 lampu) agar super ringan dan elegan tanpa membuat kipas laptop berputar kencang
+  const topBulbsCount = 8;
+  const bottomBulbsCount = 8;
+  const sideBulbsCount = 2;
 
   return (
     <div className={`cinema-marquee-container ${className}`}>

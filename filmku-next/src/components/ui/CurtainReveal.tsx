@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import SpecularButton from './SpecularButton';
 
 interface CurtainRevealProps {
   children: React.ReactNode;
@@ -149,40 +150,64 @@ export default function CurtainReveal({
                 zIndex: 10,
               }}
             >
-              <button
-                type="button"
+              <SpecularButton
+                size="lg"
+                radius={50}
+                tint="#e50914"
+                tintOpacity={0.88}
+                blur={8}
+                textColor="#ffffff"
+                lineColor="#ff8088"
+                baseColor="#8b0000"
+                intensity={1.3}
+                shineSize={14}
+                shineFade={40}
+                thickness={1.5}
+                speed={0.35}
+                followMouse={true}
+                proximity={250}
+                autoAnimate={true}
                 onClick={handleOpenCurtains}
                 style={{
-                  padding: '1rem 2.8rem',
-                  fontSize: '1.1rem',
-                  fontWeight: 800,
-                  color: '#ffffff',
-                  background: 'linear-gradient(135deg, #e50914 0%, #b80710 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '50px',
-                  cursor: 'pointer',
-                  boxShadow:
-                    '0 12px 30px rgba(229, 9, 20, 0.65), 0 4px 15px rgba(0, 0, 0, 0.8)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.6rem',
-                  letterSpacing: '0.04em',
-                  transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.transform = 'scale(1.05)';
-                  e.currentTarget.style.boxShadow =
-                    '0 16px 35px rgba(229, 9, 20, 0.8), 0 6px 20px rgba(0, 0, 0, 0.9)';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.boxShadow =
-                    '0 12px 30px rgba(229, 9, 20, 0.65), 0 4px 15px rgba(0, 0, 0, 0.8)';
+                  boxShadow: '0 12px 30px rgba(229, 9, 20, 0.65), 0 4px 15px rgba(0, 0, 0, 0.8)'
                 }}
               >
-                <span>🎬</span>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  style={{ flexShrink: 0 }}
+                >
+                  <path
+                    d="M4 6H20M4 12H20M4 18H20"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M7 3.5L10 6.5M14 3.5L17 6.5"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <rect
+                    x="3"
+                    y="6"
+                    width="18"
+                    height="14"
+                    rx="2"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  />
+                  <path
+                    d="M10 11.5L15 14L10 16.5V11.5Z"
+                    fill="currentColor"
+                  />
+                </svg>
                 <span>{buttonText}</span>
-              </button>
+              </SpecularButton>
             </motion.div>
           )}
         </AnimatePresence>

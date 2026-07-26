@@ -6,6 +6,7 @@ import { getMovieStreamUrl } from './action';
 import CurtainReveal from '@/components/ui/CurtainReveal';
 import CinemaFrame from '@/components/ui/CinemaFrame';
 import CinemaMarqueeHeader from '@/components/ui/CinemaMarqueeHeader';
+import SpecularButton from '@/components/ui/SpecularButton';
 
 type PlayerState = 'idle' | 'playing' | 'paused' | 'ended';
 
@@ -153,23 +154,45 @@ function StreamingContent() {
         
         {!streamUrl && (
           <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
-            <button 
-              onClick={handleTontonFilm} 
+            <SpecularButton
+              size="md"
+              radius={25}
+              tint="#e50914"
+              tintOpacity={0.88}
+              blur={6}
+              textColor="#ffffff"
+              lineColor="#ff8088"
+              baseColor="#6d0000"
+              intensity={1.2}
+              shineSize={14}
+              shineFade={40}
+              thickness={1.5}
+              speed={0.35}
+              followMouse={true}
+              proximity={250}
+              autoAnimate={true}
               disabled={loading}
-              style={{
-                padding: '0.8rem 2rem',
-                backgroundColor: '#e50914',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.7 : 1
-              }}
+              onClick={handleTontonFilm}
             >
-              {loading ? 'Memproses...' : '▶ Tonton Film'}
-            </button>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                style={{ flexShrink: 0 }}
+              >
+                <path
+                  d="M5 3L19 12L5 21V3Z"
+                  fill="currentColor"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <span>{loading ? 'Memproses...' : 'Tonton Film'}</span>
+            </SpecularButton>
           </div>
         )}
 
