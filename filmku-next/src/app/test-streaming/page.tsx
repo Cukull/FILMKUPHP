@@ -7,6 +7,7 @@ import CurtainReveal from '@/components/ui/CurtainReveal';
 import CinemaFrame from '@/components/ui/CinemaFrame';
 import CinemaMarqueeHeader from '@/components/ui/CinemaMarqueeHeader';
 import SpecularButton from '@/components/ui/SpecularButton';
+import AdsterraBanner from '@/components/ads/AdsterraBanner';
 
 type PlayerState = 'idle' | 'playing' | 'paused' | 'ended';
 
@@ -293,6 +294,7 @@ function StreamingContent() {
                 </button>
               </div>
             </div>
+            <AdsterraBanner />
           </>
         )}
       </div>

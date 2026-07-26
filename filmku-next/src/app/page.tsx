@@ -7,6 +7,7 @@ import MovieLaneCarousel from "@/components/MovieLaneCarousel";
 import DomeGallery from "@/components/ui/DomeGallery";
 import ScrollFloat from "@/components/ui/ScrollFloat";
 import * as LucideIcons from 'lucide-react';
+import AdsterraBanner from "@/components/ads/AdsterraBanner";
 
 export const revalidate = 30;
 
@@ -140,6 +141,8 @@ export default async function Home() {
           ))
         )}
       </div>
+
+      <AdsterraBanner />
 
       {/* ── DOME GALLERY ── */}
       <div style={{ width: '100%', height: '100vh', position: 'relative', overflow: 'hidden', backgroundColor: '#000' }}>
