@@ -1,0 +1,149 @@
+/* CinemaMarqueeHeader.css - Cinema Lampu Marquee untuk FILMKU */
+
+.cinema-marquee-container {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto 1.8rem auto;
+  padding: 1.4rem 2rem;
+  background: linear-gradient(180deg, #1f0505 0%, #0d0101 50%, #1f0505 100%);
+  border: 2px solid rgba(255, 170, 0, 0.35);
+  border-radius: 16px;
+  box-shadow: 
+    0 15px 35px rgba(0, 0, 0, 0.8),
+    0 0 30px rgba(229, 9, 20, 0.25),
+    inset 0 0 25px rgba(0, 0, 0, 0.9);
+  text-align: center;
+  overflow: hidden;
+}
+
+/* Garis aksen emas di dalam papan marquee */
+.cinema-marquee-inner-border {
+  position: absolute;
+  inset: 12px;
+  border: 1px dashed rgba(255, 170, 0, 0.25);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+/* Konten Teks di Tengah Papan */
+.cinema-marquee-content {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.cinema-marquee-subtitle {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: #ffaa00;
+  text-shadow: 0 0 8px rgba(255, 170, 0, 0.7);
+}
+
+.cinema-marquee-title {
+  font-size: clamp(1.4rem, 4vw, 2.2rem);
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.04em;
+  text-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.9),
+    0 0 15px rgba(255, 180, 0, 0.4),
+    0 0 30px rgba(229, 9, 20, 0.3);
+  margin: 0;
+  line-height: 1.25;
+}
+
+/* Lampu Marquee Bulb Dasar */
+.cinema-marquee-bulb {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ffaa00;
+  z-index: 10;
+  animation: marqueeChasingGlow 1.6s infinite ease-in-out;
+}
+
+/* Animasi Chasing Light / Berkedip Bergantian */
+@keyframes marqueeChasingGlow {
+  0%, 100% {
+    opacity: 0.25;
+    transform: scale(0.85);
+    box-shadow: 0 0 2px rgba(255, 170, 0, 0.2);
+    background: #7a5000;
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+    box-shadow: 
+      0 0 8px #ffaa00,
+      0 0 16px #ff7700,
+      0 0 24px rgba(255, 200, 0, 0.9);
+    background: #ffdf55;
+  }
+}
+
+/* Baris Lampu Atas */
+.cinema-marquee-top-bulbs {
+  position: absolute;
+  top: 5px;
+  left: 14px;
+  right: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+
+/* Baris Lampu Bawah */
+.cinema-marquee-bottom-bulbs {
+  position: absolute;
+  bottom: 5px;
+  left: 14px;
+  right: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+
+/* Kolom Lampu Kiri */
+.cinema-marquee-left-bulbs {
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: 5px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  pointer-events: none;
+}
+
+/* Kolom Lampu Kanan */
+.cinema-marquee-right-bulbs {
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  right: 5px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  pointer-events: none;
+}
+
+/* Responsif untuk mobile */
+@media (max-width: 640px) {
+  .cinema-marquee-container {
+    padding: 1.1rem 1.4rem;
+  }
+  .cinema-marquee-title {
+    font-size: 1.25rem;
+  }
+}

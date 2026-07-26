@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { getMovieStreamUrl } from './action';
 import CurtainReveal from '@/components/ui/CurtainReveal';
 import CinemaFrame from '@/components/ui/CinemaFrame';
+import CinemaMarqueeHeader from '@/components/ui/CinemaMarqueeHeader';
 
 function StreamingContent() {
   const searchParams = useSearchParams();
@@ -36,15 +37,13 @@ function StreamingContent() {
 
   return (
     <>
-      <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-        Nonton: {queryTitle}
-      </h1>
-      <p style={{ color: '#aaa', marginBottom: '2rem' }}>
+      <CinemaMarqueeHeader title={queryTitle} />
+      <p style={{ color: '#aaa', marginBottom: '2rem', textAlign: 'center' }}>
         Klik tombol di bawah untuk memuat video player.
       </p>
       
       {!streamUrl && (
-        <div style={{ marginBottom: '2rem' }}>
+        <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
           <button 
             onClick={handleTontonFilm} 
             disabled={loading}
