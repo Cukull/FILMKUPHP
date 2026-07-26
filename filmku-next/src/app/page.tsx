@@ -109,35 +109,38 @@ export default async function Home() {
             </p>
           </div>
         ) : (
-          sections.map(section => (
-            <div key={section.name} className="movie-lane">
-              <div className="movie-lane-header">
-                <h3 className="movie-lane-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ color: 'var(--primary)' }}><RenderLucideIcon name={section.icon} size={20} /></span> {section.name}
-                </h3>
-                <Link
-                  href="/genre"
-                  style={{ fontSize: '0.8rem', color: 'var(--accent)', textDecoration: 'none', fontWeight: 600, letterSpacing: '0.03em' }}
-                >
-                  Lihat Semua →
-                </Link>
-              </div>
+          sections.map((section, idx) => (
+            <React.Fragment key={section.name}>
+              <div className="movie-lane">
+                <div className="movie-lane-header">
+                  <h3 className="movie-lane-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ color: 'var(--primary)' }}><RenderLucideIcon name={section.icon} size={20} /></span> {section.name}
+                  </h3>
+                  <Link
+                    href="/genre"
+                    style={{ fontSize: '0.8rem', color: 'var(--accent)', textDecoration: 'none', fontWeight: 600, letterSpacing: '0.03em' }}
+                  >
+                    Lihat Semua →
+                  </Link>
+                </div>
 
-              <MovieLaneCarousel>
-                {section.movies.map(movie => (
-                  <MovieLaneCard
-                    key={movie.id}
-                    id={movie.id}
-                    title={movie.title}
-                    posterUrl={movie.posterUrl}
-                    rating={movie.rating}
-                    genre={movie.genre}
-                    synopsis={movie.synopsis}
-                    status={movie.status}
-                  />
-                ))}
-              </MovieLaneCarousel>
-            </div>
+                <MovieLaneCarousel>
+                  {section.movies.map(movie => (
+                    <MovieLaneCard
+                      key={movie.id}
+                      id={movie.id}
+                      title={movie.title}
+                      posterUrl={movie.posterUrl}
+                      rating={movie.rating}
+                      genre={movie.genre}
+                      synopsis={movie.synopsis}
+                      status={movie.status}
+                    />
+                  ))}
+                </MovieLaneCarousel>
+              </div>
+              {idx === 1 && <AdsterraBanner />}
+            </React.Fragment>
           ))
         )}
       </div>

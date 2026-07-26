@@ -1,6 +1,8 @@
+import React from "react";
 import { prisma } from "@/lib/prisma";
 import MovieLaneCard from "@/components/MovieLaneCard";
 import MovieLaneCarousel from "@/components/MovieLaneCarousel";
+import AdsterraBanner from "@/components/ads/AdsterraBanner";
 
 export const revalidate = 60;
 
@@ -80,44 +82,49 @@ export default async function GenrePage() {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
-          {genres.map(genre => (
-            <div key={genre.name} className="movie-lane">
-              {/* Genre Header */}
-              <div className="movie-lane-header" style={{ marginBottom: '1rem' }}>
-                <h3 className="movie-lane-title" style={{ fontSize: '1.4rem' }}>
-                  {genre.icon} {genre.name}
-                  <span style={{
-                    marginLeft: '0.75rem',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    background: 'rgba(229,9,20,0.15)',
-                    color: '#e50914',
-                    padding: '0.2rem 0.6rem',
-                    borderRadius: '20px',
-                    border: '1px solid rgba(229,9,20,0.3)',
-                    verticalAlign: 'middle',
-                  }}>
-                    {genre.movies.length} film
-                  </span>
-                </h3>
-              </div>
+          {genres.map((genre, idx) => (
+            <React.Fragment key={genre.name}>
+              <div className="movie-lane">
+                {/* Genre Header */}
+                <div className="movie-lane-header" style={{ marginBottom: '1rem' }}>
+                  <h3 className="movie-lane-title" style={{ fontSize: '1.4rem' }}>
+                    {genre.icon} {genre.name}
+                    <span style={{
+                      marginLeft: '0.75rem',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      background: 'rgba(229,9,20,0.15)',
+                      color: '#e50914',
+                      padding: '0.2rem 0.6rem',
+                      borderRadius: '20px',
+                      border: '1px solid rgba(229,9,20,0.3)',
+                      verticalAlign: 'middle',
+                    }}>
+                      {genre.movies.length} film
+                    </span>
+                  </h3>
+                </div>
 
-              <MovieLaneCarousel>
-                {genre.movies.map(movie => (
-                  <MovieLaneCard
-                    key={movie.id}
-                    id={movie.id}
-                    title={movie.title}
-                    posterUrl={movie.posterUrl}
-                    rating={movie.rating}
-                    genre={genre.name}
-                    synopsis={movie.synopsis}
-                    status={movie.status}
-                  />
-                ))}
-              </MovieLaneCarousel>
-            </div>
+                <MovieLaneCarousel>
+                  {genre.movies.map(movie => (
+                    <MovieLaneCard
+                      key={movie.id}
+                      id={movie.id}
+                      title={movie.title}
+                      posterUrl={movie.posterUrl}
+                      rating={movie.rating}
+                      genre={genre.name}
+                      synopsis={movie.synopsis}
+                      status={movie.status}
+                    />
+                  ))}
+                </MovieLaneCarousel>
+              </div>
+              {(idx === 1 || idx === 4) && <AdsterraBanner />}
+            </React.Fragment>
           ))}
+
+          <AdsterraBanner />
         </div>
       )}
     </div>
