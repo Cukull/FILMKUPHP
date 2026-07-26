@@ -14,6 +14,7 @@ type SearchResult = {
 
 export default function HeaderRight({ session, logoutAction }: { session: any, logoutAction: any }) {
   const [isSearchActive, setIsSearchActive] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -84,7 +85,9 @@ export default function HeaderRight({ session, logoutAction }: { session: any, l
               zIndex: 50
             }}
             onClick={() => {
-              if (!isSearchActive) {
+              if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+                setIsMobileSearchOpen(true);
+              } else if (!isSearchActive) {
                 setIsSearchActive(true);
                 setTimeout(() => {
                   searchContainerRef.current?.querySelector('input')?.focus();
@@ -94,6 +97,7 @@ export default function HeaderRight({ session, logoutAction }: { session: any, l
           >
             <input 
               type="text" 
+              className="desktop-search-input"
               placeholder="Cari judul film..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -337,6 +341,168 @@ export default function HeaderRight({ session, logoutAction }: { session: any, l
           )}
         </div>
       </div>
+
+      {/* ── MOBILE REALTIME SEARCH MODAL (with background blur) ── */}
+      {isMobileSearchOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(8, 8, 16, 0.82)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            zIndex: 99999,
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '1.25rem 1rem',
+            boxSizing: 'border-box',
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsMobileSearchOpen(false);
+            }
+          }}
+        >
+          {/* Top Bar with Input & Close Button */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+            <div style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              background: 'rgba(255, 255, 255, 0.12)',
+              border: '1px solid rgba(229, 9, 20, 0.7)',
+              borderRadius: '25px',
+              padding: '0 1rem',
+              height: '48px',
+              boxShadow: '0 0 20px rgba(229, 9, 20, 0.3)',
+            }}>
+              <span style={{ fontSize: '1.1rem', marginRight: '0.6rem' }}>🔍</span>
+              <input
+                type="text"
+                autoFocus
+                placeholder="Cari film secara realtime..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#fff',
+                  fontSize: '1rem',
+                  width: '100%',
+                  outline: 'none',
+                  fontFamily: 'var(--font-body)',
+                }}
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  style={{ background: 'transparent', border: 'none', color: '#aaa', fontSize: '1.1rem', cursor: 'pointer', padding: '0.2rem' }}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsMobileSearchOpen(false)}
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '50%',
+                width: '44px',
+                height: '44px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#fff',
+                fontSize: '1.1rem',
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+              aria-label="Tutup pencarian"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Realtime Search Results */}
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.75rem',
+            paddingRight: '0.25rem',
+          }}>
+            {isLoading ? (
+              <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'rgba(255,255,255,0.7)', fontSize: '1rem' }}>
+                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🎬</div>
+                Mencari film secara realtime...
+              </div>
+            ) : results.length > 0 ? (
+              results.map(movie => (
+                <Link
+                  key={movie.id}
+                  href={`/film/${movie.id}`}
+                  onClick={() => {
+                    setIsMobileSearchOpen(false);
+                    setSearchQuery('');
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    padding: '0.75rem',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    borderRadius: '1rem',
+                    textDecoration: 'none',
+                    transition: 'background 0.2s',
+                  }}
+                >
+                  {movie.posterUrl ? (
+                    <img
+                      src={movie.posterUrl}
+                      alt={movie.title}
+                      style={{ width: '48px', height: '68px', objectFit: 'cover', borderRadius: '0.5rem', flexShrink: 0 }}
+                    />
+                  ) : (
+                    <div style={{ width: '48px', height: '68px', background: 'rgba(255,255,255,0.1)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0 }}>
+                      🎬
+                    </div>
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.25rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {movie.title}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)' }}>
+                      {movie.rating && <span style={{ color: '#f5c518', fontWeight: 700 }}>⭐ {movie.rating}</span>}
+                      {movie.genre && <span>• {movie.genre}</span>}
+                    </div>
+                  </div>
+                  <div style={{ color: '#e50914', fontSize: '1.2rem', fontWeight: 800 }}>
+                    →
+                  </div>
+                </Link>
+              ))
+            ) : searchQuery.trim().length >= 2 ? (
+              <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'rgba(255,255,255,0.5)', fontSize: '0.95rem' }}>
+                Tidak ada film yang cocok dengan &quot;{searchQuery}&quot;.
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '4rem 1rem', color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem' }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>✨</div>
+                Ketik minimal 2 karakter untuk melihat hasil pencarian realtime
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

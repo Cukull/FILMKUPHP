@@ -1825,3 +1825,55 @@ a.cast-item--linked:hover .cast-avatar-overlay {
     padding: 2rem 1.25rem 4rem !important;
   }
 }
+
+/* ── Film Detail Page Responsive Layout (Sinopsis & Jadwal) ── */
+.film-detail-main-layout {
+  padding: 2rem 4rem 4rem;
+  display: flex;
+  gap: 2.5rem;
+  align-items: flex-start;
+}
+
+.film-detail-left-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+@media (max-width: 768px) {
+  .film-detail-main-layout {
+    padding: 1.5rem 1rem 3.5rem !important;
+    flex-direction: column !important;
+    gap: 2rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .film-detail-left-col {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  #jadwal {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex-shrink: 1 !important;
+  }
+
+  /* ── Mobile Search Button Only in Header ── */
+  .desktop-search-input {
+    display: none !important;
+  }
+
+  .search-container {
+    width: 40px !important;
+    height: 40px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    padding: 0 !important;
+    justify-content: center !important;
+  }
+}
+

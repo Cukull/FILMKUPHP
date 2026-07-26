@@ -284,10 +284,10 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
       )}
 
       {/* ── MAIN CONTENT: Info (left) + Schedule (right) ── */}
-      <div style={{ padding: "2rem 4rem 4rem", display: "flex", gap: "2.5rem", alignItems: "flex-start" }}>
+      <div className="film-detail-main-layout">
 
         {/* ── LEFT COLUMN: Sinopsis + Info Penayangan ── */}
-        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "2rem" }}>
+        <div className="film-detail-left-col">
 
           {/* Sinopsis */}
           <section>
