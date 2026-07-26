@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { getMovieStreamUrl } from './action';
 import CurtainReveal from '@/components/ui/CurtainReveal';
+import CinemaFrame from '@/components/ui/CinemaFrame';
 
 function StreamingContent() {
   const searchParams = useSearchParams();
@@ -71,18 +72,20 @@ function StreamingContent() {
       )}
 
       {streamUrl && (
-        <CurtainReveal buttonText="Tonton Sekarang">
-          <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000', borderRadius: '12px', overflow: 'hidden', border: '1px solid #333' }}>
-            <iframe 
-              src={streamUrl} 
-              width="100%" 
-              height="100%" 
-              frameBorder="0" 
-              allowFullScreen 
-              style={{ position: 'absolute', top: 0, left: 0 }}
-            />
-          </div>
-        </CurtainReveal>
+        <CinemaFrame title={`PREMIUM THEATER: ${queryTitle}`}>
+          <CurtainReveal buttonText="Tonton Sekarang">
+            <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000', borderRadius: '0', overflow: 'hidden' }}>
+              <iframe 
+                src={streamUrl} 
+                width="100%" 
+                height="100%" 
+                frameBorder="0" 
+                allowFullScreen 
+                style={{ position: 'absolute', top: 0, left: 0 }}
+              />
+            </div>
+          </CurtainReveal>
+        </CinemaFrame>
       )}
     </>
   );
@@ -90,7 +93,7 @@ function StreamingContent() {
 
 export default function TestStreamingPage() {
   return (
-    <div style={{ padding: '2rem', maxWidth: '900px', margin: '4rem auto', color: '#fff', fontFamily: 'sans-serif' }}>
+    <div style={{ padding: '2rem', maxWidth: '1080px', margin: '4rem auto', color: '#fff', fontFamily: 'sans-serif' }}>
       <Suspense fallback={<div style={{ color: '#fff' }}>Memuat halaman...</div>}>
         <StreamingContent />
       </Suspense>

@@ -1,0 +1,145 @@
+/* CinemaFrame.css - Luxury Proscenium Arch & Cinema Pillars for FILMKU */
+
+.cinema-frame-container {
+  position: relative;
+  width: 100%;
+  max-width: 1050px;
+  margin: 0 auto;
+  background: #080101;
+  border-radius: 16px;
+  box-shadow: 
+    0 25px 60px rgba(0, 0, 0, 0.85),
+    0 0 40px rgba(139, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  border: 1px solid rgba(139, 0, 0, 0.3);
+}
+
+/* Valance / Bagian atas panggung teater (Proscenium Arch) */
+.cinema-valance {
+  position: relative;
+  width: 100%;
+  height: 48px;
+  background: linear-gradient(180deg, #680404 0%, #4a0202 50%, #290000 90%, #150000 100%);
+  border-bottom: 2px solid rgba(229, 9, 20, 0.4);
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.9),
+    inset 0 2px 5px rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  overflow: hidden;
+}
+
+/* Tekstur lipatan pada valance */
+.cinema-valance::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.4) 0px,
+    rgba(0, 0, 0, 0.05) 15px,
+    rgba(255, 255, 255, 0.08) 30px,
+    rgba(0, 0, 0, 0.4) 45px
+  );
+  pointer-events: none;
+}
+
+/* Aksen lampu LED / emas bawah proscenium */
+.cinema-valance-glow {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #e50914 30%, #ff4444 50%, #e50914 70%, transparent 100%);
+  box-shadow: 0 0 12px #e50914;
+}
+
+/* Teks dekoratif di valance */
+.cinema-valance-title {
+  position: relative;
+  z-index: 2;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* Layout utama: Pilar Kiri - Konten Video - Pilar Kanan */
+.cinema-stage-row {
+  display: flex;
+  position: relative;
+  width: 100%;
+  align-items: stretch;
+}
+
+/* Pilar Kiri & Kanan (Permanen & Dekoratif) */
+.cinema-pillar {
+  width: clamp(50px, 7vw, 90px);
+  position: relative;
+  z-index: 5;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* Desain Pilar Kiri */
+.cinema-pillar-left {
+  background: linear-gradient(90deg, #1b0000 0%, #4a0505 40%, #680404 75%, #300000 100%);
+  box-shadow: 
+    inset -12px 0 20px -3px rgba(0, 0, 0, 0.95),
+    10px 0 25px rgba(0, 0, 0, 0.8);
+}
+
+/* Desain Pilar Kanan */
+.cinema-pillar-right {
+  background: linear-gradient(90deg, #300000 0%, #680404 25%, #4a0505 60%, #1b0000 100%);
+  box-shadow: 
+    inset 12px 0 20px -3px rgba(0, 0, 0, 0.95),
+    -10px 0 25px rgba(0, 0, 0, 0.8);
+}
+
+/* Tekstur garis vertikal statis untuk kedua pilar */
+.cinema-pillar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.5) 0px,
+    rgba(0, 0, 0, 0.08) 10px,
+    rgba(255, 255, 255, 0.07) 20px,
+    rgba(0, 0, 0, 0.5) 30px
+  );
+  pointer-events: none;
+}
+
+/* Konten utama di tengah (video player, dll) */
+.cinema-stage-content {
+  flex: 1;
+  position: relative;
+  z-index: 2;
+  background: #000;
+  min-width: 0; /* Mencegah overflow pada flex item */
+}
+
+/* Responsif: sembunyikan atau perkecil pilar di layar handphone kecil */
+@media (max-width: 640px) {
+  .cinema-pillar {
+    display: none;
+  }
+  .cinema-valance {
+    height: 38px;
+  }
+  .cinema-valance-title {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+  }
+}
