@@ -432,8 +432,8 @@ export default function MovieComments({ movieId, isLoggedIn, currentUser }: Movi
           rel="noopener noreferrer"
           style={{
             position: 'relative',
-            background: 'radial-gradient(circle at 50% 20%, rgba(139, 92, 246, 0.45) 0%, rgba(18, 11, 28, 0.98) 75%)',
-            border: '2.5px solid #8b5cf6',
+            background: 'radial-gradient(circle at 50% 20%, rgba(229, 9, 20, 0.45) 0%, rgba(18, 5, 8, 0.98) 75%)',
+            border: '2.5px solid #e50914',
             borderRadius: '24px',
             padding: '2rem 2.8rem',
             textAlign: 'center',
@@ -442,32 +442,32 @@ export default function MovieComments({ movieId, isLoggedIn, currentUser }: Movi
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: '12px',
-            maxWidth: '420px',
+            gap: '10px',
+            maxWidth: '430px',
             width: '100%',
-            boxShadow: '0 20px 45px rgba(0,0,0,0.85), 0 0 35px rgba(139, 92, 246, 0.4)',
+            boxShadow: '0 20px 45px rgba(0,0,0,0.85), 0 0 35px rgba(229, 9, 20, 0.45)',
             transition: 'all 0.25s ease',
             overflow: 'hidden',
           }}
           onMouseOver={(e) => {
             e.currentTarget.style.transform = 'scale(1.03) translateY(-3px)';
-            e.currentTarget.style.boxShadow = '0 25px 55px rgba(0,0,0,0.95), 0 0 50px rgba(168, 85, 247, 0.7)';
+            e.currentTarget.style.boxShadow = '0 25px 55px rgba(0,0,0,0.95), 0 0 50px rgba(229, 9, 20, 0.75)';
           }}
           onMouseOut={(e) => {
             e.currentTarget.style.transform = 'scale(1) translateY(0)';
-            e.currentTarget.style.boxShadow = '0 20px 45px rgba(0,0,0,0.85), 0 0 35px rgba(139, 92, 246, 0.4)';
+            e.currentTarget.style.boxShadow = '0 20px 45px rgba(0,0,0,0.85), 0 0 35px rgba(229, 9, 20, 0.45)';
           }}
-          title="Klik di sini untuk dapet reward!"
+          title="Klik di sini untuk klaim reward dari FILMKU!"
         >
-          {/* Top/Side Cute Cartoon Floating Characters */}
+          {/* Top/Side Cinema & Reward Icons */}
           <div style={{
             position: 'absolute', top: '14px', left: '18px', fontSize: '1.6rem',
-            filter: 'drop-shadow(0 2px 6px rgba(139, 92, 246, 0.8))'
-          }}>👾</div>
+            filter: 'drop-shadow(0 2px 6px rgba(229, 9, 20, 0.8))'
+          }}>🎬</div>
           <div style={{
             position: 'absolute', top: '14px', right: '18px', fontSize: '1.6rem',
-            filter: 'drop-shadow(0 2px 6px rgba(139, 92, 246, 0.8))'
-          }}>🎮</div>
+            filter: 'drop-shadow(0 2px 6px rgba(234, 179, 8, 0.8))'
+          }}>🍿</div>
           <div style={{
             position: 'absolute', bottom: '16px', left: '22px', fontSize: '1.5rem',
             filter: 'drop-shadow(0 2px 6px rgba(234, 179, 8, 0.8))'
@@ -477,16 +477,34 @@ export default function MovieComments({ movieId, isLoggedIn, currentUser }: Movi
             filter: 'drop-shadow(0 2px 6px rgba(34, 197, 94, 0.8))'
           }}>💰</div>
 
-          {/* Bold 3D Stacked Purple Typography */}
+          {/* Official FILMKU VIP Reward Header Pill */}
+          <div style={{
+            background: 'linear-gradient(90deg, #eab308, #ca8a04)',
+            color: '#000',
+            fontWeight: 900,
+            fontSize: '0.78rem',
+            padding: '4px 14px',
+            borderRadius: '20px',
+            letterSpacing: '1.5px',
+            textTransform: 'uppercase',
+            boxShadow: '0 2px 10px rgba(234, 179, 8, 0.5)',
+            marginBottom: '2px',
+          }}>
+            🎬 FILMKU VIP REWARD
+          </div>
+
+          {/* Bold 3D Stacked Cinema Red-Gold Typography */}
           <div style={{
             fontFamily: "'Impact', 'Arial Black', sans-serif",
             fontSize: '2.15rem',
             fontWeight: 900,
             lineHeight: 1.08,
             letterSpacing: '1.5px',
-            color: '#c084fc',
+            background: 'linear-gradient(180deg, #ffffff 0%, #ff8888 45%, #e50914 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
             textTransform: 'uppercase',
-            textShadow: '0 3px 0 #6b21a8, 0 8px 20px rgba(0,0,0,0.9)',
+            filter: 'drop-shadow(0 4px 10px rgba(229, 9, 20, 0.8))',
           }}>
             NONTON FILM<br />
             BISA DAPET<br />
@@ -496,7 +514,7 @@ export default function MovieComments({ movieId, isLoggedIn, currentUser }: Movi
           {/* Lower Pill Click Here Badge */}
           <div style={{
             marginTop: '0.4rem',
-            background: 'linear-gradient(90deg, #9333ea, #7c3aed)',
+            background: 'linear-gradient(90deg, #e50914, #b81d24)',
             color: '#fff',
             fontWeight: 800,
             fontSize: '0.9rem',
@@ -504,10 +522,11 @@ export default function MovieComments({ movieId, isLoggedIn, currentUser }: Movi
             borderRadius: '50px',
             letterSpacing: '1px',
             textTransform: 'lowercase',
-            boxShadow: '0 4px 15px rgba(147, 51, 234, 0.7)',
+            boxShadow: '0 4px 15px rgba(229, 9, 20, 0.7)',
           }}>
             klik disini
           </div>
+
         </a>
       </div>
 
