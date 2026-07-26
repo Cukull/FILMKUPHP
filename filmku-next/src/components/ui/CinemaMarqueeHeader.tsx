@@ -14,10 +14,10 @@ export default function CinemaMarqueeHeader({
   subtitle = 'NOW SHOWING IN FILMKU THEATER',
   className = ''
 }: CinemaMarqueeHeaderProps) {
-  // 20 lampu atas, 20 lampu bawah, 4 lampu kiri, 4 lampu kanan (total 48 lampu - sangat ringan di DOM)
-  const topBulbsCount = 20;
-  const bottomBulbsCount = 20;
-  const sideBulbsCount = 4;
+  // Dikurangi jumlah lampu (total 30 lampu) agar sangat ringan untuk CPU/GPU device (tetap simetris dan aestetik)
+  const topBulbsCount = 12;
+  const bottomBulbsCount = 12;
+  const sideBulbsCount = 3;
 
   return (
     <div className={`cinema-marquee-container ${className}`}>
@@ -32,7 +32,7 @@ export default function CinemaMarqueeHeader({
             className="cinema-marquee-bulb"
             style={{
               position: 'relative',
-              animationDelay: `${(index * 0.12) % 1.6}s`
+              animationDelay: `${(index * 0.23) % 2.8}s`
             }}
           />
         ))}
@@ -46,7 +46,7 @@ export default function CinemaMarqueeHeader({
             className="cinema-marquee-bulb"
             style={{
               position: 'relative',
-              animationDelay: `${((index + 10) * 0.12) % 1.6}s`
+              animationDelay: `${((index + 6) * 0.23) % 2.8}s`
             }}
           />
         ))}
@@ -60,7 +60,7 @@ export default function CinemaMarqueeHeader({
             className="cinema-marquee-bulb"
             style={{
               position: 'relative',
-              animationDelay: `${((index + 5) * 0.12) % 1.6}s`
+              animationDelay: `${((index + 3) * 0.23) % 2.8}s`
             }}
           />
         ))}
@@ -74,7 +74,7 @@ export default function CinemaMarqueeHeader({
             className="cinema-marquee-bulb"
             style={{
               position: 'relative',
-              animationDelay: `${((index + 15) * 0.12) % 1.6}s`
+              animationDelay: `${((index + 9) * 0.23) % 2.8}s`
             }}
           />
         ))}

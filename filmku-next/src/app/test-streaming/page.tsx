@@ -138,6 +138,8 @@ function StreamingContent() {
           opacity: isDimmed ? 0.7 : 0,
           pointerEvents: 'none',
           transition: isDimmed ? 'opacity 1.8s ease-in-out' : 'opacity 0.5s ease-out',
+          willChange: 'opacity',
+          transform: 'translateZ(0)',
           zIndex: 40
         }}
       />
