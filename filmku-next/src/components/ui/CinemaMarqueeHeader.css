@@ -131,12 +131,44 @@
   pointer-events: none;
 }
 
-/* Responsif untuk mobile */
-@media (max-width: 640px) {
+/* Responsif untuk mobile (super compact & centered, desktop unchanged) */
+@media (max-width: 768px) {
   .cinema-marquee-container {
-    padding: 1.1rem 1.4rem;
+    padding: 0.65rem 1.2rem !important;
+    margin: 0.5rem auto 1.25rem auto !important;
+    max-width: 90% !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .cinema-marquee-subtitle {
+    font-size: 0.58rem !important;
+    letter-spacing: 0.15em !important;
+    margin-bottom: 0.15rem !important;
+    text-align: center !important;
   }
   .cinema-marquee-title {
-    font-size: 1.25rem;
+    font-size: 1.15rem !important;
+    line-height: 1.25 !important;
+    text-align: center !important;
+  }
+  .cinema-marquee-inner-border {
+    inset: 6px !important;
+  }
+  .cinema-marquee-bulb {
+    width: 4px !important;
+    height: 4px !important;
+  }
+  .cinema-marquee-top-bulbs,
+  .cinema-marquee-bottom-bulbs {
+    left: 10px !important;
+    right: 10px !important;
+  }
+  .cinema-marquee-left-bulbs,
+  .cinema-marquee-right-bulbs {
+    top: 10px !important;
+    bottom: 10px !important;
   }
 }

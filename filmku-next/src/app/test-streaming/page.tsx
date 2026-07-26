@@ -147,7 +147,7 @@ function StreamingContent() {
       />
 
       {/* Konten Utama di Atas Overlay (zIndex: 50) */}
-      <div style={{ position: 'relative', zIndex: 50 }}>
+      <div style={{ position: 'relative', zIndex: 50, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <CinemaMarqueeHeader title={queryTitle} />
         <p style={{ color: '#aaa', marginBottom: '2rem', textAlign: 'center' }}>
           Klik tombol di bawah untuk memuat video player.

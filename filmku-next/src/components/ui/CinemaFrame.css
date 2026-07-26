@@ -130,16 +130,22 @@
   min-width: 0; /* Mencegah overflow pada flex item */
 }
 
-/* Responsif: sembunyikan atau perkecil pilar di layar handphone kecil */
-@media (max-width: 640px) {
+/* Responsif: sembunyikan pilar dan tengahkan frame di layar mobile (desktop unchanged) */
+@media (max-width: 768px) {
+  .cinema-frame-container {
+    max-width: 96% !important;
+    margin: 0 auto !important;
+    border-radius: 12px !important;
+  }
   .cinema-pillar {
-    display: none;
+    display: none !important;
   }
   .cinema-valance {
-    height: 38px;
+    height: 36px !important;
   }
   .cinema-valance-title {
-    font-size: 0.65rem;
-    letter-spacing: 0.2em;
+    font-size: 0.65rem !important;
+    letter-spacing: 0.18em !important;
+    text-align: center !important;
   }
 }
