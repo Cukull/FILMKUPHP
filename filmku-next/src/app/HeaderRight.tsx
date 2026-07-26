@@ -193,84 +193,150 @@ export default function HeaderRight({ session, logoutAction }: { session: any, l
         </div>
       )}
 
-      {session ? (
-        <div 
-          className="profile-dropdown-container"
-          style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center' }}
-        >
-          {/* User Avatar Menu Trigger */}
+      {/* ── DESKTOP AUTH (100% Unchanged) ── */}
+      <div className="desktop-only-flex" style={{ alignItems: 'center', height: '100%' }}>
+        {session ? (
           <div 
-            style={{ 
-              display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer',
-              padding: '0.5rem 0'
-            }}
+            className="profile-dropdown-container"
+            style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center' }}
           >
-            <div style={{
-              width: "36px", height: "36px", borderRadius: "50%",
-              background: "linear-gradient(135deg, var(--primary) 0%, #9333ea 100%)",
-              color: "white", display: "flex", alignItems: "center", justifyContent: "center",
-              fontWeight: 800, fontSize: "1rem", letterSpacing: "0.05em",
-              boxShadow: "0 4px 12px rgba(229, 9, 20, 0.3)"
-            }}>
-              {initials}
+            {/* User Avatar Menu Trigger */}
+            <div 
+              style={{ 
+                display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer',
+                padding: '0.5rem 0'
+              }}
+            >
+              <div style={{
+                width: "36px", height: "36px", borderRadius: "50%",
+                background: "linear-gradient(135deg, var(--primary) 0%, #9333ea 100%)",
+                color: "white", display: "flex", alignItems: "center", justifyContent: "center",
+                fontWeight: 800, fontSize: "1rem", letterSpacing: "0.05em",
+                boxShadow: "0 4px 12px rgba(229, 9, 20, 0.3)"
+              }}>
+                {initials}
+              </div>
+              <span style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--text-primary)", fontFamily: 'var(--font-body)' }}>
+                {session.name?.split(" ")[0]}
+              </span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.2s' }}>
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
             </div>
-            <span style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--text-primary)", fontFamily: 'var(--font-body)' }}>
-              {session.name?.split(" ")[0]}
-            </span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.2s' }}>
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </div>
 
-          {/* Dropdown Menu (handled by CSS hover on container) */}
-          <div className="profile-dropdown-menu">
-            <div style={{ padding: '1.25rem', borderBottom: '1px solid var(--glass-border)' }}>
-              <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>{session.name}</div>
-              {session.role === 'ADMIN' && (
-                <div style={{ display: 'inline-block', background: 'rgba(229,9,20,0.15)', color: 'var(--primary)', border: '1px solid rgba(229,9,20,0.3)', padding: '0.1rem 0.5rem', borderRadius: '1rem', fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.05em' }}>
-                  ADMIN
-                </div>
-              )}
-            </div>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', padding: '0.5rem 0' }}>
-              {session.role === 'ADMIN' && (
-                <Link href="/admin" className="dropdown-item">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                  Panel Admin
+            {/* Dropdown Menu (handled by CSS hover on container) */}
+            <div className="profile-dropdown-menu">
+              <div style={{ padding: '1.25rem', borderBottom: '1px solid var(--glass-border)' }}>
+                <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>{session.name}</div>
+                {session.role === 'ADMIN' && (
+                  <div style={{ display: 'inline-block', background: 'rgba(229,9,20,0.15)', color: 'var(--primary)', border: '1px solid rgba(229,9,20,0.3)', padding: '0.1rem 0.5rem', borderRadius: '1rem', fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.05em' }}>
+                    ADMIN
+                  </div>
+                )}
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', padding: '0.5rem 0' }}>
+                {session.role === 'ADMIN' && (
+                  <Link href="/admin" className="dropdown-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    Panel Admin
+                  </Link>
+                )}
+                <Link href="/wishlist" className="dropdown-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                  Daftar Tontonan
                 </Link>
-              )}
-              <Link href="/wishlist" className="dropdown-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-                Daftar Tontonan
-              </Link>
-              <Link href="/orders" className="dropdown-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                My Order
-              </Link>
-            </div>
-            
-            <div style={{ borderTop: '1px solid var(--glass-border)', padding: '0.5rem 0' }}>
-              <form action={logoutAction} style={{ margin: 0 }}>
-                <button type="submit" className="dropdown-item dropdown-item-danger" style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                  Keluar (Logout)
-                </button>
-              </form>
+                <Link href="/orders" className="dropdown-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                  My Order
+                </Link>
+              </div>
+              
+              <div style={{ borderTop: '1px solid var(--glass-border)', padding: '0.5rem 0' }}>
+                <form action={logoutAction} style={{ margin: 0 }}>
+                  <button type="submit" className="dropdown-item dropdown-item-danger" style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    Keluar (Logout)
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
-        </div>
-      ) : (
-        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-          <Link href="/auth" style={{ textDecoration: "none" }}>
-            <button className="btn-outline">Masuk</button>
-          </Link>
-          <Link href="/auth" style={{ textDecoration: "none" }}>
-            <button className="btn-primary">Daftar</button>
-          </Link>
+        ) : (
+          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+            <Link href="/auth" style={{ textDecoration: "none" }}>
+              <button className="btn-outline">Masuk</button>
+            </Link>
+            <Link href="/auth" style={{ textDecoration: "none" }}>
+              <button className="btn-primary">Daftar</button>
+            </Link>
+          </div>
+        )}
+      </div>
 
+      {/* ── MOBILE AUTH (Person SVG Icon Dropdown) ── */}
+      <div className="mobile-only-flex profile-dropdown-container" style={{ position: 'relative', height: '100%', alignItems: 'center' }}>
+        <div
+          style={{
+            width: '38px', height: '38px', borderRadius: '50%',
+            background: session ? 'linear-gradient(135deg, var(--primary) 0%, #9333ea 100%)' : 'rgba(255,255,255,0.08)',
+            border: '1px solid var(--glass-border)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', color: '#fff',
+            boxShadow: session ? '0 4px 12px rgba(229, 9, 20, 0.3)' : 'none'
+          }}
+          aria-label="Akun Pengguna"
+        >
+          {session ? (
+            <span style={{ fontWeight: 800, fontSize: '0.95rem' }}>{initials}</span>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          )}
         </div>
-      )}
+
+        <div className="profile-dropdown-menu" style={{ right: 0, left: 'auto', minWidth: '180px' }}>
+          {session ? (
+            <>
+              <div style={{ padding: '1rem', borderBottom: '1px solid var(--glass-border)' }}>
+                <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-primary)' }}>{session.name}</div>
+                {session.role === 'ADMIN' && (
+                  <div style={{ display: 'inline-block', background: 'rgba(229,9,20,0.15)', color: 'var(--primary)', border: '1px solid rgba(229,9,20,0.3)', padding: '0.1rem 0.5rem', borderRadius: '1rem', fontSize: '0.65rem', fontWeight: 800, marginTop: '0.25rem' }}>
+                    ADMIN
+                  </div>
+                )}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', padding: '0.5rem 0' }}>
+                {session.role === 'ADMIN' && (
+                  <Link href="/admin" className="dropdown-item">Panel Admin</Link>
+                )}
+                <Link href="/wishlist" className="dropdown-item">Daftar Tontonan</Link>
+                <Link href="/orders" className="dropdown-item">My Order</Link>
+              </div>
+              <div style={{ borderTop: '1px solid var(--glass-border)', padding: '0.5rem 0' }}>
+                <form action={logoutAction} style={{ margin: 0 }}>
+                  <button type="submit" className="dropdown-item dropdown-item-danger" style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer' }}>
+                    Keluar (Logout)
+                  </button>
+                </form>
+              </div>
+            </>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', padding: '0.5rem 0' }}>
+              <Link href="/auth" className="dropdown-item" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+                Masuk
+              </Link>
+              <Link href="/auth" className="dropdown-item" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--primary)' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                Daftar Baru
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

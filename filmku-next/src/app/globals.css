@@ -461,9 +461,21 @@ button, input, select, textarea, label,
   padding-bottom: 1rem;
   scroll-snap-type: x mandatory;
   scrollbar-width: none; /* Firefox */
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
 }
 .movie-lane-scroll::-webkit-scrollbar {
   display: none; /* Chrome, Safari */
+}
+@media (hover: none), (max-width: 768px) {
+  .movie-lane-arrow-zone {
+    display: none !important;
+    pointer-events: none !important;
+  }
+  .movie-lane-scroll {
+    scroll-snap-type: x proximity;
+  }
 }
 .movie-lane-card {
   position: relative;
@@ -1761,20 +1773,17 @@ a.cast-item--linked:hover .cast-avatar-overlay {
 ═══════════════════════════════════════════════ */
 
 /* Desktop/mouse: handled by JS state (showPrev/showNext) */
-/* Touch/mobile: arrows always visible — tidak ada konsep hover */
-@media (hover: none) {
+/* Touch/mobile: sembunyikan tombol panah kiri/kanan, gunakan slide layar sentuh saja */
+@media (hover: none), (max-width: 768px) {
   .hero-carousel-arrow {
-    opacity: 1 !important;
-    transform: translateY(-50%) translateX(0px) !important;
-    pointer-events: auto !important;
-    /* Perbesar tap target di mobile */
-    width: 60px !important;
-    height: 60px !important;
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
-  /* SVG sedikit lebih besar di touch */
-  .hero-carousel-arrow svg {
-    width: 32px;
-    height: 32px;
+  .home-hero {
+    min-height: 62vh !important;
+    height: 62vh !important;
+    max-height: 62vh !important;
   }
 }
 
@@ -1787,4 +1796,32 @@ a.cast-item--linked:hover .cast-avatar-overlay {
 }
 .auth-border-glow .border-glow-inner {
   overflow: hidden;   /* clip 200%-wide slider to visible 50% */
+}
+
+/* ── Mobile vs Desktop Header Auth Utilities ──────────────────────────── */
+.desktop-only-flex {
+  display: flex !important;
+}
+.mobile-only-flex {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .desktop-only-flex {
+    display: none !important;
+  }
+  .mobile-only-flex {
+    display: flex !important;
+  }
+}
+
+/* ── Genre Page Container Responsive ──────────────────────────── */
+.genre-page-container {
+  padding: 4rem 4rem 6rem;
+  min-height: 100vh;
+}
+@media (max-width: 768px) {
+  .genre-page-container {
+    padding: 2rem 1.25rem 4rem !important;
+  }
 }

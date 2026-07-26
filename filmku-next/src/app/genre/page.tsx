@@ -50,7 +50,7 @@ export default async function GenrePage() {
     .filter(g => g.movies.length > 0);
 
   return (
-    <div className="page-transition" style={{ padding: '4rem 4rem 6rem', minHeight: '100vh' }}>
+    <div className="page-transition genre-page-container">
       {/* Page Header */}
       <div style={{ marginBottom: '3rem', maxWidth: '650px' }}>
         <h1 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.75rem', color: 'var(--text-primary)' }}>

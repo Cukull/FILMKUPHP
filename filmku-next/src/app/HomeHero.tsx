@@ -32,6 +32,7 @@ export default function HomeHero({ films }: Props) {
   const heroRef      = useRef<HTMLElement | null>(null);
   // ref ke iframe YouTube — untuk postMessage mute/unmute tanpa reload
   const iframeRef    = useRef<HTMLIFrameElement | null>(null);
+  const touchStartX  = useRef<number | null>(null);
 
   const total = films.length;
   const film  = films[index] ?? null;
@@ -100,6 +101,20 @@ export default function HomeHero({ films }: Props) {
   const goPrev = () => goTo((index - 1 + total) % total);
   const goNext = () => goTo((index + 1) % total);
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const diff = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(diff) > 45) {
+      if (diff > 0) goPrev();
+      else goNext();
+    }
+    touchStartX.current = null;
+  };
+
   if (!film) {
     return (
       <section className="home-hero" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -125,6 +140,8 @@ export default function HomeHero({ films }: Props) {
         marginTop: '-72px',        /* pull up behind transparent navbar */
         minHeight: '100vh',        /* fill full viewport including navbar height */
       }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => {
         if (muteTimer.current) clearTimeout(muteTimer.current);

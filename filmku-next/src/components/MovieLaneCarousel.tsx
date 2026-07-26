@@ -40,6 +40,7 @@ export default function MovieLaneCarousel({ children }: { children: React.ReactN
     >
       {/* ── Left hover-zone + Prev button ── */}
       <div
+        className="movie-lane-arrow-zone"
         style={{
           position: 'absolute',
           inset: '0 auto 0 0',
@@ -86,6 +87,7 @@ export default function MovieLaneCarousel({ children }: { children: React.ReactN
 
       {/* ── Right hover-zone + Next button ── */}
       <div
+        className="movie-lane-arrow-zone"
         style={{
           position: 'absolute',
           inset: '0 0 0 auto',
