@@ -94,6 +94,16 @@ export default function HeaderRight({ session, logoutAction }: { session: any, l
                 }, 100);
               }
             }}
+            onMouseEnter={() => {
+              if (typeof window !== 'undefined' && window.innerWidth > 768) {
+                if (!isSearchActive) {
+                  setIsSearchActive(true);
+                  setTimeout(() => {
+                    searchContainerRef.current?.querySelector('input')?.focus();
+                  }, 100);
+                }
+              }
+            }}
           >
             <input 
               type="text" 

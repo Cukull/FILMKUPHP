@@ -5,11 +5,13 @@ import FAQSection from "./FAQSection";
 import HomeHero from "./HomeHero";
 import MovieLaneCard from "@/components/MovieLaneCard";
 import MovieLaneCarousel from "@/components/MovieLaneCarousel";
-import DomeGallery from "@/components/ui/DomeGallery";
+import FanCardGallery from "@/components/ui/FanCardGallery";
 import ScrollFloat from "@/components/ui/ScrollFloat";
+import Image from "next/image";
 import * as LucideIcons from 'lucide-react';
 import AdsterraBanner from "@/components/ads/AdsterraBanner";
 import { inferMovieSections } from "@/utils/sectionMatcher";
+import FeaturesSection from "@/components/FeaturesSection";
 
 export const revalidate = 30;
 
@@ -32,12 +34,7 @@ function RenderLucideIcon({ name, size = 24 }: { name: string, size?: number }) 
   return <IconComponent size={size} />;
 }
 
-const FEATURES = [
-  { icon: "🎬", title: "Pilih Sesi Tayang", desc: "Pilih tanggal, jam, dan studio sesuai keinginan Anda secara real-time." },
-  { icon: "🪑", title: "Pilih Kursi Sendiri", desc: "Sistem pemilihan kursi interaktif. Lihat kursi yang tersedia dan pilih favorit Anda." },
-  { icon: "⚡", title: "Seamless & Cepat", desc: "Pemesanan selesai dalam hitungan detik. E-ticket langsung terkirim ke email." },
-  { icon: "🍿", title: "Snack-Ku FnB", desc: "Pesan makanan & minuman favorit dan dikirim langsung ke kursi Anda." },
-];
+// The features array is now in FeaturesSection.tsx
 
 // Fisher-Yates shuffle to randomize movie order for dynamic UI
 function shuffleArray<T>(array: T[]): T[] {
@@ -165,58 +162,64 @@ export default async function Home() {
 
       <AdsterraBanner />
 
-      {/* ── DOME GALLERY ── */}
-      <div style={{ width: '100%', height: '100vh', position: 'relative', overflow: 'hidden', backgroundColor: '#000' }}>
-        <DomeGallery
-          images={allMovies.filter(m => m.posterUrl).slice(0, 25).map(m => ({ src: m.posterUrl, alt: m.title }))}
-          fit={0.8}
-          minRadius={600}
-          maxVerticalRotationDeg={0}
-          segments={25}
-          dragDampening={2}
-          grayscale={false}
-        />
-      </div>
+      {/* ── TUTORIAL SECTION ── */}
+      <div style={{ textAlign: 'center', marginTop: '0.5rem', marginBottom: '0.5rem' }}>
+        {/* Subtitle */}
+        <ScrollFloat
+          animationDuration={1}
+          ease="back.out(2)"
+          scrollStart="center bottom+=50%"
+          scrollEnd="bottom bottom-=40%"
+          stagger={0.03}
+          textStyle={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary, #9ca3af)', textTransform: 'uppercase', letterSpacing: '0.1em', whiteSpace: 'normal', display: 'block', marginBottom: '0.5rem' }}
+        >
+          Belum Tahu Caranya?
+        </ScrollFloat>
 
-      <AdsterraBanner />
-
-      {/* ── FEATURE SECTION ── */}
-      <section className="feature-section">
-        <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
+        {/* Main heading — two ScrollFloats side by side so "FILMKU" can be red */}
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'baseline', flexWrap: 'wrap', gap: '0 0.3em' }}>
           <ScrollFloat
             animationDuration={1}
             ease="back.inOut(2)"
             scrollStart="center bottom+=50%"
             scrollEnd="bottom bottom-=40%"
             stagger={0.03}
-            textStyle={{ fontSize: 'clamp(1.4rem, 3vw, 2rem)', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'normal', display: 'block' }}
+            textStyle={{ fontSize: 'clamp(4rem, 6vw, 5.5rem)', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap', display: 'inline-block' }}
           >
-            Mengapa Nonton FILMKU?
+            Nonton di
           </ScrollFloat>
-
           <ScrollFloat
             animationDuration={1}
-            ease="back.out(2)"
+            ease="back.inOut(2)"
             scrollStart="center bottom+=50%"
             scrollEnd="bottom bottom-=40%"
-            stagger={0.01}
-            textStyle={{ color: 'var(--text-secondary)', marginTop: '0.5rem', fontSize: '0.9rem', fontWeight: 400, whiteSpace: 'normal', display: 'block' }}
+            stagger={0.03}
+            textStyle={{ fontSize: 'clamp(4rem, 6vw, 5.5rem)', fontWeight: 800, color: '#dc2626', whiteSpace: 'nowrap', display: 'inline-block' }}
           >
-            Platform bioskop premium dengan pengalaman pesan tiket paling mudah di Indonesia.
+            FILMKU
           </ScrollFloat>
         </div>
-        <div className="feature-grid">
-          {FEATURES.map((f, i) => (
-            <div key={i} className="feature-card">
-              <span className="feature-icon">{f.icon}</span>
-              <div className="feature-title">{f.title}</div>
-              <p className="feature-desc">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      </div>
+      <div style={{ width: '100%', height: '760px', position: 'relative', backgroundColor: 'transparent', marginBottom: '4rem' }}>
+        <FanCardGallery
+          loop
+          bend={3}
+          cardWidth={340}
+          cardHeight={510}
+          gap={20}
+          items={[
+            { stepLabel: 'Langkah 1', title: 'Cari & Pilih Film', description: 'Cari dan pilih film, serial, atau drama yang ingin ditonton', image: '/images/tutorial/tutorial-1.png' },
+            { stepLabel: 'Langkah 2', title: 'Buka Halaman Film', description: 'Buka halaman detail film/serial/drama tersebut', image: '/images/tutorial/tutorial-2.png' },
+            { stepLabel: 'Langkah 3', title: 'Klik Tonton Sekarang', description: 'Klik tombol "Tonton Sekarang" pada halaman film', image: '/images/tutorial/tutorial-3.png' },
+            { stepLabel: 'Langkah 4', title: 'Klik Sekali Lagi', description: 'Tirai akan tampil, klik tombol "Tonton Sekarang" sekali lagi (iklan singkat akan muncul)', image: '/images/tutorial/tutorial-4.png' },
+            { stepLabel: 'Langkah 5', title: 'Tirai Terbuka', description: 'Tirai akan terbuka, klik tombol play sekali lagi untuk mulai film', image: '/images/tutorial/tutorial-5.png' },
+            { stepLabel: 'Langkah 6', title: 'Selamat Menonton!', description: 'Nikmati film pilihanmu di FILMKU', image: '/images/tutorial/tutorial-6.png', showCTA: true },
+          ]}
+        />
+      </div>
 
-      <AdsterraBanner />
+      {/* ── FEATURE SECTION REMOVED ── */}
+
 
       {/* ── FAQ ── */}
       <FAQSection />

@@ -45,9 +45,16 @@ export default function WatchMovieButton({
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // searchTitle: gunakan originalTitle (judul asli TMDB) jika tersedia,
-    // karena TMDB tidak mengenali judul terjemahan Indonesia
-    const searchTitle = originalTitle || title;
+    // searchTitle: gunakan originalTitle (judul asli TMDB) jika tersedia
+    let searchTitle = originalTitle || title;
+    
+    // Jika title mengandung tahun e.g. "(2022)" namun searchTitle (originalTitle) tidak memilikinya,
+    // maka tempelkan tahun tersebut agar test-streaming bisa mencocokkan tahun rilisnya di TMDB
+    const yearMatch = title.match(/\(\d{4}\)|\s\d{4}$/);
+    if (yearMatch && !searchTitle.includes(yearMatch[0])) {
+      searchTitle = `${searchTitle.trim()} ${yearMatch[0].trim()}`;
+    }
+
     router.push(`/test-streaming?title=${encodeURIComponent(searchTitle)}&displayTitle=${encodeURIComponent(title)}&id=${movieId}`);
   };
 

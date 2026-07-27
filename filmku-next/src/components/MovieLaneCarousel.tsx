@@ -5,14 +5,18 @@ import { useRef, useState, useCallback, useEffect } from 'react';
 export default function MovieLaneCarousel({ children }: { children: React.ReactNode }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showPrev, setShowPrev] = useState(false);
-  const [showNext, setShowNext] = useState(true); // default true assuming there are movies
+  const [showNext, setShowNext] = useState(true);
   const [hovering, setHovering] = useState(false);
+  
+  // Drag to scroll state
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollLeftStart = useRef(0);
 
   const checkScroll = useCallback(() => {
     if (!scrollRef.current) return;
     const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
     
-    // Allow a small margin of error (2px) for scroll calculations
     setShowPrev(scrollLeft > 2);
     setShowNext(Math.ceil(scrollLeft + clientWidth) < scrollWidth - 2);
   }, []);
@@ -26,10 +30,44 @@ export default function MovieLaneCarousel({ children }: { children: React.ReactN
   const scrollByAmount = (offset: number) => {
     if (scrollRef.current) {
       scrollRef.current.scrollBy({ left: offset, behavior: 'smooth' });
-      // update state shortly after animation starts and ends
       setTimeout(checkScroll, 100);
       setTimeout(checkScroll, 400);
     }
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+    isDragging.current = true;
+    startX.current = e.pageX - scrollRef.current.offsetLeft;
+    scrollLeftStart.current = scrollRef.current.scrollLeft;
+    // Optional: ubah cursor saat drag
+    scrollRef.current.style.cursor = 'grabbing';
+    scrollRef.current.style.scrollSnapType = 'none'; // Matikan snap sementara saat drag
+  };
+
+  const handleMouseLeave = () => {
+    isDragging.current = false;
+    if (scrollRef.current) {
+      scrollRef.current.style.cursor = 'grab';
+      scrollRef.current.style.scrollSnapType = ''; // Kembalikan snap
+    }
+  };
+
+  const handleMouseUp = () => {
+    isDragging.current = false;
+    if (scrollRef.current) {
+      scrollRef.current.style.cursor = 'grab';
+      scrollRef.current.style.scrollSnapType = '';
+      checkScroll();
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging.current || !scrollRef.current) return;
+    e.preventDefault(); // Mencegah highlight teks / drag default
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX.current) * 1.5; // Kecepatan scroll
+    scrollRef.current.scrollLeft = scrollLeftStart.current - walk;
   };
 
   return (
@@ -136,7 +174,12 @@ export default function MovieLaneCarousel({ children }: { children: React.ReactN
       <div 
         ref={scrollRef} 
         onScroll={checkScroll}
+        onMouseDown={handleMouseDown}
+        onMouseLeave={handleMouseLeave}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
         className="movie-lane-scroll" 
+        style={{ cursor: 'grab' }}
       >
         {children}
       </div>

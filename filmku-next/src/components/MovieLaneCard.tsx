@@ -65,13 +65,13 @@ export default function MovieLaneCard({
       transition={{ duration: 0.4, ease: "easeOut" }}
       style={{ flexShrink: 0 }}
     >
-      <Link href={`/film/${id}`} style={{ textDecoration: 'none', display: 'block' }}>
+      <Link href={`/film/${id}`} style={{ textDecoration: 'none', display: 'block' }} draggable={false}>
         <div className="mlc-card">
           {/* Format badge */}
           <span className={formatBadge.className}>{formatBadge.label}</span>
 
           {/* Poster */}
-          <img src={poster} alt={title} loading="lazy" className="mlc-img" />
+          <img src={poster} alt={title} loading="lazy" className="mlc-img" draggable={false} />
 
           {/* Hover overlay — slide up dari bawah */}
           <div className="mlc-overlay" aria-hidden="true">
