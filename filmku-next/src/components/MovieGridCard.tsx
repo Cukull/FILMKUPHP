@@ -16,6 +16,7 @@
 
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { getFormatBadge } from '@/utils/formatBadge';
 
 type Props = {
   id: string;
@@ -24,6 +25,11 @@ type Props = {
   rating: number | null;
   synopsis: string | null;
   status?: 'NOW_PLAYING' | 'UPCOMING' | string | null;
+  genre?: string | null;
+  sections?: string | null;
+  country?: string | null;
+  originalLanguage?: string | null;
+  mediaType?: string | null;
   /** Slot untuk elemen tambahan di atas card (misal tombol hapus) */
   actions?: ReactNode;
 };
@@ -35,9 +41,22 @@ export default function MovieGridCard({
   rating,
   synopsis,
   status,
+  genre,
+  sections,
+  country,
+  originalLanguage,
+  mediaType,
   actions,
 }: Props) {
   const poster = posterUrl || 'https://via.placeholder.com/500x750?text=No+Poster';
+  const formatBadge = getFormatBadge({
+    genre,
+    sections,
+    title,
+    country,
+    originalLanguage,
+    mediaType,
+  });
 
   return (
     <div className="mgc-wrapper">
@@ -46,13 +65,8 @@ export default function MovieGridCard({
 
       <Link href={`/film/${id}`} style={{ textDecoration: 'none', display: 'block' }}>
         <div className="mgc-card">
-          {/* Status badge */}
-          {status === 'NOW_PLAYING' && (
-            <span className="movie-status-badge badge-now-playing">Tayang</span>
-          )}
-          {status === 'UPCOMING' && (
-            <span className="movie-status-badge badge-upcoming">Segera</span>
-          )}
+          {/* Format badge */}
+          <span className={formatBadge.className}>{formatBadge.label}</span>
 
           {/* Poster */}
           <img src={poster} alt={title} loading="lazy" className="mgc-img" />

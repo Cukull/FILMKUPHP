@@ -9,6 +9,7 @@ import DomeGallery from "@/components/ui/DomeGallery";
 import ScrollFloat from "@/components/ui/ScrollFloat";
 import * as LucideIcons from 'lucide-react';
 import AdsterraBanner from "@/components/ads/AdsterraBanner";
+import { inferMovieSections } from "@/utils/sectionMatcher";
 
 export const revalidate = 30;
 
@@ -59,6 +60,19 @@ export default async function Home() {
     orderBy: { order: 'asc' },
   });
 
+  const getMovieSections = (m: any): string[] => {
+    const raw = m.sections ? m.sections.split(',').map((s: string) => s.trim()) : [];
+    const validRaw = raw.filter((s: string) => !s.includes('NEW_RELEASE') && !s.includes('POPULAR'));
+    if (validRaw.length > 0) return validRaw;
+    return inferMovieSections({
+      title: m.title || '',
+      genres: m.genre ? m.genre.split(',').map((g: string) => g.trim()) : [],
+      synopsis: m.synopsis || '',
+      rating: m.rating || 0,
+      status: m.status,
+    });
+  };
+
   // Group by sections (each movie can belong to multiple sections)
   const sections = dashboardSections
     .map(sec => ({
@@ -66,10 +80,7 @@ export default async function Home() {
       icon: sec.icon || 'Film',
       movies: shuffleArray(
         allMovies.filter(m =>
-          m.sections
-            ?.split(',')
-            .map(s => s.trim())
-            .includes(sec.name)
+          getMovieSections(m).includes(sec.name)
         )
       ),
     }))
@@ -79,7 +90,7 @@ export default async function Home() {
   const heroMovies = allMovies
     .filter(
       m =>
-        m.sections?.split(',').map(s => s.trim()).includes('Sorotan Layar Utama') &&
+        getMovieSections(m).includes('Sorotan Layar Utama') &&
         m.trailerUrl
     )
     .map(m => ({
@@ -89,7 +100,7 @@ export default async function Home() {
       rating: m.rating,
       genre: m.genre,
       posterUrl: m.posterUrl,
-      backdropUrl: m.backdropUrl,
+      backdropUrl: (m as any).backdropUrl || m.posterUrl,
       trailerVideoId: extractYouTubeId(m.trailerUrl),
     }))
     .filter(m => m.trailerVideoId !== '');
@@ -138,6 +149,10 @@ export default async function Home() {
                       genre={movie.genre}
                       synopsis={movie.synopsis}
                       status={movie.status}
+                      sections={movie.sections}
+                      country={movie.country}
+                      originalLanguage={movie.originalLanguage}
+                      mediaType={movie.mediaType}
                     />
                   ))}
                 </MovieLaneCarousel>

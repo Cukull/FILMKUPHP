@@ -31,7 +31,7 @@ export default function HomeHero({ films }: Props) {
   const [fading, setFading]       = useState(false); // crossfade between slides
   const [showPrev, setShowPrev]   = useState(false); // left hover-zone active
   const [showNext, setShowNext]   = useState(false); // right hover-zone active
-  const [isMobile, setIsMobile]   = useState(false);
+  const [isMobile, setIsMobile]   = useState(true); // Default ke true saat SSR agar tidak ada hydration mismatch, useEffect akan mendeteksi ulang ukurannya di client
 
   useEffect(() => {
     const checkMobile = () => {
@@ -184,16 +184,19 @@ export default function HomeHero({ films }: Props) {
     >
       {/* ── Background: Poster/Backdrop Image on Mobile, YouTube iframe on Desktop ── */}
       {isMobile ? (
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          zIndex: 0,
-          pointerEvents: 'none',
-          opacity: fading ? 0 : 1,
-          transition: 'opacity 0.28s ease',
-        }}>
+        <div
+          className="hero-poster-container"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            zIndex: 0,
+            pointerEvents: 'none',
+            opacity: fading ? 0 : 1,
+            transition: 'opacity 0.28s ease',
+          }}
+        >
           <img
             key={`${film.id}-${index}-img`}
             src={film.backdropUrl || film.posterUrl || '/placeholder.jpg'}
@@ -207,16 +210,19 @@ export default function HomeHero({ films }: Props) {
           />
         </div>
       ) : (
-        <div style={{
-          position: 'absolute',
-          width: '100%', height: '56.25vw',
-          minHeight: '100vh', minWidth: '100%',
-          transform: 'translate(-50%, -50%)',
-          top: '50%', left: '50%',
-          zIndex: 0, pointerEvents: 'none',
-          opacity: fading ? 0 : 1,
-          transition: 'opacity 0.28s ease',
-        }}>
+        <div
+          className="hero-iframe-container"
+          style={{
+            position: 'absolute',
+            width: '100%', height: '56.25vw',
+            minHeight: '100vh', minWidth: '100%',
+            transform: 'translate(-50%, -50%)',
+            top: '50%', left: '50%',
+            zIndex: 0, pointerEvents: 'none',
+            opacity: fading ? 0 : 1,
+            transition: 'opacity 0.28s ease',
+          }}
+        >
           <iframe
             ref={iframeRef}
             key={`${film.id}-${index}`}
@@ -243,33 +249,6 @@ export default function HomeHero({ films }: Props) {
         background: 'radial-gradient(circle at 15% 85%, rgba(8,8,16,0.9) 0%, rgba(8,8,16,0.5) 30%, transparent 60%), linear-gradient(to top, rgba(8,8,16,0.7) 0%, transparent 15%)',
         pointerEvents: 'none',
       }} />
-
-      {/* ── ElasticSlider Volume Control (0-100) ── */}
-      <div
-        className="filmku-volume-pill"
-        style={{
-          position: 'absolute',
-          bottom: total > 1 ? '13%' : '15%',
-          right: '5%',
-          zIndex: 25,
-          opacity: showMute ? 1 : 0,
-          transition: 'opacity 0.6s ease, transform 0.6s ease',
-          transform: showMute ? 'translateY(0)' : 'translateY(10px)',
-          pointerEvents: showMute ? 'auto' : 'none',
-        }}
-        onMouseEnter={() => {
-          setShowMute(true);
-          if (muteTimer.current) clearTimeout(muteTimer.current);
-        }}
-      >
-        <ElasticSlider
-          startingValue={0}
-          defaultValue={0}
-          maxValue={100}
-          value={volume}
-          onChange={handleVolumeChange}
-        />
-      </div>
 
       {/* ── Vignette tepi kiri & kanan — selalu terlihat, pointer-events-none ── */}
       {/* Tipis saja (8%) untuk kontras arrow putih */}
@@ -537,6 +516,33 @@ export default function HomeHero({ films }: Props) {
           </div>
         )}
       </div>
+
+      {/* ── Desktop Volume Control ── */}
+      {!isMobile && (
+        <div
+          className="filmku-volume-pill"
+          style={{
+            position: 'absolute',
+            bottom: '22%',
+            right: '4%',
+            zIndex: 25,
+            pointerEvents: 'auto',
+            opacity: showMute ? 1 : 0,
+            transform: showMute ? 'translateY(0)' : 'translateY(10px)',
+            transition: 'all 0.4s ease',
+          }}
+          onMouseEnter={() => setShowMute(true)}
+          onMouseLeave={() => setShowMute(false)}
+        >
+          <ElasticSlider
+            startingValue={0}
+            defaultValue={0}
+            maxValue={100}
+            value={volume}
+            onChange={handleVolumeChange}
+          />
+        </div>
+      )}
     </section>
   );
 }

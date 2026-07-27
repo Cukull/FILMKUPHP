@@ -17,6 +17,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { getFormatBadge } from '@/utils/formatBadge';
 
 type Props = {
   id: string;
@@ -26,6 +27,10 @@ type Props = {
   genre: string | null;
   synopsis: string | null;
   status?: 'NOW_PLAYING' | 'UPCOMING' | string | null;
+  sections?: string | null;
+  country?: string | null;
+  originalLanguage?: string | null;
+  mediaType?: string | null;
 };
 
 export default function MovieLaneCard({
@@ -36,9 +41,21 @@ export default function MovieLaneCard({
   genre,
   synopsis,
   status,
+  sections,
+  country,
+  originalLanguage,
+  mediaType,
 }: Props) {
   const poster = posterUrl || 'https://via.placeholder.com/160x240?text=No+Poster';
   const primaryGenre = genre?.split(',')[0]?.trim() ?? '';
+  const formatBadge = getFormatBadge({
+    genre,
+    sections,
+    title,
+    country,
+    originalLanguage,
+    mediaType,
+  });
 
   return (
     <motion.div
@@ -50,13 +67,8 @@ export default function MovieLaneCard({
     >
       <Link href={`/film/${id}`} style={{ textDecoration: 'none', display: 'block' }}>
         <div className="mlc-card">
-          {/* Status badge */}
-          {status === 'NOW_PLAYING' && (
-            <span className="movie-status-badge badge-now-playing">Tayang</span>
-          )}
-          {status === 'UPCOMING' && (
-            <span className="movie-status-badge badge-upcoming">Segera</span>
-          )}
+          {/* Format badge */}
+          <span className={formatBadge.className}>{formatBadge.label}</span>
 
           {/* Poster */}
           <img src={poster} alt={title} loading="lazy" className="mlc-img" />

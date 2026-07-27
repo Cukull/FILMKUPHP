@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { deleteMovie } from '@/actions/admin';
 import DeleteButton from './DeleteButton'; // Client component for delete
+import TranslateSynopsesButton from './TranslateSynopsesButton'; // Client button untuk terjemahkan sinopsis
 
 export default async function AdminFilmList() {
   const session = await getSession();
@@ -18,16 +19,37 @@ export default async function AdminFilmList() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem' }}>Kelola Film</h1>
           <p style={{ color: 'var(--text-secondary)' }}>Tambah, ubah, dan hapus daftar film yang tayang.</p>
         </div>
-        <Link href="/admin/film/baru">
-          <button className="btn-primary" style={{ padding: '0.5rem 1.5rem', fontWeight: 700 }}>
-            + Tambah Film
-          </button>
-        </Link>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <TranslateSynopsesButton />
+          <Link href="/admin/film/import-vidsrc">
+            <button style={{
+              background: 'linear-gradient(135deg, #e50914, #99050d)',
+              color: '#fff',
+              border: '1px solid rgba(229, 9, 20, 0.4)',
+              borderRadius: '0.5rem',
+              padding: '0.5rem 1.25rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              boxShadow: '0 4px 14px rgba(229, 9, 20, 0.3)'
+            }}>
+              <span>⚡</span>
+              <span>Auto-Import VidSrc & TMDB</span>
+            </button>
+          </Link>
+          <Link href="/admin/film/baru">
+            <button className="btn-primary" style={{ padding: '0.5rem 1.5rem', fontWeight: 700 }}>
+              + Tambah Film
+            </button>
+          </Link>
+        </div>
       </div>
 
       <div className="glass" style={{ borderRadius: '1rem', overflow: 'hidden' }}>

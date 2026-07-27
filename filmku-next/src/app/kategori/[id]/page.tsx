@@ -33,6 +33,11 @@ export default async function CategoryDetail({ params }: { params: Promise<{ id:
               rating={movie.rating}
               synopsis={movie.synopsis}
               status={movie.status}
+              genre={movie.genre}
+              sections={movie.sections}
+              country={movie.country}
+              originalLanguage={movie.originalLanguage}
+              mediaType={movie.mediaType}
             />
           ))}
         </div>

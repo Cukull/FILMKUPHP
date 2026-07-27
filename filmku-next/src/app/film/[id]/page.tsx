@@ -179,7 +179,7 @@ export default async function MovieDetail({ params }: { params: Promise<{ id: st
         <div className="hero-content" style={{ paddingBottom: "3rem", zIndex: 2, position: "relative" }}>
           {/* CTA Buttons row */}
           <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center", marginBottom: "1.25rem" }}>
-            <WatchMovieButton title={movie.title} movieId={movie.id} />
+            <WatchMovieButton title={movie.title} originalTitle={movie.originalTitle ?? undefined} movieId={movie.id} />
             <WishlistButton movieId={movie.id} />
             <button aria-label="Bagikan" style={{ width: "38px", height: "38px", borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "white", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.9rem" }}>🔗</button>
           </div>

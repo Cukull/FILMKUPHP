@@ -32,6 +32,28 @@ const GENRE_ICONS: Record<string, string> = {
   'Western': '🤠',
 };
 
+function movieHasGenre(movieGenreStr: string | null, targetGenre: string): boolean {
+  if (!movieGenreStr) return false;
+  const genres = movieGenreStr.toLowerCase().split(',').map(g => g.trim());
+  const target = targetGenre.toLowerCase();
+  if (genres.includes(target)) return true;
+  if (target === 'animation' && (genres.includes('animasi') || genres.includes('anime') || genres.includes('kartun'))) return true;
+  if (target === 'action' && (genres.includes('aksi') || genres.includes('aksi & petualangan'))) return true;
+  if (target === 'adventure' && (genres.includes('petualangan') || genres.includes('aksi & petualangan'))) return true;
+  if (target === 'comedy' && genres.includes('komedi')) return true;
+  if (target === 'crime' && genres.includes('kriminal')) return true;
+  if (target === 'documentary' && genres.includes('dokumenter')) return true;
+  if (target === 'family' && genres.includes('keluarga')) return true;
+  if (target === 'fantasy' && (genres.includes('fantasi') || genres.includes('sci-fi & fantasi'))) return true;
+  if (target === 'horror' && genres.includes('horor')) return true;
+  if (target === 'mystery' && genres.includes('misteri')) return true;
+  if (target === 'romance' && (genres.includes('romantis') || genres.includes('percintaan'))) return true;
+  if (target === 'science fiction' && (genres.includes('fiksi ilmiah') || genres.includes('sci-fi') || genres.includes('sci-fi & fantasi'))) return true;
+  if (target === 'war' && (genres.includes('perang') || genres.includes('perang & politik'))) return true;
+  if (target === 'western' && genres.includes('koboi')) return true;
+  return false;
+}
+
 export default async function GenrePage() {
   const allMovies = await prisma.movie.findMany({
     orderBy: { title: 'asc' },
@@ -42,12 +64,7 @@ export default async function GenrePage() {
     .map(name => ({
       name,
       icon: GENRE_ICONS[name] ?? '🎬',
-      movies: allMovies.filter(m =>
-        m.genre
-          ?.split(',')
-          .map(g => g.trim())
-          .includes(name)
-      ),
+      movies: allMovies.filter(m => movieHasGenre(m.genre, name)),
     }))
     .filter(g => g.movies.length > 0);
 
@@ -116,6 +133,7 @@ export default async function GenrePage() {
                       genre={genre.name}
                       synopsis={movie.synopsis}
                       status={movie.status}
+                      sections={movie.sections}
                     />
                   ))}
                 </MovieLaneCarousel>

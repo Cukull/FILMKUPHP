@@ -5,6 +5,7 @@ import { createMovie, updateMovie } from '@/actions/admin';
 import { useRouter } from 'next/navigation';
 import DarkSelect, { type SelectOption } from '@/components/DarkSelect';
 import * as LucideIcons from 'lucide-react';
+import { inferMovieSections } from '@/utils/sectionMatcher';
 
 // Helper to render Lucide Icon by name
 function RenderLucideIcon({ name, size = 16 }: { name: string, size?: number }) {
@@ -57,6 +58,54 @@ const TOKEN = {
   labelGap: '0.45rem',
 };
 
+function matchStandardGenres(rawGenreStr?: string | null): string[] {
+  if (!rawGenreStr) return [];
+  const rawList = rawGenreStr.split(',').map((g) => g.trim()).filter(Boolean);
+  const matched = new Set<string>();
+
+  for (const raw of rawList) {
+    const lower = raw.toLowerCase();
+    if (lower === 'animation' || lower === 'animasi' || lower === 'anime' || lower === 'kartun') {
+      matched.add('Animation');
+    } else if (lower === 'action' || lower === 'aksi' || lower === 'aksi & petualangan') {
+      matched.add('Action');
+    } else if (lower === 'adventure' || lower === 'petualangan' || lower === 'aksi & petualangan') {
+      matched.add('Adventure');
+    } else if (lower === 'comedy' || lower === 'komedi') {
+      matched.add('Comedy');
+    } else if (lower === 'crime' || lower === 'kriminal') {
+      matched.add('Crime');
+    } else if (lower === 'documentary' || lower === 'dokumenter') {
+      matched.add('Documentary');
+    } else if (lower === 'drama' || lower === 'drakor' || lower === 'drachin') {
+      matched.add('Drama');
+    } else if (lower === 'family' || lower === 'keluarga') {
+      matched.add('Family');
+    } else if (lower === 'fantasy' || lower === 'fantasi' || lower === 'sci-fi & fantasi') {
+      matched.add('Fantasy');
+    } else if (lower === 'horror' || lower === 'horor') {
+      matched.add('Horror');
+    } else if (lower === 'mystery' || lower === 'misteri') {
+      matched.add('Mystery');
+    } else if (lower === 'romance' || lower === 'romantis' || lower === 'percintaan') {
+      matched.add('Romance');
+    } else if (lower === 'science fiction' || lower === 'sci-fi' || lower === 'fiksi ilmiah' || lower === 'sci-fi & fantasi') {
+      matched.add('Science Fiction');
+    } else if (lower === 'thriller' || lower === 'menegangkan') {
+      matched.add('Thriller');
+    } else if (lower === 'war' || lower === 'perang' || lower === 'perang & politik') {
+      matched.add('War');
+    } else if (lower === 'western' || lower === 'koboi') {
+      matched.add('Western');
+    } else {
+      const cap = raw.charAt(0).toUpperCase() + raw.slice(1);
+      if (GENRES.includes(cap)) matched.add(cap);
+    }
+  }
+
+  return Array.from(matched);
+}
+
 export default function FilmForm({ 
   initialData, 
   sectionsList = [] 
@@ -88,12 +137,21 @@ export default function FilmForm({
     status: initialData?.status || 'NOW_PLAYING',
   });
 
-  const [selectedGenres, setSelectedGenres] = useState<string[]>(
-    initialData?.genre ? initialData.genre.split(',').map((g: string) => g.trim()) : []
+  const [selectedGenres, setSelectedGenres] = useState<string[]>(() =>
+    matchStandardGenres(initialData?.genre)
   );
-  const [selectedSections, setSelectedSections] = useState<string[]>(
-    initialData?.sections ? initialData.sections.split(',').map((g: string) => g.trim()) : []
-  );
+  const [selectedSections, setSelectedSections] = useState<string[]>(() => {
+    const raw = initialData?.sections ? initialData.sections.split(',').map((g: string) => g.trim()) : [];
+    const validRaw = raw.filter((s: string) => !s.includes('NEW_RELEASE') && !s.includes('POPULAR'));
+    if (validRaw.length > 0) return validRaw;
+    return inferMovieSections({
+      title: initialData?.title || '',
+      genres: initialData?.genre ? initialData.genre.split(',').map((g: string) => g.trim()) : [],
+      synopsis: initialData?.synopsis || '',
+      rating: initialData?.rating || 0,
+      status: initialData?.status,
+    });
+  });
 
   const handleOMDBFetch = async () => {
     if (!formData.title) { setOmdbError('Isi judul film terlebih dahulu'); return; }
@@ -138,15 +196,28 @@ export default function FilmForm({
       // ── 6. Poster URL ──
       const newPoster = valid(d.posterUrl) ? d.posterUrl : null;
 
+      // ── 7. Trailer URL (dari TMDB resmi, tanpa rickroll) ──
+      const newTrailer = valid(d.trailerUrl) ? d.trailerUrl : null;
+
       // ── Terapkan ke formData — hanya jika ada nilai valid dari API ──
+      if (newSynopsis)  { filled.push('Sinopsis'); }
+      if (newRating)    { filled.push('Rating IMDb'); }
+      if (newDuration)  { filled.push('Durasi'); }
+      if (newRT)        { filled.push('Rotten Tomatoes'); }
+      if (newMC)        { filled.push('Metacritic'); }
+      if (newPoster)    { filled.push('Poster URL'); }
+      if (newTrailer)   { filled.push('Trailer YouTube'); }
+
       setFormData(prev => {
         const next = { ...prev };
-        if (newSynopsis)  { next.synopsis      = newSynopsis;  filled.push('Sinopsis'); }
-        if (newRating)    { next.rating         = newRating;    filled.push('Rating IMDb'); }
-        if (newDuration)  { next.durationMin    = newDuration;  filled.push('Durasi'); }
-        if (newRT)        { next.rottenTomatoes = newRT;        filled.push('Rotten Tomatoes'); }
-        if (newMC)        { next.metacritic     = newMC;        filled.push('Metacritic'); }
-        if (newPoster)    { next.posterUrl      = newPoster;    filled.push('Poster URL'); }
+        if (newSynopsis)  { next.synopsis      = newSynopsis; }
+        if (newRating)    { next.rating         = newRating; }
+        if (newDuration)  { next.durationMin    = newDuration; }
+        if (newRT)        { next.rottenTomatoes = newRT; }
+        if (newMC)        { next.metacritic     = newMC; }
+        if (newPoster)    { next.posterUrl      = newPoster; }
+        if (newTrailer)   { next.trailerUrl     = newTrailer; }
+        else if (!prev.trailerUrl || prev.trailerUrl.includes('dQw4w9WgXcQ')) { next.trailerUrl = ''; }
         // director & cast disimpan sebagai JSON string dari TMDB credits
         if (valid(d.director)) { next.director = d.director; }
         if (valid(d.cast))     { next.cast     = d.cast; }
@@ -154,6 +225,7 @@ export default function FilmForm({
       });
 
       // ── Genre: case-insensitive matching, track yang tidak cocok ──
+      let matchedGenresList: string[] = [];
       if (valid(d.genre)) {
         const rawGenres = d.genre.split(',').map((g: string) => g.trim());
         const matched: string[] = [];
@@ -181,6 +253,7 @@ export default function FilmForm({
         });
 
         if (matched.length > 0) {
+          matchedGenresList = matched;
           // Gabungkan dengan genre yang sudah dipilih manual (union)
           setSelectedGenres(prev => Array.from(new Set([...prev, ...matched])));
           filled.push(`Genre (${matched.join(', ')})`);
@@ -188,6 +261,23 @@ export default function FilmForm({
         if (unmatched.length > 0) {
           setUnmatchedGenres(unmatched);
         }
+      }
+
+      // ── Otomatisasi Kategori Section minimal 1 section berdasarkan genre/rating/sinopsis ──
+      const inferredSections = inferMovieSections({
+        title: formData.title || '',
+        genres: matchedGenresList.length > 0 ? matchedGenresList : selectedGenres,
+        synopsis: newSynopsis || formData.synopsis || '',
+        country: d.country || '',
+        originalLanguage: d.originalLanguage || d.language || '',
+        mediaType: d.mediaType || (d.type === 'series' ? 'tv' : 'movie'),
+        rating: newRating ? Number(newRating) : Number(formData.rating || 0),
+        status: formData.status,
+        existingSections: selectedSections,
+      });
+      if (inferredSections.length > 0) {
+        setSelectedSections(inferredSections);
+        filled.push(`Section (${inferredSections.join(', ')})`);
       }
 
       setOmdbFilledFields(filled);

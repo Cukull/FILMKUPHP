@@ -64,6 +64,11 @@ export default function WishlistClient() {
               rating={movie.rating}
               synopsis={movie.synopsis}
               status={movie.status}
+              genre={movie.genre}
+              sections={movie.sections}
+              country={movie.country}
+              originalLanguage={movie.originalLanguage}
+              mediaType={movie.mediaType}
               actions={
                 <button
                   onClick={(e) => removeFromWishlist(movie.id, e)}

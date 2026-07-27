@@ -53,6 +53,7 @@ export async function createMovie(data: {
   });
   revalidatePath('/admin/film');
   revalidatePath('/');
+  revalidatePath('/genre');
   return { success: true, movie };
 }
 
@@ -84,6 +85,7 @@ export async function updateMovie(id: string, data: Partial<{
   });
   revalidatePath('/admin/film');
   revalidatePath('/');
+  revalidatePath('/genre');
   revalidatePath(`/film/${id}`);
   return { success: true, movie };
 }
@@ -98,6 +100,7 @@ export async function deleteMovie(id: string) {
   await prisma.movie.delete({ where: { id } });
   revalidatePath('/admin/film');
   revalidatePath('/');
+  revalidatePath('/genre');
   return { success: true };
 }
 

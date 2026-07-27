@@ -13,7 +13,8 @@ interface HeroTrailerProps {
 export default function HeroTrailer({ videoId, title, posterUrl, backdropUrl }: HeroTrailerProps) {
   const [isMuted, setIsMuted] = useState(true);
   const [volume, setVolume] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(true);
+  const [showMute, setShowMute] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
@@ -45,6 +46,19 @@ export default function HeroTrailer({ videoId, title, posterUrl, backdropUrl }: 
       postYT('setVolume', [newVol]);
     } else {
       setIsMuted(true);
+      postYT('mute');
+    }
+  };
+
+  const toggleMute = () => {
+    if (isMuted) {
+      setIsMuted(false);
+      setVolume(80);
+      postYT('unMute');
+      postYT('setVolume', [80]);
+    } else {
+      setIsMuted(true);
+      setVolume(0);
       postYT('mute');
     }
   };
@@ -103,7 +117,7 @@ export default function HeroTrailer({ videoId, title, posterUrl, backdropUrl }: 
         </div>
       )}
 
-      {/* ── ElasticSlider Volume Control (0-100) ── */}
+      {/* ── Volume Control: SVG Speaker Icon on Mobile, ElasticSlider on Desktop ── */}
       <div
         className="filmku-volume-pill"
         style={{
@@ -112,15 +126,56 @@ export default function HeroTrailer({ videoId, title, posterUrl, backdropUrl }: 
           right: '4%',
           zIndex: 25,
           pointerEvents: 'auto',
+          opacity: showMute ? 1 : (isMobile ? 0.4 : 0),
+          transform: (showMute || isMobile) ? 'translateY(0)' : 'translateY(10px)',
+          transition: 'all 0.4s ease',
         }}
+        onMouseEnter={() => setShowMute(true)}
+        onMouseLeave={() => setShowMute(false)}
       >
-        <ElasticSlider
-          startingValue={0}
-          defaultValue={0}
-          maxValue={100}
-          value={volume}
-          onChange={handleVolumeChange}
-        />
+        {isMobile ? (
+          <button
+            onClick={toggleMute}
+            aria-label={isMuted ? 'Aktifkan Suara' : 'Bisukan Suara'}
+            style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '50%',
+              background: 'rgba(8, 8, 16, 0.75)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              backdropFilter: 'blur(8px)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+              transition: 'all 0.2s ease',
+              padding: 0,
+            }}
+          >
+            {isMuted ? (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <line x1="23" y1="9" x2="17" y2="15"></line>
+                <line x1="17" y1="9" x2="23" y2="15"></line>
+              </svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+              </svg>
+            )}
+          </button>
+        ) : (
+          <ElasticSlider
+            startingValue={0}
+            defaultValue={0}
+            maxValue={100}
+            value={volume}
+            onChange={handleVolumeChange}
+          />
+        )}
       </div>
     </>
   );

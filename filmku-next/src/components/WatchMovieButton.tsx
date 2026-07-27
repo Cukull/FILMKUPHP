@@ -12,6 +12,7 @@ const SMARTLINK_URL = "https://dischargeconceiteffort.com/kne0qw3q7?key=9e4530e7
 
 interface WatchMovieButtonProps {
   title: string;
+  originalTitle?: string;   // Judul asli untuk pencarian TMDB (Inggris / Korea / China)
   movieId: string;
   className?: string;
   style?: React.CSSProperties;
@@ -19,6 +20,7 @@ interface WatchMovieButtonProps {
 
 export default function WatchMovieButton({
   title,
+  originalTitle,
   movieId,
   className = 'btn-primary',
   style,
@@ -43,7 +45,10 @@ export default function WatchMovieButton({
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    router.push(`/test-streaming?title=${encodeURIComponent(title)}&id=${movieId}`);
+    // searchTitle: gunakan originalTitle (judul asli TMDB) jika tersedia,
+    // karena TMDB tidak mengenali judul terjemahan Indonesia
+    const searchTitle = originalTitle || title;
+    router.push(`/test-streaming?title=${encodeURIComponent(searchTitle)}&displayTitle=${encodeURIComponent(title)}&id=${movieId}`);
   };
 
   return (

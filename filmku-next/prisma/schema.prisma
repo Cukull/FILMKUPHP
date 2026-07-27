@@ -47,6 +47,7 @@ model Movie {
   director       String?
   genre          String?
   sections       String?
+  originalTitle  String?   // Judul asli (Inggris/Korea/China) untuk pencarian TMDB
 }
 
 enum MovieStatus {

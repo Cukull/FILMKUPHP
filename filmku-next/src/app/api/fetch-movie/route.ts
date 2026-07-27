@@ -18,7 +18,13 @@ export async function GET(request: Request) {
     year = yearMatch[1];
   }
   // Strip year like "(2014)" or "2014" from title for cleaner TMDB/OMDB search
-  const cleanTitle = title.replace(/\s*\(\d{4}\)\s*$/, '').replace(/\s+\d{4}$/, '').trim();
+  let cleanTitle = title.replace(/\s*\(\d{4}\)\s*$/, '').replace(/\s+\d{4}$/, '').trim();
+
+  // JIKA format judul adalah "Judul Indonesia (Judul Asli)" -> Ekstrak "Judul Asli" untuk pencarian TMDB
+  const parenMatch = cleanTitle.match(/\(([^)]+)\)\s*$/);
+  if (parenMatch && parenMatch[1].trim().length > 1 && !/^\d+$/.test(parenMatch[1])) {
+    cleanTitle = parenMatch[1].trim();
+  }
 
   try {
     // ─── TMDB: poster + cast + crew ────────────────────────────
@@ -40,8 +46,11 @@ export async function GET(request: Request) {
     let cast: any[] = [];
     let crew: any[] = [];
     let posterUrl = '';
+    let trailerUrl = '';
     let tmdbRuntime: number | null = null;
     let genre = '';
+    let tmdbOverview = '';
+    let tmdbCountry = '';
 
     if (tmdbMovie) {
       posterUrl = tmdbMovie.poster_path
@@ -55,7 +64,7 @@ export async function GET(request: Request) {
       const tmdbCreditsData = await tmdbCreditsRes.json();
 
       cast = (tmdbCreditsData.cast || []).slice(0, 10).map((c: any) => ({
-        tmdbId: c.id,                          // ← TMDB person ID for profile links
+        tmdbId: c.id,
         name: c.name,
         role: c.character,
         imageUrl: c.profile_path ? `https://image.tmdb.org/t/p/w200${c.profile_path}` : '',
@@ -65,7 +74,7 @@ export async function GET(request: Request) {
         .filter((c: any) => c.job === 'Director' || c.job === 'Producer' || c.department === 'Directing')
         .slice(0, 5)
         .map((c: any) => ({
-          tmdbId: c.id,                        // ← TMDB person ID for profile links
+          tmdbId: c.id,
           name: c.name,
           role: c.job,
           imageUrl: c.profile_path ? `https://image.tmdb.org/t/p/w200${c.profile_path}` : '',
@@ -81,6 +90,29 @@ export async function GET(request: Request) {
       }
       if (tmdbDetailData.genres && tmdbDetailData.genres.length > 0) {
         genre = tmdbDetailData.genres.map((g: any) => g.name).join(', ');
+      }
+      if (tmdbDetailData.overview) {
+        tmdbOverview = tmdbDetailData.overview;
+      }
+      if (tmdbDetailData.origin_country && tmdbDetailData.origin_country.length > 0) {
+        tmdbCountry = tmdbDetailData.origin_country[0];
+      }
+
+      // Get official trailer from TMDB videos endpoint (no rickroll fallback)
+      try {
+        const tmdbVideosRes = await fetch(
+          `https://api.themoviedb.org/3/movie/${tmdbMovie.id}/videos?api_key=${tmdbKey}`
+        );
+        const tmdbVideosData = await tmdbVideosRes.json();
+        const results = tmdbVideosData.results || [];
+        const trailer = results.find(
+          (v: any) => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser')
+        ) || results.find((v: any) => v.site === 'YouTube');
+        if (trailer && trailer.key) {
+          trailerUrl = `https://www.youtube.com/watch?v=${trailer.key}`;
+        }
+      } catch (e) {
+        console.warn('TMDB video fetch failed:', e);
       }
     }
 
@@ -141,14 +173,16 @@ export async function GET(request: Request) {
       success: true,
       data: {
         posterUrl,
+        trailerUrl,
         cast: JSON.stringify(cast),
         director: JSON.stringify(crew),
         durationMin,
         rating,
         rottenTomatoes,
         metacritic,
-        synopsis: synopsis || tmdbMovie?.overview || '',
+        synopsis: tmdbOverview || tmdbMovie?.overview || synopsis || '',
         genre,
+        country: tmdbCountry,
         omdbFound: omdbData.Response === 'True',
       },
     });
