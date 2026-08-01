@@ -213,8 +213,15 @@ export default function AuthPage() {
       <style>{`
         @media (max-width: 768px) {
           .auth-panel-red { display: none !important; }
-          .auth-panel-dark { width: 50% !important; padding: 2rem 1.5rem !important; }
-          .auth-mobile-toggle { display: block !important; text-align: center; margin-top: 1rem; font-size: 0.85rem; }
+          .auth-panel-dark { 
+            width: 50% !important; 
+            min-height: auto !important; 
+            padding: 2rem 1.25rem !important; 
+          }
+          .auth-panel-dark h1 { font-size: 1.5rem !important; margin-bottom: 0.2rem !important; }
+          .auth-panel-dark p { margin-bottom: 1.2rem !important; font-size: 0.78rem !important; }
+          .auth-panel-dark form { gap: 0.75rem !important; }
+          .auth-mobile-toggle { display: block !important; text-align: center; margin-top: 1rem; font-size: 0.8rem; }
         }
         @media (min-width: 769px) {
           .auth-mobile-toggle { display: none !important; }
