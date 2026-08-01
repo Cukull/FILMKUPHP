@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import React, { useState, useEffect } from 'react';
+
 const navItems = [
   {
     name: 'Ringkasan',
@@ -65,83 +67,172 @@ const navItems = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
 
   return (
-    <div style={{ display: 'flex', minHeight: 'calc(100vh - 72px)', background: 'var(--bg-base)' }}>
-      {/* Sidebar Admin */}
-      <aside style={{
-        width: '240px',
-        flexShrink: 0,
-        background: 'rgba(8, 8, 16, 0.95)',
-        borderRight: '1px solid rgba(255,255,255,0.06)',
-        padding: '1.5rem 0.75rem',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.25rem',
-      }}>
-        <div style={{
-          fontSize: '0.7rem',
-          fontWeight: 700,
-          color: 'rgba(255,255,255,0.35)',
-          marginBottom: '0.75rem',
-          paddingLeft: '0.75rem',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-        }}>
-          MENU ADMIN
-        </div>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 72px)', background: 'var(--bg-base)' }}>
+      <style>{`
+        .admin-sidebar {
+          width: 240px;
+          flex-shrink: 0;
+          background: rgba(8, 8, 16, 0.95);
+          border-right: 1px solid rgba(255,255,255,0.06);
+          padding: 1.5rem 0.75rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+          transition: transform 0.3s ease;
+        }
+        .admin-main {
+          flex: 1;
+          padding: 2rem;
+          overflow-y: auto;
+          overflow-x: hidden;
+        }
+        .admin-mobile-header {
+          display: none;
+        }
+        .admin-overlay {
+          display: none;
+        }
+        @media (max-width: 768px) {
+          .admin-layout-wrapper {
+            flex-direction: column !important;
+          }
+          .admin-sidebar {
+            position: fixed;
+            top: 72px; /* below navbar */
+            left: 0;
+            bottom: 0;
+            z-index: 50;
+            transform: translateX(-100%);
+            background: #080810;
+          }
+          .admin-sidebar.open {
+            transform: translateX(0);
+          }
+          .admin-main {
+            padding: 1rem 0.75rem;
+          }
+          .admin-mobile-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: rgba(8, 8, 16, 0.95);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            position: sticky;
+            top: 0;
+            z-index: 40;
+          }
+          .admin-overlay.open {
+            display: block;
+            position: fixed;
+            top: 72px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(2px);
+            z-index: 45;
+          }
+        }
+      `}</style>
 
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          {navItems.map((item) => {
-            const isActive = pathname === item.path || (item.path !== '/admin' && pathname.startsWith(item.path));
-            return (
-              <Link
-                key={item.path}
-                href={item.path}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.875rem',
-                  padding: '0.875rem 1rem',
-                  borderRadius: '0.625rem',
-                  textDecoration: 'none',
-                  color: isActive ? '#fff' : 'rgba(255,255,255,0.55)',
-                  background: isActive
-                    ? 'linear-gradient(90deg, rgba(229, 9, 20, 0.25) 0%, rgba(229, 9, 20, 0.05) 100%)'
-                    : 'transparent',
-                  borderLeft: `3px solid ${isActive ? '#e50914' : 'transparent'}`,
-                  fontWeight: isActive ? 700 : 500,
-                  fontSize: '0.875rem',
-                  transition: 'all 0.2s ease',
-                  fontFamily: 'var(--font-body)',
-                }}
-                onMouseEnter={e => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-                    e.currentTarget.style.color = 'rgba(255,255,255,0.85)';
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = 'rgba(255,255,255,0.55)';
-                  }
-                }}
-              >
-                <span style={{ color: isActive ? '#e50914' : 'inherit', flexShrink: 0 }}>
-                  {item.icon}
-                </span>
-                {item.name}
-              </Link>
-            );
-          })}
-        </nav>
-      </aside>
+      {/* Mobile Header (Only visible on mobile) */}
+      <div className="admin-mobile-header">
+        <span style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', letterSpacing: '0.05em' }}>Dashboard Admin</span>
+        <button 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: '0.5rem' }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+      </div>
 
-      {/* Main Content Admin */}
-      <main style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}>
-        {children}
-      </main>
+      <div className="admin-layout-wrapper" style={{ display: 'flex', flex: 1, position: 'relative' }}>
+        
+        {/* Mobile Overlay */}
+        <div 
+          className={`admin-overlay ${isMobileMenuOpen ? 'open' : ''}`} 
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+
+        {/* Sidebar Admin */}
+        <aside className={`admin-sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
+          <div style={{
+            fontSize: '0.7rem',
+            fontWeight: 700,
+            color: 'rgba(255,255,255,0.35)',
+            marginBottom: '0.75rem',
+            paddingLeft: '0.75rem',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+          }}>
+            MENU ADMIN
+          </div>
+
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            {navItems.map((item) => {
+              const isActive = pathname === item.path || (item.path !== '/admin' && pathname.startsWith(item.path));
+              return (
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.875rem',
+                    padding: '0.875rem 1rem',
+                    borderRadius: '0.625rem',
+                    textDecoration: 'none',
+                    color: isActive ? '#fff' : 'rgba(255,255,255,0.55)',
+                    background: isActive
+                      ? 'linear-gradient(90deg, rgba(229, 9, 20, 0.25) 0%, rgba(229, 9, 20, 0.05) 100%)'
+                      : 'transparent',
+                    borderLeft: `3px solid ${isActive ? '#e50914' : 'transparent'}`,
+                    fontWeight: isActive ? 700 : 500,
+                    fontSize: '0.875rem',
+                    transition: 'all 0.2s ease',
+                    fontFamily: 'var(--font-body)',
+                  }}
+                  onMouseEnter={e => {
+                    if (!isActive) {
+                      e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                      e.currentTarget.style.color = 'rgba(255,255,255,0.85)';
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (!isActive) {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.color = 'rgba(255,255,255,0.55)';
+                    }
+                  }}
+                >
+                  <span style={{ color: isActive ? '#e50914' : 'inherit', flexShrink: 0 }}>
+                    {item.icon}
+                  </span>
+                  {item.name}
+                </Link>
+              );
+            })}
+          </nav>
+        </aside>
+
+        {/* Main Content Admin */}
+        <main className="admin-main">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
