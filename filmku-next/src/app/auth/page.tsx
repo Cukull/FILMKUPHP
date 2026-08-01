@@ -210,6 +210,16 @@ export default function AuthPage() {
       padding: '2rem 1rem',
       position: 'relative',
     }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .auth-panel-red { display: none !important; }
+          .auth-panel-dark { width: 50% !important; padding: 2rem 1.5rem !important; }
+          .auth-mobile-toggle { display: block !important; text-align: center; margin-top: 1rem; font-size: 0.85rem; }
+        }
+        @media (min-width: 769px) {
+          .auth-mobile-toggle { display: none !important; }
+        }
+      `}</style>
 
       {/* ══ DotField — fixed, full viewport, behind navbar ══ */}
       <div style={{ position: 'fixed', inset: 0, zIndex: -1 }}>
@@ -272,7 +282,7 @@ export default function AuthPage() {
           }}>
 
             {/* ════════ PANEL 1 — LOGIN FORM (dark left) ════════ */}
-            <div style={darkSide}>
+            <div style={darkSide} className="auth-panel-dark">
               {/* Corner ambient glow */}
               <div style={{
                 position: 'absolute', top: '-60px', right: '-60px',
@@ -354,6 +364,12 @@ export default function AuthPage() {
                 </button>
               </form>
 
+              {/* Mobile toggle link */}
+              <div className="auth-mobile-toggle">
+                <span style={{ color: 'rgba(255,255,255,0.5)' }}>Belum punya akun?</span>{' '}
+                <button type="button" onClick={() => setIsRegister(true)} style={{ background: 'none', border: 'none', color: '#e50914', fontWeight: 600, cursor: 'pointer', padding: 0 }}>Daftar sekarang</button>
+              </div>
+
               {/* Demo credentials */}
               <div style={{
 
@@ -363,7 +379,7 @@ export default function AuthPage() {
             </div>
 
             {/* ════════ PANEL 2 — CTA DAFTAR (red right) ════════ */}
-            <div style={redSide}>
+            <div style={redSide} className="auth-panel-red">
               {/* Decorative circles */}
               <div style={{ position: 'absolute', top: '-40px', right: '-40px', width: '200px', height: '200px', borderRadius: '50%', background: 'rgba(255,255,255,0.06)', pointerEvents: 'none' }} />
               <div style={{ position: 'absolute', bottom: '-30px', left: '-30px', width: '140px', height: '140px', borderRadius: '50%', background: 'rgba(0,0,0,0.12)', pointerEvents: 'none' }} />
@@ -389,7 +405,7 @@ export default function AuthPage() {
             </div>
 
             {/* ════════ PANEL 3 — CTA MASUK (red left) ════════ */}
-            <div style={redSide}>
+            <div style={redSide} className="auth-panel-red">
               <div style={{ position: 'absolute', top: '-40px', left: '-40px', width: '200px', height: '200px', borderRadius: '50%', background: 'rgba(255,255,255,0.06)', pointerEvents: 'none' }} />
               <div style={{ position: 'absolute', bottom: '-30px', right: '-30px', width: '140px', height: '140px', borderRadius: '50%', background: 'rgba(0,0,0,0.12)', pointerEvents: 'none' }} />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, transparent 50%, rgba(0,0,0,0.15) 100%)', pointerEvents: 'none' }} />
@@ -420,7 +436,7 @@ export default function AuthPage() {
             </div>
 
             {/* ════════ PANEL 4 — REGISTER FORM (dark right) ════════ */}
-            <div style={darkSide}>
+            <div style={darkSide} className="auth-panel-dark">
               <div style={{
                 position: 'absolute', top: '-60px', left: '-60px',
                 width: '220px', height: '220px', borderRadius: '50%',
@@ -516,13 +532,10 @@ export default function AuthPage() {
                 </button>
               </form>
 
-              <p style={{ marginTop: '1.25rem', fontSize: '0.78rem', color: 'rgba(255,255,255,0.28)' }}>
-                Sudah punya akun?{' '}
-                <button onClick={() => setIsRegister(false)}
-                  style={{ background: 'none', border: 'none', color: '#e50914', fontWeight: 700, cursor: 'pointer', fontSize: '0.78rem', padding: 0 }}>
-                  Masuk
-                </button>
-              </p>
+              <div className="auth-mobile-toggle">
+                <span style={{ color: 'rgba(255,255,255,0.5)' }}>Sudah punya akun?</span>{' '}
+                <button type="button" onClick={() => setIsRegister(false)} style={{ background: 'none', border: 'none', color: '#e50914', fontWeight: 600, cursor: 'pointer', padding: 0 }}>Masuk sekarang</button>
+              </div>
             </div>
 
           </div>{/* end 4-panel slider */}
