@@ -293,3 +293,21 @@ export async function deleteDashboardSection(id: string) {
   revalidatePath('/'); // Revalidate homepage
   return { success: true };
 }
+
+export async function updateDashboardSectionOrders(updates: { id: string; order: number }[]) {
+  await requireAdmin();
+
+  // Use a transaction to perform bulk updates reliably
+  await prisma.$transaction(
+    updates.map((update) =>
+      prisma.dashboardSection.update({
+        where: { id: update.id },
+        data: { order: update.order },
+      })
+    )
+  );
+
+  revalidatePath('/admin/sections');
+  revalidatePath('/'); // Revalidate homepage
+  return { success: true };
+}

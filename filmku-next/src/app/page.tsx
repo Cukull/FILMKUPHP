@@ -12,9 +12,7 @@ import * as LucideIcons from 'lucide-react';
 import AdsterraBanner from "@/components/ads/AdsterraBanner";
 import { inferMovieSections } from "@/utils/sectionMatcher";
 import FeaturesSection from "@/components/FeaturesSection";
-import CuratedYearlySection from "@/components/CuratedYearlySection";
-import CuratedThemeSection from "@/components/CuratedThemeSection";
-import { THEMED_SECTIONS } from "@/data/curatedSections";
+import BestFilmsSection from "@/components/BestFilmsSection";
 
 export const revalidate = 30;
 
@@ -37,8 +35,6 @@ function RenderLucideIcon({ name, size = 24 }: { name: string, size?: number }) 
   return <IconComponent size={size} />;
 }
 
-// The features array is now in FeaturesSection.tsx
-
 // Fisher-Yates shuffle to randomize movie order for dynamic UI
 function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
@@ -60,25 +56,6 @@ export default async function Home() {
     orderBy: { order: 'asc' },
   });
 
-  // Curated section name patterns
-  const YEARLY_PATTERN = /^Film Terbaik (\d{4})$/;
-  const themedNames = new Set(THEMED_SECTIONS.map(s => s.name));
-  // Metadata lookup for themed sections (emoji + description)
-  const themedMeta = new Map(THEMED_SECTIONS.map(s => [s.name, { emoji: s.emoji, description: s.description }]));
-
-  // Separate dashboard sections into regular vs curated
-  const regularSections = dashboardSections.filter(sec => 
-    !YEARLY_PATTERN.test(sec.name) && !themedNames.has(sec.name)
-  );
-  const yearlySections = dashboardSections
-    .filter(sec => YEARLY_PATTERN.test(sec.name))
-    .sort((a, b) => {
-      const yearA = parseInt(a.name.match(YEARLY_PATTERN)?.[1] || '0');
-      const yearB = parseInt(b.name.match(YEARLY_PATTERN)?.[1] || '0');
-      return yearB - yearA; // Newest first
-    });
-  const themedSectionsList = dashboardSections.filter(sec => themedNames.has(sec.name));
-
   const getMovieSections = (m: any): string[] => {
     const raw = m.sections ? m.sections.split(',').map((s: string) => s.trim()) : [];
     const validRaw = raw.filter((s: string) => !s.includes('NEW_RELEASE') && !s.includes('POPULAR'));
@@ -92,59 +69,21 @@ export default async function Home() {
     });
   };
 
-  // Group by REGULAR sections only (curated sections handled separately)
-  const sections = regularSections
-    .map(sec => ({
-      name: sec.name,
-      icon: sec.icon || 'Film',
-      movies: shuffleArray(
-        allMovies.filter(m =>
-          getMovieSections(m).includes(sec.name)
-        )
-      ),
-    }))
-    .filter(s => s.movies.length > 0);
+  // Filter out "Sorotan Layar Utama" so it only appears in the Hero Carousel, not as a lane
+  const displaySections = dashboardSections.filter(sec => sec.name !== 'Sorotan Layar Utama');
 
-  // Build yearly curated data from DB
-  const yearlyDataFromDB = yearlySections
-    .map(sec => {
-      const yearMatch = sec.name.match(YEARLY_PATTERN);
-      const year = yearMatch ? parseInt(yearMatch[1]) : 0;
-      const films = allMovies
-        .filter(m => getMovieSections(m).includes(sec.name))
-        .map(m => ({
-          title: m.title,
-          year,
-          tmdbId: 0,
-          imdbRating: m.rating || 0,
-          posterUrl: m.posterUrl || '',
-        }));
-      return { year, films };
-    })
-    .filter(y => y.films.length > 0);
+  // Group movies by dynamic dashboard sections
+  const sections = displaySections.map(sec => ({
+    name: sec.name,
+    icon: sec.icon || 'Film',
+    movies: shuffleArray(
+      allMovies.filter(m =>
+        getMovieSections(m).includes(sec.name)
+      )
+    ),
+  }));
 
-  // Build themed curated data from DB
-  const themedDataFromDB = themedSectionsList
-    .map(sec => {
-      const meta = themedMeta.get(sec.name) || { emoji: '🎬', description: '' };
-      const films = allMovies
-        .filter(m => getMovieSections(m).includes(sec.name))
-        .map(m => ({
-          title: m.title,
-          year: 0,
-          tmdbId: 0,
-          imdbRating: m.rating || 0,
-          posterUrl: m.posterUrl || '',
-        }));
-      return {
-        name: sec.name,
-        icon: sec.icon || 'Film',
-        emoji: meta.emoji,
-        description: meta.description,
-        films,
-      };
-    })
-    .filter(s => s.films.length > 0);
+  const bestFilmSections = sections.filter(sec => sec.name.toLowerCase().includes('film terbaik'));
 
   // Hero films: all tagged "Sorotan Layar Utama" with a valid trailer
   const heroMovies = allMovies
@@ -171,7 +110,7 @@ export default async function Home() {
       <HomeHero films={heroMovies} />
 
       {/* ── MOVIE SECTIONS ── */}
-      <div style={{ paddingTop: '2.5rem', paddingBottom: '1rem' }}>
+      <div style={{ paddingTop: '2.5rem', paddingBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '3rem' }}>
         {sections.length === 0 ? (
           <div style={{ padding: '4rem 2rem', textAlign: 'center', color: 'rgba(255,255,255,0.35)' }}>
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎬</div>
@@ -183,74 +122,82 @@ export default async function Home() {
             </p>
           </div>
         ) : (
-          sections.map((section, idx) => (
-            <React.Fragment key={section.name}>
-              <div className="movie-lane">
-                <div className="movie-lane-header">
-                  <h3 className="movie-lane-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ color: 'var(--primary)' }}><RenderLucideIcon name={section.icon} size={20} /></span> {section.name}
-                  </h3>
-                  <Link
-                    href="/genre"
-                    style={{ fontSize: '0.8rem', color: 'var(--accent)', textDecoration: 'none', fontWeight: 600, letterSpacing: '0.03em' }}
-                  >
-                    Lihat Semua →
-                  </Link>
-                </div>
+          <>
+            {sections.map((section, idx) => {
+              const isBestFilm = section.name.toLowerCase().includes('film terbaik');
 
-                <MovieLaneCarousel>
-                  {section.movies.map(movie => (
-                    <MovieLaneCard
-                      key={movie.id}
-                      id={movie.id}
-                      title={movie.title}
-                      posterUrl={movie.posterUrl}
-                      rating={movie.rating}
-                      genre={movie.genre}
-                      synopsis={movie.synopsis}
-                      status={movie.status}
-                      sections={movie.sections}
-                      country={movie.country}
-                      originalLanguage={movie.originalLanguage}
-                      mediaType={movie.mediaType}
-                    />
-                  ))}
-                </MovieLaneCarousel>
-              </div>
-              {(idx === 0 || idx === 2) && <AdsterraBanner />}
-            </React.Fragment>
-          ))
+              if (isBestFilm) {
+                // Find the first 'film terbaik' index to only render the grouped component once
+                const firstBestFilmIndex = sections.findIndex(s => s.name.toLowerCase().includes('film terbaik'));
+                if (idx !== firstBestFilmIndex) return null;
+
+                return <BestFilmsSection key="best-films-group" bestFilmSections={bestFilmSections} />;
+              }
+
+              // Render regular section
+              return (
+                <React.Fragment key={section.name}>
+                  <div className="movie-lane">
+                    <div className="movie-lane-header">
+                      <h3 className="movie-lane-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ color: 'var(--primary)' }}><RenderLucideIcon name={section.icon} size={20} /></span> {section.name}
+                      </h3>
+                      <Link
+                        href="/genre"
+                        style={{ fontSize: '0.8rem', color: 'var(--accent)', textDecoration: 'none', fontWeight: 600, letterSpacing: '0.03em' }}
+                      >
+                        Lihat Semua →
+                      </Link>
+                    </div>
+
+                    {section.movies.length > 0 ? (
+                      <MovieLaneCarousel>
+                        {section.movies.map(movie => (
+                          <MovieLaneCard
+                            key={movie.id}
+                            id={movie.id}
+                            title={movie.title}
+                            posterUrl={movie.posterUrl}
+                            rating={movie.rating}
+                            genre={movie.genre}
+                            synopsis={movie.synopsis}
+                            status={movie.status}
+                            sections={movie.sections}
+                            country={(movie as any).country}
+                            originalLanguage={(movie as any).originalLanguage}
+                            mediaType={(movie as any).mediaType}
+                          />
+                        ))}
+                      </MovieLaneCarousel>
+                    ) : (
+                      <div style={{
+                        padding: '1.25rem 2rem',
+                        borderRadius: '1rem',
+                        background: 'rgba(255,255,255,0.02)',
+                        border: '1px dashed rgba(255,255,255,0.08)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem',
+                        color: 'rgba(255,255,255,0.4)',
+                        fontSize: '0.875rem',
+                        marginTop: '0.75rem',
+                        marginBottom: '1.5rem'
+                      }}>
+                        <span>🎬</span>
+                        <span>Belum ada film di section <strong>{section.name}</strong></span>
+                      </div>
+                    )}
+                  </div>
+                  {/* Show Adsterra Banner after the first and third regular sections */}
+                  {(idx === 0 || idx === 2) && <AdsterraBanner />}
+                </React.Fragment>
+              );
+            })}
+          </>
         )}
       </div>
 
       <AdsterraBanner />
-
-      {/* ── CURATED SECTIONS — Yearly Best + Themed Collections ── */}
-      {(yearlyDataFromDB.length > 0 || themedDataFromDB.length > 0) && (
-        <div className="curated-sections-container">
-          {/* 🏆 Film Terbaik Per Tahun */}
-          {yearlyDataFromDB.length > 0 && (
-            <CuratedYearlySection yearlyData={yearlyDataFromDB} />
-          )}
-
-          <AdsterraBanner />
-
-          {/* Themed sections with ad banners every 3 sections */}
-          {themedDataFromDB.map((section, idx) => (
-            <React.Fragment key={section.name}>
-              <div className="curated-divider" />
-              <CuratedThemeSection
-                name={section.name}
-                icon={section.icon}
-                emoji={section.emoji}
-                description={section.description}
-                films={section.films}
-              />
-              {(idx === 2 || idx === 5 || idx === 8 || idx === 11) && <AdsterraBanner />}
-            </React.Fragment>
-          ))}
-        </div>
-      )}
 
       {/* ── TUTORIAL SECTION ── */}
       <div style={{ textAlign: 'center', marginTop: '0.5rem', marginBottom: '0.5rem' }}>
@@ -305,9 +252,6 @@ export default async function Home() {
         />
       </div>
 
-      {/* ── FEATURE SECTION REMOVED ── */}
-
-
       {/* ── FAQ ── */}
       <FAQSection />
 
@@ -318,3 +262,4 @@ export default async function Home() {
     </div>
   );
 }
+

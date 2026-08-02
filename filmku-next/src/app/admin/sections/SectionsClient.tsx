@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { createDashboardSection, updateDashboardSection, deleteDashboardSection } from '@/actions/admin';
+import { useState, useTransition, useEffect } from 'react';
+import { createDashboardSection, updateDashboardSection, deleteDashboardSection, updateDashboardSectionOrders } from '@/actions/admin';
 import * as LucideIcons from 'lucide-react';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
 // List of available professional icons
 const ICON_OPTIONS = [
@@ -52,11 +53,51 @@ export function DynamicIcon({ name, size = 20 }: { name: string, size?: number }
 }
 
 export default function SectionsClient({ initialData }: { initialData: Section[] }) {
-  const [sections, setSections] = useState<Section[]>(initialData);
+  // Pastikan data di-sort sejak awal agar urutannya benar di state
+  const [sections, setSections] = useState<Section[]>(() => [...initialData].sort((a,b) => a.order - b.order));
   const [isPending, startTransition] = useTransition();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+
+    const sourceIndex = result.source.index;
+    const destinationIndex = result.destination.index;
+
+    if (sourceIndex === destinationIndex) return;
+
+    const newSections = Array.from(sections);
+    const [movedSection] = newSections.splice(sourceIndex, 1);
+    newSections.splice(destinationIndex, 0, movedSection);
+
+    // Update the 'order' property for each section based on its new index (1-based index)
+    const updatedSections = newSections.map((sec, idx) => ({
+      ...sec,
+      order: idx + 1,
+    }));
+
+    // Update UI immediately (optimistic UI)
+    setSections(updatedSections);
+
+    // Send the new orders to the server
+    startTransition(async () => {
+      try {
+        const updates = updatedSections.map(sec => ({ id: sec.id, order: sec.order }));
+        await updateDashboardSectionOrders(updates);
+      } catch (error) {
+        console.error("Gagal menyimpan urutan:", error);
+        alert("Gagal menyimpan urutan. Silakan refresh halaman.");
+      }
+    });
+  };
+
   
   const [formData, setFormData] = useState({
     name: '',
@@ -112,7 +153,7 @@ export default function SectionsClient({ initialData }: { initialData: Section[]
         } else {
           const res = await createDashboardSection(payload);
           if (res.success) {
-            setSections([...sections, res.section]);
+            setSections([...sections, res.section].sort((a,b) => a.order - b.order));
             resetForm();
           }
         }
@@ -219,47 +260,79 @@ export default function SectionsClient({ initialData }: { initialData: Section[]
 
       {/* ── LIST ── */}
       <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'left', background: 'rgba(255,255,255,0.03)' }}>
-              <th style={{ padding: '1rem', fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Urutan</th>
-              <th style={{ padding: '1rem', fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Kategori</th>
-              <th style={{ padding: '1rem', fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)', textAlign: 'right' }}>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sections.sort((a,b) => a.order - b.order).map(sec => (
-              <tr key={sec.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <td style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600 }}>#{sec.order}</td>
-                <td style={{ padding: '1rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <span style={{ color: 'var(--primary)' }}><DynamicIcon name={sec.icon} /></span>
-                    <span style={{ fontWeight: 500 }}>{sec.name}</span>
+        {isMounted ? (
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <div style={{ width: '100%' }}>
+              {/* Header */}
+              <div style={{ display: 'grid', gridTemplateColumns: '50px 100px 1fr 150px', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.03)', padding: '1rem' }}>
+                <div></div>
+                <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Urutan</div>
+                <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Kategori</div>
+                <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)', textAlign: 'right' }}>Aksi</div>
+              </div>
+              
+              {/* List */}
+              <Droppable droppableId="sections-list">
+                {(provided) => (
+                  <div {...provided.droppableProps} ref={provided.innerRef} style={{ minHeight: '50px' }}>
+                    {sections.map((sec, index) => (
+                      <Draggable key={sec.id} draggableId={sec.id} index={index}>
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            style={{ 
+                              display: 'grid',
+                              gridTemplateColumns: '50px 100px 1fr 150px',
+                              alignItems: 'center',
+                              borderBottom: '1px solid rgba(255,255,255,0.05)',
+                              background: snapshot.isDragging ? 'rgba(255,255,255,0.08)' : 'transparent',
+                              padding: '1rem',
+                              ...provided.draggableProps.style
+                            }}
+                          >
+                            <div>
+                              <div {...provided.dragHandleProps} style={{ display: 'flex', alignItems: 'center', color: 'var(--text-secondary)', cursor: 'grab' }}>
+                                <LucideIcons.GripVertical size={20} />
+                              </div>
+                            </div>
+                            <div style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>#{sec.order}</div>
+                            <div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                <span style={{ color: 'var(--primary)' }}><DynamicIcon name={sec.icon} /></span>
+                                <span style={{ fontWeight: 500 }}>{sec.name}</span>
+                              </div>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                              <button 
+                                onClick={() => handleEdit(sec)}
+                                style={{ background: 'transparent', border: 'none', color: '#3b82f6', cursor: 'pointer', marginRight: '1rem', fontWeight: 600 }}
+                              >
+                                Edit
+                              </button>
+                              <button 
+                                onClick={() => handleDelete(sec.id)}
+                                style={{ background: 'transparent', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontWeight: 600 }}
+                              >
+                                Hapus
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                    {sections.length === 0 && (
+                      <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Belum ada kategori.</div>
+                    )}
                   </div>
-                </td>
-                <td style={{ padding: '1rem', textAlign: 'right' }}>
-                  <button 
-                    onClick={() => handleEdit(sec)}
-                    style={{ background: 'transparent', border: 'none', color: '#3b82f6', cursor: 'pointer', marginRight: '1rem', fontWeight: 600 }}
-                  >
-                    Edit
-                  </button>
-                  <button 
-                    onClick={() => handleDelete(sec.id)}
-                    style={{ background: 'transparent', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontWeight: 600 }}
-                  >
-                    Hapus
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {sections.length === 0 && (
-              <tr>
-                <td colSpan={3} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Belum ada kategori.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                )}
+              </Droppable>
+            </div>
+          </DragDropContext>
+        ) : (
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Memuat...</div>
+        )}
       </div>
 
     </div>
