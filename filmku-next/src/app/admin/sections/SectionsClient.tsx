@@ -20,7 +20,22 @@ const ICON_OPTIONS = [
   'Ghost',
   'Sword',
   'Clock',
-  'Ticket'
+  'Ticket',
+  // Curated section icons
+  'Trophy',
+  'Skull',
+  'Bug',
+  'Moon',
+  'Coffee',
+  'Brain',
+  'Rocket',
+  'Music',
+  'Popcorn',
+  'Mountain',
+  'BookOpen',
+  'Gamepad2',
+  'Eye',
+  'CloudRain',
 ];
 
 type Section = {

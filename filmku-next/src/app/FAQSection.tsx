@@ -32,9 +32,8 @@ export default function FAQSection() {
         <ScrollFloat
           animationDuration={1}
           ease="back.inOut(2)"
-          scrollStart="center bottom+=50%"
-          scrollEnd="bottom bottom-=40%"
           stagger={0.03}
+          playOnce
           textStyle={{ fontSize: 'clamp(4rem, 6vw, 5.5rem)', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'normal', display: 'block' }}
         >
           Tanya Jawab (FAQ)

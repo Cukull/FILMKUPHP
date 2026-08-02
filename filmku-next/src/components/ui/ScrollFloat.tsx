@@ -19,6 +19,8 @@ interface ScrollFloatProps {
   scrollStart?: string;
   scrollEnd?: string;
   stagger?: number;
+  /** When true, animation plays once on enter instead of scrubbing with scroll position */
+  playOnce?: boolean;
 }
 
 const ScrollFloat = ({
@@ -31,7 +33,8 @@ const ScrollFloat = ({
   ease = 'back.inOut(2)',
   scrollStart = 'center bottom+=50%',
   scrollEnd = 'bottom bottom-=40%',
-  stagger = 0.03
+  stagger = 0.03,
+  playOnce = false,
 }: ScrollFloatProps) => {
   const containerRef = useRef<HTMLHeadingElement>(null);
 
@@ -70,16 +73,23 @@ const ScrollFloat = ({
         scaleY: 1,
         scaleX: 1,
         stagger: stagger,
-        scrollTrigger: {
-          trigger: el,
-          scroller,
-          start: scrollStart,
-          end: scrollEnd,
-          scrub: true
-        }
+        scrollTrigger: playOnce
+          ? {
+              trigger: el,
+              scroller,
+              start: 'top bottom-=10%',
+              toggleActions: 'play none none none',
+            }
+          : {
+              trigger: el,
+              scroller,
+              start: scrollStart,
+              end: scrollEnd,
+              scrub: true,
+            },
       }
     );
-  }, [scrollContainerRef, animationDuration, ease, scrollStart, scrollEnd, stagger]);
+  }, [scrollContainerRef, animationDuration, ease, scrollStart, scrollEnd, stagger, playOnce]);
 
   return (
     <h2 ref={containerRef} className={`scroll-float ${containerClassName}`} style={{ margin: 0, ...textStyle }}>

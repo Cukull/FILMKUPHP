@@ -12,6 +12,9 @@ import * as LucideIcons from 'lucide-react';
 import AdsterraBanner from "@/components/ads/AdsterraBanner";
 import { inferMovieSections } from "@/utils/sectionMatcher";
 import FeaturesSection from "@/components/FeaturesSection";
+import CuratedYearlySection from "@/components/CuratedYearlySection";
+import CuratedThemeSection from "@/components/CuratedThemeSection";
+import { THEMED_SECTIONS } from "@/data/curatedSections";
 
 export const revalidate = 30;
 
@@ -57,6 +60,25 @@ export default async function Home() {
     orderBy: { order: 'asc' },
   });
 
+  // Curated section name patterns
+  const YEARLY_PATTERN = /^Film Terbaik (\d{4})$/;
+  const themedNames = new Set(THEMED_SECTIONS.map(s => s.name));
+  // Metadata lookup for themed sections (emoji + description)
+  const themedMeta = new Map(THEMED_SECTIONS.map(s => [s.name, { emoji: s.emoji, description: s.description }]));
+
+  // Separate dashboard sections into regular vs curated
+  const regularSections = dashboardSections.filter(sec => 
+    !YEARLY_PATTERN.test(sec.name) && !themedNames.has(sec.name)
+  );
+  const yearlySections = dashboardSections
+    .filter(sec => YEARLY_PATTERN.test(sec.name))
+    .sort((a, b) => {
+      const yearA = parseInt(a.name.match(YEARLY_PATTERN)?.[1] || '0');
+      const yearB = parseInt(b.name.match(YEARLY_PATTERN)?.[1] || '0');
+      return yearB - yearA; // Newest first
+    });
+  const themedSectionsList = dashboardSections.filter(sec => themedNames.has(sec.name));
+
   const getMovieSections = (m: any): string[] => {
     const raw = m.sections ? m.sections.split(',').map((s: string) => s.trim()) : [];
     const validRaw = raw.filter((s: string) => !s.includes('NEW_RELEASE') && !s.includes('POPULAR'));
@@ -70,8 +92,8 @@ export default async function Home() {
     });
   };
 
-  // Group by sections (each movie can belong to multiple sections)
-  const sections = dashboardSections
+  // Group by REGULAR sections only (curated sections handled separately)
+  const sections = regularSections
     .map(sec => ({
       name: sec.name,
       icon: sec.icon || 'Film',
@@ -82,6 +104,47 @@ export default async function Home() {
       ),
     }))
     .filter(s => s.movies.length > 0);
+
+  // Build yearly curated data from DB
+  const yearlyDataFromDB = yearlySections
+    .map(sec => {
+      const yearMatch = sec.name.match(YEARLY_PATTERN);
+      const year = yearMatch ? parseInt(yearMatch[1]) : 0;
+      const films = allMovies
+        .filter(m => getMovieSections(m).includes(sec.name))
+        .map(m => ({
+          title: m.title,
+          year,
+          tmdbId: 0,
+          imdbRating: m.rating || 0,
+          posterUrl: m.posterUrl || '',
+        }));
+      return { year, films };
+    })
+    .filter(y => y.films.length > 0);
+
+  // Build themed curated data from DB
+  const themedDataFromDB = themedSectionsList
+    .map(sec => {
+      const meta = themedMeta.get(sec.name) || { emoji: '🎬', description: '' };
+      const films = allMovies
+        .filter(m => getMovieSections(m).includes(sec.name))
+        .map(m => ({
+          title: m.title,
+          year: 0,
+          tmdbId: 0,
+          imdbRating: m.rating || 0,
+          posterUrl: m.posterUrl || '',
+        }));
+      return {
+        name: sec.name,
+        icon: sec.icon || 'Film',
+        emoji: meta.emoji,
+        description: meta.description,
+        films,
+      };
+    })
+    .filter(s => s.films.length > 0);
 
   // Hero films: all tagged "Sorotan Layar Utama" with a valid trailer
   const heroMovies = allMovies
@@ -162,15 +225,41 @@ export default async function Home() {
 
       <AdsterraBanner />
 
+      {/* ── CURATED SECTIONS — Yearly Best + Themed Collections ── */}
+      {(yearlyDataFromDB.length > 0 || themedDataFromDB.length > 0) && (
+        <div className="curated-sections-container">
+          {/* 🏆 Film Terbaik Per Tahun */}
+          {yearlyDataFromDB.length > 0 && (
+            <CuratedYearlySection yearlyData={yearlyDataFromDB} />
+          )}
+
+          <AdsterraBanner />
+
+          {/* Themed sections with ad banners every 3 sections */}
+          {themedDataFromDB.map((section, idx) => (
+            <React.Fragment key={section.name}>
+              <div className="curated-divider" />
+              <CuratedThemeSection
+                name={section.name}
+                icon={section.icon}
+                emoji={section.emoji}
+                description={section.description}
+                films={section.films}
+              />
+              {(idx === 2 || idx === 5 || idx === 8 || idx === 11) && <AdsterraBanner />}
+            </React.Fragment>
+          ))}
+        </div>
+      )}
+
       {/* ── TUTORIAL SECTION ── */}
       <div style={{ textAlign: 'center', marginTop: '0.5rem', marginBottom: '0.5rem' }}>
         {/* Subtitle */}
         <ScrollFloat
           animationDuration={1}
           ease="back.out(2)"
-          scrollStart="center bottom+=50%"
-          scrollEnd="bottom bottom-=40%"
           stagger={0.03}
+          playOnce
           textStyle={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary, #9ca3af)', textTransform: 'uppercase', letterSpacing: '0.1em', whiteSpace: 'normal', display: 'block', marginBottom: '0.5rem' }}
         >
           Belum Tahu Caranya?
@@ -181,9 +270,8 @@ export default async function Home() {
           <ScrollFloat
             animationDuration={1}
             ease="back.inOut(2)"
-            scrollStart="center bottom+=50%"
-            scrollEnd="bottom bottom-=40%"
             stagger={0.03}
+            playOnce
             textStyle={{ fontSize: 'clamp(4rem, 6vw, 5.5rem)', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap', display: 'inline-block' }}
           >
             Nonton di
@@ -191,9 +279,8 @@ export default async function Home() {
           <ScrollFloat
             animationDuration={1}
             ease="back.inOut(2)"
-            scrollStart="center bottom+=50%"
-            scrollEnd="bottom bottom-=40%"
             stagger={0.03}
+            playOnce
             textStyle={{ fontSize: 'clamp(4rem, 6vw, 5.5rem)', fontWeight: 800, color: '#dc2626', whiteSpace: 'nowrap', display: 'inline-block' }}
           >
             FILMKU
