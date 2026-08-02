@@ -34,6 +34,7 @@ export default function FAQSection() {
           ease="back.inOut(2)"
           stagger={0.03}
           playOnce
+          scrollStart="top 90%"
           textStyle={{ fontSize: 'clamp(4rem, 6vw, 5.5rem)', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'normal', display: 'block' }}
         >
           Tanya Jawab (FAQ)

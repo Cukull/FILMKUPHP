@@ -207,6 +207,7 @@ export default async function Home() {
           ease="back.out(2)"
           stagger={0.03}
           playOnce
+          scrollStart="top 90%"
           textStyle={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary, #9ca3af)', textTransform: 'uppercase', letterSpacing: '0.1em', whiteSpace: 'normal', display: 'block', marginBottom: '0.5rem' }}
         >
           Belum Tahu Caranya?
@@ -219,6 +220,7 @@ export default async function Home() {
             ease="back.inOut(2)"
             stagger={0.03}
             playOnce
+            scrollStart="top 90%"
             textStyle={{ fontSize: 'clamp(4rem, 6vw, 5.5rem)', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap', display: 'inline-block' }}
           >
             Nonton di
@@ -228,6 +230,7 @@ export default async function Home() {
             ease="back.inOut(2)"
             stagger={0.03}
             playOnce
+            scrollStart="top 90%"
             textStyle={{ fontSize: 'clamp(4rem, 6vw, 5.5rem)', fontWeight: 800, color: '#dc2626', whiteSpace: 'nowrap', display: 'inline-block' }}
           >
             FILMKU

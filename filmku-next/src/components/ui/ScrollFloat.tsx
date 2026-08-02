@@ -77,7 +77,7 @@ const ScrollFloat = ({
           ? {
               trigger: el,
               scroller,
-              start: 'top bottom-=10%',
+              start: scrollStart,
               toggleActions: 'play none none none',
             }
           : {
